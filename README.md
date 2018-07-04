@@ -28,4 +28,13 @@ The Unsafe Code Guidelines WG is in the process of being rebooted.  We
 expect to be holding regular meetings focused on particular topics.
 Stay tuned for more announcements. -- @nikomatsakis
 
+## See also
 
+The [Rustonomicon](https://doc.rust-lang.org/nightly/nomicon/) is a
+draft document discussing unsafe code. It is intended to be brought
+into agreement with the content here. It represents an organized
+effort to explain how to write Rust code, rather than a reference.
+
+[The nikomatsakis/rust-memory-model
+repository](https://github.com/nikomatsakis/rust-memory-model) was a
+previous effort and contains a lot of good links and info.
