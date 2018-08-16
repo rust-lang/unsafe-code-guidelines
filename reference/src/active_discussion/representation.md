@@ -10,4 +10,5 @@ TODO:
 - Enumerate things that we *might* in fact guarantee, even for non-C types:
   - e.g., `&T` and `Option<&T>` are both pointer sized
   - size of `extern fn` etc (at least on some platforms)?
-
+  - For which `T` is `None` represented as a "null pointer" etc?
+    - (Which "niche" optimizations can we rely on)
