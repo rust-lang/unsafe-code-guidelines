@@ -71,6 +71,8 @@ As an example, a value of `&T` type can never be null -- therefore,
   say that they will have the same layout?
   - or do we have the freedom to rearrange the types of `A` but not
     `B`, e.g. based on PGO results
+- Rust currently says that no single value may be larger than `isize` bytes
+  - is this good? can it be changed? does it matter *here* anyway?
 
 ## Active threads
 
