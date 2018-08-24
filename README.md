@@ -28,6 +28,9 @@ The Unsafe Code Guidelines WG is in the process of being rebooted.  We
 expect to be holding regular meetings focused on particular topics.
 Stay tuned for more announcements. -- @nikomatsakis
 
+We follow the [Rust code of conduct](https://www.rust-lang.org/en-US/conduct.html). 
+Any concerns should be addressed to [the moderation team](https://www.rust-lang.org/team.html#Moderation-team) immediately.
+
 ## See also
 
 The [Rustonomicon](https://doc.rust-lang.org/nightly/nomicon/) is a
