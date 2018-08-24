@@ -12,6 +12,12 @@ At any given time, the UCG working group is focused on one particular
 read that link for more background and information. You can find the
 [current discussion threads here][threads].
 
+Ideas for future "areas of discussion" are represented as [issues
+labeled with the "proposed discussion topic"
+label](https://github.com/rust-rfcs/unsafe-code-guidelines/labels/proposed%20discussion%20topic). Feel
+free to open more such issues if you have a question that doesn't
+match any of the existing issues!
+
 We follow the [Rust code of
 conduct](https://www.rust-lang.org/en-US/conduct.html).  Any concerns
 should be addressed to [the moderation
@@ -19,7 +25,7 @@ team](https://www.rust-lang.org/team.html#Moderation-team)
 immediately.
 
 [currentarea]: active_discussion/TEMPLATE.md
-[threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3A%22active+discussion%22
+[threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3Atopic-repr
 
 ## The "Unsafe Code Guidelines Reference"
 
