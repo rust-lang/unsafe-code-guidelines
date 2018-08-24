@@ -5,6 +5,7 @@
 This discussion is meant to focus on two things:
 
 - What guarantees does Rust make regarding the layout of data structures?
+- What guarantees does Rust make regarding ABI compatibility?
 - What invariants does the compiler require from the various Rust types?
   - the "validity invariant", as defined in [Ralf's blog post][bp]
 
@@ -28,6 +29,26 @@ and control how an individual struct will be laid out -- notably with
 `#[repr]` annotations. One purpose of this section, then, is to layout
 what sorts of guarantees we offer when it comes to layout, and also
 what effect the various `#[repr]` annotations have.
+
+### ABI compatibilty
+
+When one either calls a foreign function or is called by one, extra
+care is needed to ensure that all the ABI details line up. ABI compatibility
+is related to data structure layout but -- in some cases -- can add another
+layer of complexity. For example, consider a struct with one field, like this one:
+
+```rust
+#[repr(C)]
+struct Foo { field: u32 }
+```
+
+The memory layout of `Foo` is identical to a `u32`. But in many ABIs,
+the struct type `Foo` is treated differently at the point of a
+function call than a `u32` would be. Eliminating these gaps is the
+goal of the `#[repr(transparent)]` annotation introduced in [RFC
+1758]. For built-in types, such as `&T` and so forth, it is important
+for us to specify how they are treated at the point of a function
+call.
 
 ### Validity invariant
 
@@ -93,7 +114,8 @@ To start, we will create threads for each major categories of types
     - [RFC 2195][] defined the layout of `#[repr(C)]` enums with payloads.
     - [RFC 2363][] offers a proposal to permit specifying discriminations.
 - Structs
-    - Do we ever say *anything* about how a `#[repr(rust)]` struct is laid out?
+    - Do we ever say *anything* about how a `#[repr(rust)]` struct is laid out
+      (and/or treated by the ABI)?
       - e.g., what about different structs with same definition
       - across executions of the same program?
 - Tuples
@@ -106,6 +128,7 @@ To start, we will create threads for each major categories of types
     - Out of scope: aliasing rules
     - We currently tell LLVM they are aligned and dereferenceable, have to justify that
     - Safe code may use them also
+    - When using the C ABI, these map to the C pointer types, presumably
 - Raw pointers
     - Effectively same as integers?
 - Representation knobs:
@@ -126,3 +149,4 @@ We will also create categories for the following specific areas:
 [RFC 2195]: https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
 [RFC 1358]: https://rust-lang.github.io/rfcs/1358-repr-align.html
 [RFC 1240]: https://rust-lang.github.io/rfcs/1240-repr-packed-unsafe-ref.html
+[RFC 1758]: https://rust-lang.github.io/rfcs/1758-repr-transparent.html
