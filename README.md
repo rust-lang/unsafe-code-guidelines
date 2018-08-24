@@ -1,35 +1,51 @@
 # unsafe-code-guidelines
 
-Home for the Unsafe Code Guidelines effort. The goal of the Unsafe
+Home for the Unsafe Code Guidelines (UCG) effort. The goal of the Unsafe
 Code Guidelines effort is to collaboratively produce a "reference
-guide" to write unsafe code. This guide should ultimately be a formal
-specification of what kinds of things unsafe code can and cannot do.
-However, we are not there yet.
+guide" for writing unsafe code that what kinds of things unsafe code
+can and cannot do.
 
-## The reference
+## Active area of discussion
 
-The primary document in this repo is the "Unsafe Code Guidelines
-Reference".  It is largely a work-in-progress right now. It serves as
-a kind of table of contents to the sorts of questions that are on our
-radar, as well as place to collect notes and summaries about those
-questions.
+At any given time, the UCG working group is focused on one particular
+**area**. The current area is [**To Be Determined**][current_area] --
+read that link for more background and information. You can find the
+current discussion threads here][threads].
 
-Since we are not yet at the point where we can provide complete,
-definitive answers, the current goal for each section is to describe
-the "contours of the space". For example, we would try to specify what
-kinds of invariants **must** hold, as well as things that we expect to
-**never** be true. For other cases where there is disagreement, we
-will try to summarize the various options on the table -- you would do
-well in your unsafe code to steer clear of relying on those details.
+We follow the [Rust code of
+conduct](https://www.rust-lang.org/en-US/conduct.html).  Any concerns
+should be addressed to [the moderation
+team](https://www.rust-lang.org/team.html#Moderation-team)
+immediately.
 
-## How to participate
+[current_area]: active_discussions/TEMPLATE.md
+[threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3A%22active+discussion%22
 
-The Unsafe Code Guidelines WG is in the process of being rebooted.  We
-expect to be holding regular meetings focused on particular topics.
-Stay tuned for more announcements. -- @nikomatsakis
+## The "Unsafe Code Guidelines Reference"
 
-We follow the [Rust code of conduct](https://www.rust-lang.org/en-US/conduct.html). 
-Any concerns should be addressed to [the moderation team](https://www.rust-lang.org/team.html#Moderation-team) immediately.
+Results from past discussions are written up in the "Unsafe Code
+Guidelines Reference", which lives in this repository. It is largely a
+work-in-progress right now. Note that, unless we state otherwise, the
+information in there is mostly a "recommendation" and still subject to
+change -- once made official, the intention is to migrate this
+information into the Rust Reference proper. [Read the "Unsafe Code
+Guidelines Reference" here.][rr]
+
+[rr]: https://github.com/rust-rfcs/unsafe-code-guidelines/blob/master/reference/src/SUMMARY.md
+
+## Chat platform, discussion cadence
+
+Most of the discussion takes place here in GitHub issues. Many of us
+do hangout on [Zulip], however, in the `wg-unsafe-code-guidelines`
+stream.
+
+[Zulip]: https://rust-lang.zulipchat.com/#narrow/stream/136281-wg-unsafe-code-guidelines
+
+Every two weeks, we hold a brief, non-technical meeting to decide
+whether to keep the current area of discussion or to adopt a new
+one. Prior to this meeting, we update the "area of discussion"
+document with summaries of the threads. The meeting takes place on
+[Zulip] and all are welcome to attend.
 
 ## See also
 
