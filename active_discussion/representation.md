@@ -48,8 +48,9 @@ As an example, a value of `&T` type can never be null -- therefore,
 
 - Define what we guarantee about the layout of various types
   and the effect of `#[repr]` annotations.
-- Define the **validity requirements** of various types that unsafe
-  programmers must uphold at all times.
+- Define the **validity requirements** of various types. These are the
+  requirements that must hold at all times when the compiler considers
+  a value to be initialized.
     - Also examine when/how we could dynamically check these requirements.
 - Uncover the sorts of constraints that we may wish to satisfy in the
   future.
