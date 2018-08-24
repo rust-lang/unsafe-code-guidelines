@@ -7,8 +7,9 @@ This discussion is meant to focus on two things:
 - What guarantees does Rust make regarding the layout of data structures?
 - What invariants does the compiler require from the various Rust types?
   - the "validity invariant", as defined in [Ralf's blog post][bp]
-- What invariants can safe code expect to hold for the various Rust types?
-  - the "safety invariant", as defined in [Ralf's blog post][bp]
+
+NB. The discussion is **not** meant to discuss the "safety invariant"
+from [Ralf's blog post][bp], as that can be handled later.
 
 [bp]: https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html
 
@@ -43,23 +44,10 @@ invariant, however, so as to leave room for future optimization.
 As an example, a value of `&T` type can never be null -- therefore,
 `Option<&T>` can use null to represent `None`.
 
-### Safety invariant
-
-The "safety invariant" for each type defines what must hold whenever
-safe code has access to a type.
-
-This invariant must **at minimum** justify all the things that our
-type system allows without an `unsafe` keyword being required.
-
-For example, a value of `&T` must be dereferencable, since safe code
-could always choose to dereference it.
-
 ## Goals
 
 - Define what we guarantee about the layout of various types
   and the effect of `#[repr]` annotations.
-- Define the **safety requirements** of various types that safe
-  code requires (and which unsafe code must uphold at the safe/unsafe boundary).
 - Define the **validity requirements** of various types that unsafe
   programmers must uphold at all times.
     - Also examine when/how we could dynamically check these requirements.
