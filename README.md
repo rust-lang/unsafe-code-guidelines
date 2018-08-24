@@ -27,6 +27,16 @@ immediately.
 [currentarea]: active_discussion/TEMPLATE.md
 [threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3Atopic-repr
 
+For people who are interested in this sort of thing, there is a team
+in the rust-lang org called `WG-unsafe-code-guidelines`. Send a
+private message to @nikomatsakis on [internals] if you would like to
+be added. This team is commonly cc'd when curious situations arise.
+Being a member of this GitHub team simply indicates that you would
+like to be notified and does not imply any particular decision making
+power.
+
+[internals]: https://internals.rust-lang.org/
+
 ## The "Unsafe Code Guidelines Reference"
 
 Results from past discussions are written up in the "Unsafe Code
@@ -52,6 +62,10 @@ whether to keep the current area of discussion or to adopt a new
 one. Prior to this meeting, we update the "area of discussion"
 document with summaries of the threads. The meeting takes place on
 [Zulip] and all are welcome to attend.
+
+A more complete description of our process can be found in [the `process.md` file][p].
+
+[p]: 
 
 ## See also
 
