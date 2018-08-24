@@ -8,9 +8,9 @@ can and cannot do.
 ## Active area of discussion
 
 At any given time, the UCG working group is focused on one particular
-**area**. The current area is [**To Be Determined**][current_area] --
+**area**. The current area is [**To Be Determined**][currentarea] --
 read that link for more background and information. You can find the
-current discussion threads here][threads].
+[current discussion threads here][threads].
 
 We follow the [Rust code of
 conduct](https://www.rust-lang.org/en-US/conduct.html).  Any concerns
@@ -18,7 +18,7 @@ should be addressed to [the moderation
 team](https://www.rust-lang.org/team.html#Moderation-team)
 immediately.
 
-[current_area]: active_discussions/TEMPLATE.md
+[currentarea]: active_discussion/TEMPLATE.md
 [threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3A%22active+discussion%22
 
 ## The "Unsafe Code Guidelines Reference"
