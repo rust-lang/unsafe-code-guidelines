@@ -107,6 +107,11 @@ To start, we will create threads for each major categories of types
     - What about signaling NaN etc? ([Seems like a
       non-issue](https://github.com/rust-lang/rust/issues/40470#issuecomment-343803381),
       but it'd be good to resummarize the details).
+- usize/isize
+    - is `usize` the native size of a pointer? [the max of various other considerations](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212702266)?
+      what are edge cases here?
+    - Rust currently states that the maximum size of any single value must fit in with `isize`
+      - Can we say a bit more about why? (e.g., [ensuring that "pointer diff" is representable](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212703192)
 - Booleans
     - Prior discussions ([#46156][], [#46176][]) documented bool as a single
       byte that is either 0 or 1.
@@ -154,7 +159,6 @@ To start, we will create threads for each major categories of types
 - Representation knobs:
     - Custom alignment ([RFC 1358])
     - Packed ([RFC 1240] talks about some safety issues)
-- ... what else?
 
 We will also create categories for the following specific areas:
 
