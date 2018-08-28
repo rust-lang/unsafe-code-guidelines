@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This discussion is meant to focus on two things:
+This discussion is meant to focus on the following things:
 
 - What guarantees does Rust make regarding the layout of data structures?
 - What guarantees does Rust make regarding ABI compatibility?
@@ -92,6 +92,8 @@ As an example, a value of `&T` type can never be null -- therefore,
   say that they will have the same layout?
   - or do we have the freedom to rearrange the types of `A` but not
     `B`, e.g. based on PGO results
+  - What about different instantiations of the same struct? (`Vec<A>`
+    vs `Vec<B>`)
 - Rust currently says that no single value may be larger than `isize` bytes
   - is this good? can it be changed? does it matter *here* anyway?
 
@@ -102,6 +104,9 @@ To start, we will create threads for each major categories of types
 
 - Integers and floating points
     - What about uninitialized values?
+    - What about signaling NaN etc? ([Seems like a
+      non-issue](https://github.com/rust-lang/rust/issues/40470#issuecomment-343803381),
+      but it'd be good to resummarize the details).
 - Booleans
     - Prior discussions ([#46156][], [#46176][]) documented bool as a single
       byte that is either 0 or 1.
@@ -118,12 +123,25 @@ To start, we will create threads for each major categories of types
       (and/or treated by the ABI)?
       - e.g., what about different structs with same definition
       - across executions of the same program?
+    - For example, [rkruppe
+      writes](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212776247)
+      that we might "want to guarantee (some subset of) newtype
+      unpacking and relegate repr(transparent) to being the way to
+      guarantee to other crates that a type with private fields is and
+      will remain a newtype?"
 - Tuples
     - Are these effectively anonymous structs? 
 - Unions
     - Can we ever say anything about the initialized contents of a union?
     - Is `#[repr(C)]` meaningful on a union?
+    - When (if ever) do we guarantee that all fields have the same address?
 - Fn pointers (`fn()`, `extern "C" fn()`)
+    - When is transmuting from one `fn` type to another allowed?
+    - Can you transmute from a `fn` to `usize` or raw pointer?
+      - In theory this is platform dependent, and C certainly draws a
+        distinction between `void*` and a function pointer, but are
+        there any modern and/or realisic platforms where it is an
+        issue?
 - References `&T` and `&mut T`
     - Out of scope: aliasing rules
     - We currently tell LLVM they are aligned and dereferenceable, have to justify that
