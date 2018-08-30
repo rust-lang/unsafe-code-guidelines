@@ -57,7 +57,7 @@ stream.
 
 [Zulip]: https://rust-lang.zulipchat.com/#narrow/stream/136281-wg-unsafe-code-guidelines
 
-Every two weeks on Thursday at 9:00 UTC+4, we hold a brief,
+Every two weeks on Thursday at 9:00 UTC-4 (13:00 UTC), we hold a brief,
 non-technical meeting to decide whether to keep the current area of
 discussion or to adopt a new one. Prior to this meeting, we update the
 "area of discussion" document with summaries of the threads. The
