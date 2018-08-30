@@ -6,13 +6,12 @@ This discussion is meant to focus on the following things:
 
 - What guarantees does Rust make regarding the layout of data structures?
 - What guarantees does Rust make regarding ABI compatibility?
-- What invariants does the compiler require from the various Rust types?
-  - the "validity invariant", as defined in [Ralf's blog post][bp]
 
-NB. The discussion is **not** meant to discuss the "safety invariant"
-from [Ralf's blog post][bp], as that can be handled later.
-
-[bp]: https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html
+NB. Oftentimes, choices of layout will only be possible if we can
+guarantee various invariants -- this is particularly true when
+optimizing the layout of `Option` or other enums. However, designing
+those invariants is left for a future discussion -- here, we should
+document/describe what we currently do and/or aim to support.
 
 ### Layout of data structures
 
@@ -50,30 +49,13 @@ goal of the `#[repr(transparent)]` annotation introduced in [RFC
 for us to specify how they are treated at the point of a function
 call.
 
-### Validity invariant
-
-The "validity invariant" for each type defines what must hold whenever
-a value of this type is considered to be initialized. The compiler expects
-the validity invariant to hold **at all times** and is thus allowed to use
-these invariants to (e.g.) affect the layout of data structures or do other
-optimizations.
-
-Therefore, the validity invariant must **at minimum** justify all the
-layout optimizations that the compiler does. We may want a stronger
-invariant, however, so as to leave room for future optimization.
-
-As an example, a value of `&T` type can never be null -- therefore,
-`Option<&T>` can use null to represent `None`.
-
 ## Goals
 
-- Define what we guarantee about the layout of various types
-  and the effect of `#[repr]` annotations.
-- Define the **validity requirements** of various types. These are the
-  requirements that must hold at all times when the compiler considers
-  a value to be initialized.
-    - Also examine when/how we could dynamically check these requirements.
-- Uncover the sorts of constraints that we may wish to satisfy in the
+- Document current behavior of compiler.
+  - Indicate which behavior is "permitted" for compiler and which
+    aspects are things that unsafe code can rely upon.
+  - Include the effect of `#[repr]` annotations.
+- Uncover the sorts of layout optimizations we may wish to do in the
   future.
 
 ## Some interesting examples and questions
@@ -83,6 +65,7 @@ As an example, a value of `&T` type can never be null -- therefore,
 - `Option<&T>` where `T: Sized`
   - This is **guaranteed** to be a nullable pointer
 - `Option<extern "C" fn()>`
+  - Can this be assumed to be a non-null pointer?
 - `usize`
   - Platform dependent size, but guaranteed to be able to store a pointer?
   - Also an array length?
@@ -103,11 +86,9 @@ To start, we will create threads for each major categories of types
 (with a few suggested focus points):
 
 - Integers and floating points
-    - What about uninitialized values?
     - What about signaling NaN etc? ([Seems like a
       non-issue](https://github.com/rust-lang/rust/issues/40470#issuecomment-343803381),
       but it'd be good to resummarize the details).
-- usize/isize
     - is `usize` the native size of a pointer? [the max of various other considerations](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212702266)?
       what are edge cases here?
     - Rust currently states that the maximum size of any single value must fit in with `isize`
@@ -131,9 +112,9 @@ To start, we will create threads for each major categories of types
     - For example, [rkruppe
       writes](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212776247)
       that we might "want to guarantee (some subset of) newtype
-      unpacking and relegate repr(transparent) to being the way to
-      guarantee to other crates that a type with private fields is and
-      will remain a newtype?"
+      unpacking and relegate `#[repr(transparent)]` to being the way
+      to guarantee to other crates that a type with private fields is
+      and will remain a newtype?"
 - Tuples
     - Are these effectively anonymous structs? 
 - Unions
@@ -147,10 +128,10 @@ To start, we will create threads for each major categories of types
         distinction between `void*` and a function pointer, but are
         there any modern and/or realisic platforms where it is an
         issue?
+    - Is `Option<extern "C" fn()>` guaranteed to be a pointer (possibly null)?
 - References `&T` and `&mut T`
     - Out of scope: aliasing rules
-    - We currently tell LLVM they are aligned and dereferenceable, have to justify that
-    - Safe code may use them also
+    - Always aligned, non-null
     - When using the C ABI, these map to the C pointer types, presumably
 - Raw pointers
     - Effectively same as integers?
@@ -159,13 +140,6 @@ To start, we will create threads for each major categories of types
 - Representation knobs:
     - Custom alignment ([RFC 1358])
     - Packed ([RFC 1240] talks about some safety issues)
-
-We will also create categories for the following specific areas:
-
-- Niches: Optimizing `Option`-like enums
-- Uninitialized memory: when/where are uninitializes values permitted, if ever?
-- ... what else?
-
 
 [#46156]: https://github.com/rust-lang/rust/pull/46156
 [#46176]: https://github.com/rust-lang/rust/pull/46176
