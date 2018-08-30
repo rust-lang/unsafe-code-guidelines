@@ -1,4 +1,4 @@
-# Data structure representation and validity requirements
+# Data structure representation
 
 ## Introduction
 
