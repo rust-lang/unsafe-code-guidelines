@@ -19,6 +19,10 @@ https://github.com/rust-rfcs/unsafe-code-guidelines/issues/10
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/13
 
+## Representation of references and raw pointers
+
+https://github.com/rust-rfcs/unsafe-code-guidelines/issues/16
+
 ## Representation of function pointers
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/13
