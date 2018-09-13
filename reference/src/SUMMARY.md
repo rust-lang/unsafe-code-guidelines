@@ -13,5 +13,6 @@
   - [Uninhabited types like `!` and exhaustiveness](./active_discussion/uninhabited_types.md)
   - [Unions](./active_discussion/unions.md)
   - [Uninitialized memory](./active_discussion/uninitialized_memory.md)
+- [Data representation](./representation.md)
 - [Optimizations](./optimizations.md)
   - [Optimizing immutable memory](./optimizations/immutable_memory.md) 
