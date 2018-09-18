@@ -8,5 +8,7 @@
 * *niche*
 * *layout*
 * *tag*
+* *rvalue*
+* *lvalue*
 
 ## Unsafe abstraction
