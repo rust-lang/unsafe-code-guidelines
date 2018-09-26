@@ -14,7 +14,7 @@ In general, an anonymous tuple type `(T1..Tn)` of arity N is laid out
 
 ```rust
 #[repr(Rust)]
-struct TupleN<P1..Pn>(P1..Pn);
+struct TupleN<P1..Pn:?Sized>(P1..Pn);
 ```
 
 In this case, `(T1..Tn)` would be compatible with `TupleN<T1..Tn>`.
@@ -32,6 +32,13 @@ permits such tuples to be transmuted and then indexed using an integer
 index.[^exception]
 
 [^exception]: [Proposed in this comment](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/12#issuecomment-417680324).
+
+Note that the final element of a tuple (`Pn`) is marked as `?Sized` to
+permit unsized tuple coercion -- this is implemented on nightly but is
+currently unstable ([tracking issue][#42877]). In the future, we may
+extend unsizing to other elements of tuples as well.
+
+[#42877]: https://github.com/rust-lang/rust/issues/42877
 
 ### Other notes on tuples
 
@@ -59,12 +66,25 @@ Structs come in two principle varieties:
 struct Foo { f1: T1, .., fn: Tn }
 
 // Tuple structs
-struct Foo(T1, .., Tn)
+struct Foo(T1, .., Tn);
 ```
 
-In general, tuple structs can be understood as equivalent to named
-structs declared with the same order; therefore, the two declarations
-of `Foo` in the previous example are treated equivalently.
+In terms of their layout, tuple structs can be understood as
+equivalent to a named struct with fields named `0..n-1`:
+
+```rust
+struct Foo {
+  0: T1,
+  ...
+  n-1: Tn
+}
+```
+
+(In fact, one may use such field names in patterns or in accessor
+expressions like `foo.0`.)
+
+Field names are not relevant to layout: changing the name of a field
+in a struct will never affect its layout.
 
 Structs can have various `#[repr]` flags that influence their layout:
 
@@ -72,9 +92,9 @@ Structs can have various `#[repr]` flags that influence their layout:
 - `#[repr(C)]` -- request C compatibility
 - `#[repr(align(N))]` -- specify the alignment
 - `#[repr(packed)]` -- request packed layout where fields are not internally aligned
-- `#[repr(transparent)]` -- request that a single-field struct be
-  treated "as if" it were an instance of its field type when passed as
-  an argument
+- `#[repr(transparent)]` -- request that a "wrapper struct" be treated
+  "as if" it were an instance of its field type when passed as an
+  argument
 
 ### Default layout ("repr rust")
 
@@ -103,10 +123,12 @@ a detailed write-up):
 
 - Field order is preserved.
 - The first field begins at offset 0.
-- Assuming the struct is not packed, each field's offset is aligned to
-  the natural alignment for that field's type, possibly creating
+- Assuming the struct is not packed, each field's offset is aligned[^aligned] to
+  the ABI-mandated alignment for that field's type, possibly creating
   unused padding bits.
-- The total size of the struct is rounded up to its overall alignemnt.  
+- The total size of the struct is rounded up to its overall alignment.  
+
+[^aligned]: Aligning an offset O to an alignment A means to round up the offset O until it is a multiple of the alignment A.
 
 The intention is that if one has a set of C struct declarations and a
 corresponding set of Rust struct declarations, all of which are tagged
@@ -128,13 +150,19 @@ of a struct, as described in [The Rust Reference][TRR-align].
 
 ### Packed layout
 
-The `#[repr(packed)]` attribute may be used to remove all padding from
-the struct. The resulting fields may not fall at properly aligned
-boundaries in memory. This makes it unsafe to create a Rust reference
-(`&T` or `&mut T`) to those fields, as the compiler requires that all
-reference values must always be aligned (so that it can use more
-efficient load/store instructions at runtime). See the [Rust reference
-for more details][TRR-packed].
+The `#[repr(packed(N))]` attribute may be used to impose a maximum
+limit on the alignments for individual fields. It is most commonly
+used with an alignment of 1, which makes the struct as small as
+possible. For example, in a `#[repr(packed(2))]` struct, a `u8` or
+`u16` would be aligned at 1- or 2-bytes respectively (as normal), but
+a `u32` would be aligned at only 2 bytes instead of 4.
+
+The resulting fields may not fall at properly aligned boundaries in
+memory. This makes it unsafe to create a Rust reference (`&T` or `&mut
+T`) to those fields, as the compiler requires that all reference
+values must always be aligned (so that it can use more efficient
+load/store instructions at runtime). See the [Rust reference for more
+details][TRR-packed].
 
 [TRR-packed]: https://doc.rust-lang.org/stable/reference/type-layout.html#the-packed-representation
 
@@ -174,6 +202,13 @@ Instead, you should declare the struct with `#[repr(transparent)]`,
 which specifies that `Foo` should use the ABI rules for its field
 type, `u32`. This is useful when using "wrapper structs" in Rust to
 give stronger typing guarantees.
+
+`#[repr(transparent)]` cannot be applied to *any* struct. It is
+limited to structs with a single field whose type `T` has non-zero
+size, along with some number of other fields whose types are all
+zero-sized (typically `std::marker::PhantomData` fields). The struct
+then takes on the "ABI behavior" of the type `T` that has non-zero
+size.
 
 (Note further that the Rust ABI is undefined and theoretically may
 vary from compiler revision to compiler revision.)
