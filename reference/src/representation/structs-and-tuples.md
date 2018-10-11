@@ -81,9 +81,6 @@ struct Foo {
 (In fact, one may use such field names in patterns or in accessor
 expressions like `foo.0`.)
 
-Field names are not relevant to layout: changing the name of a field
-in a struct will never affect its layout.
-
 Structs can have various `#[repr]` flags that influence their layout:
 
 - `#[repr(Rust)]` -- the default.
@@ -93,6 +90,25 @@ Structs can have various `#[repr]` flags that influence their layout:
 - `#[repr(transparent)]` -- request that a "wrapper struct" be treated
   "as if" it were an instance of its field type when passed as an
   argument
+
+### Details *not* relevant to layout
+
+Although the compiler is free to choose the layout of structs as it
+likes, we do put some restrictions on it:
+
+- Layout must be **deterministic** -- if you compile the same program
+  twice (with the same compilation settings), the layout of the
+  structs in the program should not change.
+  - Open question: What sorts of changes can cause layout to change?
+    Do you have to make changes to the types (transitively) included
+    in the struct? Or can any sort of change suffice.
+- **Field names** are not relevant to layout: changing the name of a field
+  in a struct will never affect its layout.
+- **Privacy** is not relevant to layout: changing whether a field is
+  public or private does not affect layout, although it may affect who
+  can observe the layout (e.g., in a `#[repr(C)]` struct, if fields
+  are public, then one may find that client libraries are relying on
+  the order of fields in your struct in some fashion).
 
 ### Default layout ("repr rust")
 
