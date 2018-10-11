@@ -125,19 +125,32 @@ issue has been opened for further discussion on the repository. This
 section documents the questions and gives a few light details, but the
 reader is referred to the issues for further discussion.
 
-**Single-field structs.** If you have a struct with single field
+**Zero-sized structs ([#37]).** If you have a struct which --
+transitively -- contains no data of non-zero size, then the size of
+that struct will be zero as well. These zero-sized structs appear
+frequently as exceptions in other layout considerations (e.g.,
+single-field structs). An example of such a struct is
+`std::marker::PhantomData`.
+
+[#37]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/37
+
+**Single-field structs ([#34]).** If you have a struct with single field
 (`struct Foo { x: T }`), should we guarantee that the memory layout of
 `Foo` is identical to the memory layout of `T` (note that ABI details
 around function calls may still draw a distinction, which is why
 `#[repr(transparent)]` is needed). What about zero-sized types like
 `PhantomData`?
 
-**Homogeneous structs.** If you have homogeneous structs, where all
+[#34]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/34
+
+**Homogeneous structs ([#36]).** If you have homogeneous structs, where all
 the `N` fields are of a single type `T`, can we guarantee a mapping to
 the memory layout of `[T; N]`? How do we map between the field names
 and the indices? What about zero-sized types?
 
-**Deterministic layout.** Can we say that layout is some deterministic
+[#36]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/36
+
+**Deterministic layout ([#35]).** Can we say that layout is some deterministic
 function of a certain, fixed set of inputs? This would allow you to be
 sure that if you do not alter those inputs, your struct layout would
 not change, even if it meant that you can't predict precisely what it
@@ -147,6 +160,8 @@ would imply that any two structs with the same definition are laid out
 the same. This might interfere with our ability to do profile-guided
 layout or to analyze how a struct is used and optimize based on
 that. Some would call that a feature.
+
+[#35]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/35
 
 ### C-compatible layout ("repr C")
 
