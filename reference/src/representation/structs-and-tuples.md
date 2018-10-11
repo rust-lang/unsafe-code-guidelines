@@ -24,15 +24,6 @@ guaranteed layout from a tuple, you are generally advised to create a
 named struct with a `#[repr(C)]` annotation (see [the section on
 structs for more details](#structs)).
 
-There is one exception: if all N fields of the tuple are of the same
-type `T` (with lifetime erased), then the tuple is guaranteed to be
-laid out as the fixed-length array type `[T; N]` (with the numbered
-tuple fields placed in the corresponding indices as expected). This
-permits such tuples to be transmuted and then indexed using an integer
-index.[^exception]
-
-[^exception]: [Proposed in this comment](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/12#issuecomment-417680324).
-
 Note that the final element of a tuple (`Pn`) is marked as `?Sized` to
 permit unsized tuple coercion -- this is implemented on nightly but is
 currently unstable ([tracking issue][#42877]). In the future, we may
@@ -91,35 +82,33 @@ Structs can have various `#[repr]` flags that influence their layout:
   "as if" it were an instance of its field type when passed as an
   argument
 
-### Details *not* relevant to layout
-
-Although the compiler is free to choose the layout of structs as it
-likes, we do put some restrictions on it:
-
-- Layout must be **deterministic** -- if you compile the same program
-  twice (with the same compilation settings), the layout of the
-  structs in the program should not change.
-  - Open question: What sorts of changes can cause layout to change?
-    Do you have to make changes to the types (transitively) included
-    in the struct? Or can any sort of change suffice.
-- **Field names** are not relevant to layout: changing the name of a field
-  in a struct will never affect its layout.
-- **Privacy** is not relevant to layout: changing whether a field is
-  public or private does not affect layout, although it may affect who
-  can observe the layout (e.g., in a `#[repr(C)]` struct, if fields
-  are public, then one may find that client libraries are relying on
-  the order of fields in your struct in some fashion).
-
 ### Default layout ("repr rust")
 
-The default layout of structs is undefined and subject to change
-between individual compilations. We further do not guarantee that two
-structs with different names (but the same field types) will be laid
-out in the same way (for example, the hypothetical struct representing
-tuples ). Finally, the presence or absence of generics can make a
-difference (e.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
-x: u16, y: T }` where `T = u32` are not guaranteed to be identical),
-owing to the possibility of unsizing coercions.
+The default layout of structs is not specified. Effectively, the
+compiler provdes a deterministic function per struct definition that
+defines its layout. This function may as principle take as input the
+entire input program. Therefore:
+
+- the types of the struct's fields
+- the layout of other structs (including structs not included within this struct)
+- compiler settings
+
+As of this writing, we have not reached a full consensus on what
+limitations should exist on possible field struct layouts. Therefore,
+the default layout of structs is considered undefined and subject to
+change between individual compilations. This implies that (among other
+things) two structs with the same field types may not be laid out in
+the same way (for example, the hypothetical struct representing tuples
+may be laid out differently from user-declared structs). 
+
+Further, the layout of structs is always defined relative to the
+**struct definition** plus a substitution supplying values for each of
+the struct's generic types (in contrast to just considering the fully
+monomorphized field types). This is necessary because the presence or
+absence of generics can make a difference (e.g., `struct Foo { x: u16,
+y: u32 }` and `struct Foo<T> { x: u16, y: T }` where `T = u32` are not
+guaranteed to be identical), owing to the possibility of unsizing
+coercions.
 
 **Compiler's current behavior.** As of the time of this writing, the
 compiler will reorder struct fields to minimize the overall size of
@@ -127,12 +116,45 @@ the struct (and in particular to eliminate padding due to alignment
 restrictions). The final field, however, is not reordered if an
 unsizing coercion may be applied.
 
+#### Unresolved questions
+
+During the course of the discussion in [#11] and [#12], various
+suggestions arose to limit the compiler's flexibility. These questions
+are currently considering **unresolved** and -- for each of them -- an
+issue has been opened for further discussion on the repository. This
+section documents the questions and gives a few light details, but the
+reader is referred to the issues for further discussion.
+
+**Single-field structs.** If you have a struct with single field
+(`struct Foo { x: T }`), should we guarantee that the memory layout of
+`Foo` is identical to the memory layout of `T` (note that ABI details
+around function calls may still draw a distinction, which is why
+`#[repr(transparent)]` is needed). What about zero-sized types like
+`PhantomData`?
+
+**Homogeneous structs.** If you have homogeneous structs, where all
+the `N` fields are of a single type `T`, can we guarantee a mapping to
+the memory layout of `[T; N]`? How do we map between the field names
+and the indices? What about zero-sized types?
+
+**Deterministic layout.** Can we say that layout is some deterministic
+function of a certain, fixed set of inputs? This would allow you to be
+sure that if you do not alter those inputs, your struct layout would
+not change, even if it meant that you can't predict precisely what it
+will be. For example, we might say that struct layout is a function of
+the struct's generic types and its substitutions, full stop -- this
+would imply that any two structs with the same definition are laid out
+the same. This might interfere with our ability to do profile-guided
+layout or to analyze how a struct is used and optimize based on
+that. Some would call that a feature.
+
 ### C-compatible layout ("repr C")
 
 For structs tagged `#[repr(C)]`, the compiler will apply a C-like
 layout scheme. See section 6.7.2.1 of the [C17 specification][C17] for
-a detailed write-up of what such rules entail. For most platforms,
-however, this means the following:
+a detailed write-up of what such rules entail (as well as the relevant
+specs for your platform). For most platforms, however, this means the
+following:
 
 [C17]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
 
