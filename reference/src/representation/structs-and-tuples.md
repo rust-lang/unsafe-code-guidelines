@@ -246,7 +246,7 @@ this can be used to track down the struct that is causing the problem.
 [#42877]: https://github.com/rust-lang/rust/issues/42877
 [pg-unsized-tuple]: https://play.rust-lang.org/?gist=46399bb68ac685f23beffefc014203ce&version=nightly&mode=debug&edition=2015
 
-There are also benefits also to having fewer guarantees. For example:
+There are also benefits to having fewer guarantees. For example:
 
 - Code hardening tools can be used to randomize the layout of individual structs.
 - Profile-guided optimization might analyze how instances of a
