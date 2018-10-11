@@ -51,9 +51,7 @@ Some related discussion:
   forth against some suffix of the struct. This RFC was not accepted,
   however. This lay out requires extra padding and seems somewhat
   surprising: it means that the layout of tuples and tuple structs
-  would diverge significantly from structs with named fields.  This
-  proposal is also incompatible with the guaranteed array layout
-  described above.
+  would diverge significantly from structs with named fields.
 
 <a name="structs"></a>
 
