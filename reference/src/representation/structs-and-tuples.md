@@ -155,7 +155,9 @@ limit on the alignments for individual fields. It is most commonly
 used with an alignment of 1, which makes the struct as small as
 possible. For example, in a `#[repr(packed(2))]` struct, a `u8` or
 `u16` would be aligned at 1- or 2-bytes respectively (as normal), but
-a `u32` would be aligned at only 2 bytes instead of 4.
+a `u32` would be aligned at only 2 bytes instead of 4. In the absence
+of an explicit `#[repr(align)]` directive, `#[repr(packed(N))]` also
+sets the alignment for the struct as a whole to N bytes.
 
 The resulting fields may not fall at properly aligned boundaries in
 memory. This makes it unsafe to create a Rust reference (`&T` or `&mut
