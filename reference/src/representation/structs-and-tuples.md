@@ -99,7 +99,7 @@ Structs can have various `#[repr]` flags that influence their layout:
 ### Default layout ("repr rust")
 
 The default layout of structs is undefined and subject to change
-between compiler revisions. We further do not guarantee that two
+between individual compilations. We further do not guarantee that two
 structs with different names (but the same field types) will be laid
 out in the same way (for example, the hypothetical struct representing
 tuples ). Finally, the presence or absence of generics can make a
