@@ -130,8 +130,9 @@ unsizing coercion may be applied.
 ### C-compatible layout ("repr C")
 
 For structs tagged `#[repr(C)]`, the compiler will apply a C-like
-layout scheme (see section 6.7.2.1 of the [C17 specification][C17] for
-a detailed write-up):
+layout scheme. See section 6.7.2.1 of the [C17 specification][C17] for
+a detailed write-up of what such rules entail. For most platforms,
+however, this means the following:
 
 [C17]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
 
