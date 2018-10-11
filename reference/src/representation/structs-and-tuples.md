@@ -2,7 +2,7 @@
 
 **Disclaimer:** This chapter represents the consensus from issues
 [#11] and [#12].  The statements in here are not (yet) "guaranteed"
-not to change.
+not to change until an RFC ratifies them.
 
 [#11]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/11
 [#12]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/12
