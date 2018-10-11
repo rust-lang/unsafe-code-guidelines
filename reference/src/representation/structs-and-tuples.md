@@ -137,7 +137,7 @@ those would have no corresponding C struct declaration -- as
 `#[repr(Rust)]` types have undefined layout, you cannot safely declare
 their layout in a C program.
 
-See also the notes on ABI compatibility under the section on `#[repr(transparent)]`.
+See also the notes on [ABI compatibility](#fnabi) under the section on `#[repr(transparent)]`.
 
 ### Fixed alignment
 
@@ -166,7 +166,9 @@ details][TRR-packed].
 
 [TRR-packed]: https://doc.rust-lang.org/stable/reference/type-layout.html#the-packed-representation
 
-### ABI Compatibility
+<a name="fnabi"> </a>
+
+### Function call ABI compatibility
 
 In general, when invoking functions that use the C ABI, `#[repr(C)]`
 structs are guaranteed to be passed in the same way as their
@@ -272,7 +274,7 @@ deterministic" layout. These areas need future exploration.
 
 ## Counteropinions and other notes
 
-@joshtrippler [argued against reordering struct
+@joshtripplet [argued against reordering struct
 fields](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/11#issuecomment-417953576),
 suggesting instead it would be better if users reordering fields
 themselves. However, there are a number of downsides to such a
