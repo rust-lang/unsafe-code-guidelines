@@ -84,40 +84,43 @@ Structs can have various `#[repr]` flags that influence their layout:
 
 ### Default layout ("repr rust")
 
-The default layout of structs is not specified. Effectively, the
-compiler provdes a deterministic function per struct definition that
-defines its layout. This function may as principle take as input the
-entire input to the compiler. Therefore, any of the the following might
-influence layout:
+**The default layout of structs is not specified.** As of this
+writing, we have not reached a full consensus on what limitations
+should exist on possible field struct layouts, so effectively one must
+assume that the compiler can select any layout it likes for each
+struct on each compilation, and it is not required to select the same
+layout across two compilations. This implies that (among other things)
+two structs with the same field types may not be laid out in the same
+way (for example, the hypothetical struct representing tuples may be
+laid out differently from user-declared structs).
 
-- the types of the struct's fields
-- the layout of other structs (including structs not included within this struct)
-- compiler settings
-- the results of profile information which are given to the compiler
-  for the purpose of PGO etc
+Known things that can influence layout (non-exhaustive):
 
-As of this writing, we have not reached a full consensus on what
-limitations should exist on possible field struct layouts. Therefore,
-the default layout of structs is considered undefined and subject to
-change between individual compilations. This implies that (among other
-things) two structs with the same field types may not be laid out in
-the same way (for example, the hypothetical struct representing tuples
-may be laid out differently from user-declared structs). 
+- the type of the struct fields and the layout of those types
+- compiler settings, including esoteric choices like optimization fuel
 
-Further, the layout of structs is always defined relative to the
-**struct definition** plus a substitution supplying values for each of
-the struct's generic types (in contrast to just considering the fully
-monomorphized field types). This is necessary because the presence or
-absence of generics can make a difference (e.g., `struct Foo { x: u16,
-y: u32 }` and `struct Foo<T> { x: u16, y: T }` where `T = u32` are not
-guaranteed to be identical), owing to the possibility of unsizing
-coercions.
+**A note on determinism.** The definition above does not guarantee
+determinism between executions of the compiler -- two executions may
+select different layouts, even if all inputs are identical. Naturally,
+in practice, the compiler aims to produce deterministic output for a
+given set of inputs. However, it is difficult to produce a
+comprehensive summary of the various factors that may affect the
+layout of structs, and so for the time being we have opted for a
+conservative definition.
 
 **Compiler's current behavior.** As of the time of this writing, the
 compiler will reorder struct fields to minimize the overall size of
 the struct (and in particular to eliminate padding due to alignment
-restrictions). The final field, however, is not reordered if an
-unsizing coercion may be applied.
+restrictions).
+
+Layout is presently defined not in terms of a "fully monomorphized"
+struct definition but rather in terms of its generic definition along
+with a set of substitutions (values for each type parameter; lifetime
+parameters do not affect layout). This distinction is important
+because of *unsizing* -- if the final field has generic type, the
+compiler will not reorder it, to allow for the possibility of
+unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
+x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
 #### Unresolved questions
 
