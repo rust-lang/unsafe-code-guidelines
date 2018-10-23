@@ -87,11 +87,14 @@ Structs can have various `#[repr]` flags that influence their layout:
 The default layout of structs is not specified. Effectively, the
 compiler provdes a deterministic function per struct definition that
 defines its layout. This function may as principle take as input the
-entire input program. Therefore:
+entire input to the compiler. Therefore, any of the the following might
+influence layout:
 
 - the types of the struct's fields
 - the layout of other structs (including structs not included within this struct)
 - compiler settings
+- the results of profile information which are given to the compiler
+  for the purpose of PGO etc
 
 As of this writing, we have not reached a full consensus on what
 limitations should exist on possible field struct layouts. Therefore,
