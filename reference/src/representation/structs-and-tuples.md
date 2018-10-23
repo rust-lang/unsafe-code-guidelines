@@ -262,12 +262,11 @@ which specifies that `Foo` should use the ABI rules for its field
 type, `u32`. This is useful when using "wrapper structs" in Rust to
 give stronger typing guarantees.
 
-`#[repr(transparent)]` cannot be applied to *any* struct. It is
-limited to structs with a single field whose type `T` has non-zero
-size, along with some number of other fields whose types are all
-zero-sized (typically `std::marker::PhantomData` fields). The struct
-then takes on the "ABI behavior" of the type `T` that has non-zero
-size.
+`#[repr(transparent)]` can only be applied to structs with a single
+field whose type `T` has non-zero size, along with some number of
+other fields whose types are all zero-sized (typically
+`std::marker::PhantomData` fields). The struct then takes on the "ABI
+behavior" of the type `T` that has non-zero size.
 
 (Note further that the Rust ABI is undefined and theoretically may
 vary from compiler revision to compiler revision.)
