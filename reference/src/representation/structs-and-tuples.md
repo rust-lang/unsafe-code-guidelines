@@ -188,6 +188,14 @@ following:
 
 [^aligned]: Aligning an offset O to an alignment A means to round up the offset O until it is a multiple of the alignment A.
 
+One deviation from C comes about with "empty structs". In Rust, a
+struct that contains (transitively) no data members is considered to
+have size zero, which is not something that exists in C. This includes
+a struct like `#[repr(C)] struct Foo { }`. Further, when a
+`#[repr(C)]` struct has a field whose type has zero-size, that field
+may induce padding due to its alignment, but will not otherwise affect
+the offsets of subsequent fields (as it takes up zero space).
+
 The intention is that if one has a set of C struct declarations and a
 corresponding set of Rust struct declarations, all of which are tagged
 with `#[repr(C)]`, then the layout of those structs will all be
