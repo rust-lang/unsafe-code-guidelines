@@ -341,11 +341,19 @@ proposal (and -- further -- it does not match our existing behavior):
   ahead of
   time](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/11#issuecomment-420659840),
   so the user cannot do it manually.
-- If layout is defined, then it becomes part of your API, such taht
-  reordering fields is a breaking change for your clients (if we
-  consider unsafe code that may rely on the layout, then this applies
-  [even to structs with named
-  fields](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/11#issuecomment-420117856).
+- If layout is defined, and a library exposes a struct with all public
+  fields, then clients may be more likely to assume that the layout of
+  that struct is stable. If they were to write unsafe code that relied
+  on this assumption, that would break if fields were reordered. But
+  libraries may well expect the freedom to reorder fields. This case
+  is weakened because of the requirement to write unsafe code (after
+  all, one can always write unsafe code that relies on virtually any
+  implementation detail); if we were to permit **safe** casts that
+  rely on the layout, then reordering fields would clearly be a
+  breaking change (see also [this
+  comment](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/11#issuecomment-420117856)
+  and [this
+  thread](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/31#discussion_r224955817)).
 - Many people would prefer the name ordering to be chosen for
   "readability" and not optimal layout.
 
