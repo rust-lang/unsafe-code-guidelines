@@ -188,14 +188,6 @@ following:
 
 [^aligned]: Aligning an offset O to an alignment A means to round up the offset O until it is a multiple of the alignment A.
 
-One deviation from C comes about with "empty structs". In Rust, a
-struct that contains (transitively) no data members is considered to
-have size zero, which is not something that exists in C. This includes
-a struct like `#[repr(C)] struct Foo { }`. Further, when a
-`#[repr(C)]` struct has a field whose type has zero-size, that field
-may induce padding due to its alignment, but will not otherwise affect
-the offsets of subsequent fields (as it takes up zero space).
-
 The intention is that if one has a set of C struct declarations and a
 corresponding set of Rust struct declarations, all of which are tagged
 with `#[repr(C)]`, then the layout of those structs will all be
@@ -206,6 +198,38 @@ those would have no corresponding C struct declaration -- as
 their layout in a C program.
 
 See also the notes on [ABI compatibility](#fnabi) under the section on `#[repr(transparent)]`.
+
+**Structs with no fields.** One area where Rust layout can deviate
+from C/C++ -- even with `#[repr(C)]` -- comes about with "empty
+structs" that have no fields. In C, an empty struct declaration like
+`struct Foo { }` is illegal. However, both gcc and clang support
+options to enable such structs, and [assign them size
+zero](https://godbolt.org/z/AS2gdC). Rust behaves the same way --
+empty structs have size 0 and alignment 1 (unless an explicit
+`#[repr(align)]` is present). C++, in contrast, gives empty structs a
+size of 1, unless they are inherited from or they are fields that have
+the `[[no_unique_address]]` attribute, in which case they do not
+increase the overall size of the struct.
+
+**Structs of zero-size.** It is also possible to have structs that
+have fields but have non-zero size. In this case, the size of the
+struct would be zero, but its alignment may be greater. For example,
+`#[repr(C)] struct Foo { x: [u16; 0] }` would have an alignment of 2
+bytes by default. ([This matches the behavior in gcc and
+clang](https://godbolt.org/z/5w0gkq).)
+
+**Structs with fields of zero-size.** If a `#[repr(C)]` struct
+containing a field of zero-size, that field does not occupy space in
+the struct; it can affect the offsets of subsequent fields if it
+induces padding due to the alignment on its type. ([This matches the
+behavior in gcc and clang](https://godbolt.org/z/5w0gkq).)
+
+**C++ compatibility hazard.** As noted above when discussing structs
+with no fields, C++ treats empty structs like `struct Foo { }`
+differently from C and Rust. This can introduce subtle compatibility
+hazards. If you have an empty struct in your C++ code and you make the
+"naive" translation into Rust, even tagging with `#[repr(C)]` will not
+produce layout- or ABI-compatible results.
 
 ### Fixed alignment
 
