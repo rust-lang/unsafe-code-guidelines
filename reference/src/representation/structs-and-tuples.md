@@ -212,7 +212,7 @@ the `[[no_unique_address]]` attribute, in which case they do not
 increase the overall size of the struct.
 
 **Structs of zero-size.** It is also possible to have structs that
-have fields but have non-zero size. In this case, the size of the
+have fields but still have zero size. In this case, the size of the
 struct would be zero, but its alignment may be greater. For example,
 `#[repr(C)] struct Foo { x: [u16; 0] }` would have an alignment of 2
 bytes by default. ([This matches the behavior in gcc and
