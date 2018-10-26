@@ -34,3 +34,7 @@ a field type to obtain a pointer to any field, and vice versa.
 to keep the option of using non-zero offsets open for the future; whether this
 is useful depends on what exactly the compiler-assumed invariants about union
 contents are.
+
+Even if the offsets happen to be all 0, there might still be differences in the
+function call ABI.  If you need to pass unions by-value across an FFI boundary,
+you have to use `#[repr(C)]`.
