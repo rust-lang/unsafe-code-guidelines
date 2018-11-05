@@ -2,9 +2,11 @@
 
 ### Terminology
 
-In Rust, a function pointer type, is either `fn(Args...) -> Ret`, or
-`extern "ABI" fn(Args...) -> Ret`. A function pointer is the address of a
-function, and have function pointer type.
+In Rust, a function pointer type, is either `fn(Args...) -> Ret`,
+`extern "ABI" fn(Args...) -> Ret`, `unsafe fn(Args...) -> Ret`, and
+`unsafe extern "ABI" fn(Args...) -> Ret`.
+A function pointer is the address of a function,
+and has function pointer type.
 The pointer is implicit in the `fn` type,
 and `fn` types are implicitly `'static`.
 
@@ -14,7 +16,7 @@ or the address of a function.
 
 ### Representation
 
-The ABI and layout of `(extern "ABI")? fn(Args...) -> Ret`
+The ABI and layout of `(unsafe)? (extern "ABI")? fn(Args...) -> Ret`
 is exactly that of the corresonding C type --
 the lack of a null value does not change this. 
 On common platforms, this means that `*const ()` and `fn(Args...) -> Ret` have
