@@ -41,7 +41,7 @@ so will Rust.
 
 However, null values are not supported by the Rust function pointer types --
 just like references, the expectation is that you use `Option` to create
-nullable pointers. `Option<fn(Args...) -> Ret` will have the exact same ABI
+nullable pointers. `Option<fn(Args...) -> Ret>` will have the exact same ABI
 as `fn(Args...) -> Ret`, but additionally allows null pointer values.
 
 
