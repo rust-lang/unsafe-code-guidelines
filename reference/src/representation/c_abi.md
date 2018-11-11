@@ -17,7 +17,6 @@ unspecified behavior:
 * `sizeof(_Bool) == 1`
 * `true = 1` and `false = 0`
 * two's complement integers
-* have, at least, one pointer value that is never dereferenceable
 
 ## Unresolved questions
 
@@ -28,5 +27,14 @@ unspecified behavior:
 * Are `float` and `double` optional? What should we require of these types
   (IEEE754:2018 compatibility?)? See [#9].
 * Is atomics support optional?
+
+ * Once we start discussing validity, the bit pattern representing the `None`
+   value of `Option<&T>` has to be specified. In particular, we want to require
+   that this bitpattern matches that of a C pointer for which `ptr == NULL`
+   returns `true`, to ensure that C pointers passed to Rust via FFI that are
+   null also result in null pointers in Rust, `Option<&T>::None`, etc.
+   
+   If we decide that this null bit-pattern can only be `0x0`, then we'd have to
+   add this requirement to this document in the future.
   
 [latest_c_std]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
