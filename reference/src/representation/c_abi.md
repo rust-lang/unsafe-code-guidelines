@@ -15,6 +15,7 @@ unspecified behavior:
 
 * `CHAR_BITS == 8`
 * `sizeof(Bool_) == 1`
+* `true = 1` and `false = 0`
 * two's complement integers
 * have, at least, one pointer value that is never dereferenceable
 
