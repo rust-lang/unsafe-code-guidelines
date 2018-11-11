@@ -26,7 +26,7 @@ unspecified behavior:
 * Does the pointer with representation `intptr_t(0)` have to never be
   dereferenceable?
 * Are `float` and `double` optional? What should we require of these types
-  layout-wise? See [#9].
+  (IEEE754:2018 compatibility?)? See [#9].
 * Is atomics support optional?
   
 [latest_c_std]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
