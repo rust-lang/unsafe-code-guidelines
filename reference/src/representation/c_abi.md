@@ -12,11 +12,11 @@ satisfies all requirements specified in this document.
 
 ## Requirements on the C implementation 
 
-If the platform has a C implementation that can be interfaced with via C FFI,
-this implementation is required to conform to the [latest version of the C
-standard]. The following are extra requirements that Rust imposes on top of the
-latest version of the C standard, e.g., on implementation-defined and/or
-unspecified behavior:
+These requirement assume that the platform has a C implementation that can be
+interfaced with. This implementation is required to conform to the [latest
+version of the C standard]. The following are extra requirements that Rust
+imposes on top of the latest version of the C standard, e.g., on
+implementation-defined and/or unspecified behavior:
 
 * `CHAR_BITS == 8`
 * `sizeof(_Bool) == 1`
