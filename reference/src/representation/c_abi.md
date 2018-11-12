@@ -20,31 +20,50 @@ unspecified behavior:
 
 ## Unresolved questions
 
-Please open an issue to discuss any of these as required. I'll update this
-document to link to the appropriate issues as they are opened.
+The unresolved questions that don't contain a link to an issue have no issue
+open yet. This document shall be updated as issues are resolved and new issues
+are opened:
 
-* Shall Rust require that the C's platform pointer size must be at lest, e.g.,
-  16-bits wide?
-* Does the pointer with representation `intptr_t(0)` have to never be
-  dereferenceable? @ralfj mentioned that there are two different platform that
-  we have to consider here:
-    * platforms that do not have a `NULL` pointer (e.g. Linux kernel), where all
-      addresses are available (is this allowed by the C standard ?). Is this
-      allowed by the C standard?
-    * platforms that do have a `NULL` pointer, in which case we might only want
-      to support those platforms where it's run-time address is `0x0`, instead
-      of a platform specific one.
-* Are `float` and `double` optional? What should we require of these types
-  (IEEE754:2018 compatibility?)? See [#9].
-* Is atomics support optional?
+* **minimum platform pointer size**: should Rust require that the C's platform
+  pointer size must be at lest, e.g., 16-bits wide?
 
- * Once we start discussing validity, the bit pattern representing the `None`
-   value of `Option<&T>` has to be specified. In particular, we want to require
-   that this bitpattern matches that of a C pointer for which `ptr == NULL`
-   returns `true`, to ensure that C pointers passed to Rust via FFI that are
-   null also result in null pointers in Rust, `Option<&T>::None`, etc.
-   
-   If we decide that this null bit-pattern can only be `0x0`, then we'd have to
-   add this requirement to this document in the future.
+* **float types** (32 and 64-bit wide only for now): see [#9]
+
+  * Are these optional? 
+  
+  * Should we require anything about them beyond what the C standard requires?
+  
+  * These probably need to be IEEE754:2018 compliant and we should specify their
+  binary representation. 
+  
+  * Do we need to specify anything else on top of IEEE754:2018, e.g., with
+    respect to implementation-defined behavior?
+
+* **atomics**:
+
+  * Are these optional?
+  
+  * Should we require anything about them beyond what the C standard requires?
+
+* **`NULL` pointer bitpattern**:
+
+  * Does the C standard allow platforms without a run-time `NULL` representation?
+  
+  * Some platforms do not have any pointer value that compares equal to `NULL`.
+    Should we support these platforms? For example, an OS kernel like Linux that
+    wants to use the `0x0` address. Rust is used for these platforms already.
+
+  * Some platforms have pointer values that compare equal to `NULL` but whose
+    bit representation is not `0x0`. Should we support these platforms?
+    * That is, should we only support C platforms where the only pointer
+      representation that compares equal to `NULL` is `(void*)intptr_t(0)` ?
+
+    * This interacts which the bit-patterns:
+     
+       * for which `&T` and `&mut T` have niches, and therefore `Option<&T>` is
+         `None`
+       * `<*[mut,const] T>::is_null(self)` returns `true` - note that `NonNull`
+         does not convey any information about the exact representation of its
+         niche, that is, it is different from `NonZero`.
   
 [latest_c_std]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
