@@ -20,10 +20,20 @@ unspecified behavior:
 
 ## Unresolved questions
 
+Please open an issue to discuss any of these as required. I'll update this
+document to link to the appropriate issues as they are opened.
+
 * Shall Rust require that the C's platform pointer size must be at lest, e.g.,
   16-bits wide?
 * Does the pointer with representation `intptr_t(0)` have to never be
-  dereferenceable?
+  dereferenceable? @ralfj mentioned that there are two different platform that
+  we have to consider here:
+    * platforms that do not have a `NULL` pointer (e.g. Linux kernel), where all
+      addresses are available (is this allowed by the C standard ?). Is this
+      allowed by the C standard?
+    * platforms that do have a `NULL` pointer, in which case we might only want
+      to support those platforms where it's run-time address is `0x0`, instead
+      of a platform specific one.
 * Are `float` and `double` optional? What should we require of these types
   (IEEE754:2018 compatibility?)? See [#9].
 * Is atomics support optional?
