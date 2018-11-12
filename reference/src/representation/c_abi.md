@@ -1,30 +1,24 @@
 # Layout requirements of the C ABI
 
-**Disclaimer:** This chapter is a minimal summary of issue [#44] about Rust's
+**Disclaimer:** This chapter summarizes the current consensus about Rust's
 current layout requirements of the platforms' C ABI.
 
-Rust programs can target platforms that do not have a C implementation. However,
-when targeting these platforms, attempting to interface with C, e.g., via
-`extern "C"` is illegal, since there is no C ABI to interface with. 
-
-Interfacing with C is allowed in platforms that have a C implementation that
-satisfies all requirements specified in this document.
-
-## Requirements on the C implementation 
-
 These requirement assume that the platform has a C implementation that can be
-interfaced with. This implementation is required to conform to the [latest
-version of the C standard]. The following are extra requirements that Rust
-imposes on top of the latest version of the C standard, e.g., on
-implementation-defined and/or unspecified behavior:
+interfaced with. This C implementation is required to satisfy the following
+requirements.
+
+## Integer and floating point requirements
 
 * `CHAR_BITS == 8`
 * `sizeof(_Bool) == 1`
 * `true = 1` and `false = 0`
 * two's complement integers
 
-If the C implementation does not satisfy these requirements, the behavior is
-undefined.
+## Layout of structs
+
+See the [C-compatible layout ("repr C")][c_struct] section.
+
+[c_struct]: https://github.com/rust-rfcs/unsafe-code-guidelines/blob/master/reference/src/representation/structs-and-tuples.md#c-compatible-layout-repr-c
 
 ## Unresolved questions
 
