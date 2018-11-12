@@ -1,7 +1,7 @@
-# Layout requirements of the C ABI
+# Layout requirements on the platform's C ABI
 
-**Disclaimer:** This chapter summarizes the current consensus about Rust's
-current layout requirements of the platforms' C ABI.
+**Disclaimer:** This chapter summarizes the consensus about Rust's layout
+requirements on the platforms' C ABI.
 
 These requirement assume that the platform has a C implementation that can be
 interfaced with. This C implementation is required to satisfy the following
