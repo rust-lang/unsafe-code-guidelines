@@ -3,14 +3,19 @@
 **Disclaimer:** This chapter is a minimal summary of issue [#44] about Rust's
 current layout requirements of the platforms' C ABI.
 
-These requirements apply to all C ABIs that Rust programs interface with, e.g.,
-via `extern "C"`. That is, for Rust to be able to target a platform, this
-platform does not have to provide a C implementation, but then all Rust programs
-attempting to interface with one are illegal.
+Rust programs can target platforms that do not have a C implementation. However,
+when targeting these platforms, attempting to interface with C, e.g., via
+`extern "C"` is illegal, since there is no C ABI to interface with. 
 
-The platform's C implementation is required to conform to the [latest version of
-the C standard]. The following are extra requirements that Rust imposes on top
-of the latest version of the C standard, e.g., on implementation-defined or
+Interfacing with C is allowed in platforms that have a C implementation that
+satisfies all requirements specified in this document.
+
+## Requirements on the C implementation 
+
+If the platform has a C implementation that can be interfaced with via C FFI,
+this implementation is required to conform to the [latest version of the C
+standard]. The following are extra requirements that Rust imposes on top of the
+latest version of the C standard, e.g., on implementation-defined and/or
 unspecified behavior:
 
 * `CHAR_BITS == 8`
