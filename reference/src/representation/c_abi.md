@@ -23,6 +23,9 @@ implementation-defined and/or unspecified behavior:
 * `true = 1` and `false = 0`
 * two's complement integers
 
+If the C implementation does not satisfy these requirements, the behavior is
+undefined.
+
 ## Unresolved questions
 
 The unresolved questions that don't contain a link to an issue have no issue
