@@ -71,4 +71,12 @@ are opened:
          does not convey any information about the exact representation of its
          niche, that is, it is different from `NonZero`.
   
+* **targets "without C"**:
+
+  * What should we do about targets whose C implementation is not standard
+    conforming? Do we require full standard conformance? Or only conformance of
+    some specific aspects that are required for FFI ?
+    
+  * What should we do about targets that do not have a C implementation at all?
+  
 [latest_c_std]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
