@@ -1,0 +1,46 @@
+# Representation of reference and pointer types
+
+### Terminology
+
+Reference types are types of the form `&T` or `&mut T`.
+
+Raw pointer types are types of the form `*const T` or `*mut T`.
+
+### Representation
+
+The alignment of reference and raw pointer types is the word size.
+
+The sizes of `&T`, `&mut T`, `*const T` and `*mut T` are the same,
+and are at least one word.
+
+* If `T` is a trait, then the size of `&T` is two words.
+* If `T` is a sized type then the size of `&T` is one word.
+* The size of `&[T]` is two words.
+
+Raw pointer types have no requirements of their representation.
+
+The representations of `&T` and `&mut T` are the same.
+
+The representation of `&T` when `T` is a trait is the same as that of:
+```rust
+#[repr(C)]
+struct DynObject {
+  data: &u8,
+  vtable: &usize,
+}
+```
+
+The representation of `&[T]` is the same as that of:
+```rust
+#[repr(C)]
+struct Slice<T> {
+  ptr: &T,
+  len: usize,
+}
+```
+
+### Notes
+
+The validity requirements of `&T` include that all values are non-null, which
+impacts niche optimizations and hence representation of types which include `&T`.
+In particular, `Option<&T>` is one word.
