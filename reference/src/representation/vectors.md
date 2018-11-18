@@ -24,12 +24,12 @@ struct Vector<T, N>(T_0, ..., T_(N - 1));
 The set of supported values of `T` and `N` is _implementation-defined_.
 
 The size of `Vector` is `N * size_of::<T>()` and its alignment is an
-_implementation-defined_ function of `N` and `T` greater than or equal to
+_implementation-defined_ function of `T` and `N` greater than or equal to
 `align_of::<T>()`. That is:
 
 ```rust
-assert_eq!(size_of::<Vector<T, N>>(), size_of::<[T; N]>());
-assert_eq!(size_of::<Vector<T, N>>(), size_of::<(T_0, ..., T_(N - 1))>());
+assert_eq!(size_of::<Vector<T, N>>(), size_of::<T>() * N);
+assert!(align_of::<Vector<T, N>>() >= align_of::<T>());
 ```
 
 That is, two distinct `repr(simd)` vector types that have the same `T` and the
@@ -43,6 +43,9 @@ union U {
    vec: Vector<T, N>,
    arr: [T; N]
 }
+
+assert_eq!(size_of::<Vector<T, N>>(), size_of::<[T; N]>());
+assert!(align_of::<Vector<T, N>>() >= align_of::<[T; N]>());
 
 unsafe {
   let u = U { vec: Vector<T, N>(t_0, ..., t_(N - 1)) };
@@ -63,6 +66,9 @@ unsafe {
     vec: Vector<T, N>,
     tup: (T_0, ..., T_(N-1)),
   }
+
+  assert_eq!(size_of::<Vector<T, N>>(), size_of::<(T_0, ..., T_(N-1))>());
+  assert!(align_of::<Vector<T, N>>() >= align_of::<(T_0, ..., T_(N-1))>());
 
   unsafe {
     let u = U { vec: Vector(t_0, ..., t_(N - 1)) };
