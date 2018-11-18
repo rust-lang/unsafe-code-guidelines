@@ -86,4 +86,4 @@ unsafe {
   
   
 * Should unions containing a vector type and any number of ZSTs also be vector
-  types?
+  types? For example, should `MaybeUninit<Vector<T, N>>` also be a vector type?
