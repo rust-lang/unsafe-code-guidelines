@@ -84,8 +84,10 @@ unsafe {
   
   [#36]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/36
   
-  
 * Should unions containing a vector type and any number of ZSTs also be vector
   types? For example, should `MaybeUninit<Vector<T, N>>` also be a vector type?
+  This should be documented for `unions` in general, and the rules for vectors
+  should follow from that. This document should, at most, mention that in the
+  context of vectors.
 
-* Should we guarantee that `N` is a power-of-two ?
+* Should we require `N` to be a power-of-two?
