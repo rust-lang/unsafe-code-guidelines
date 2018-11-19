@@ -35,8 +35,8 @@ assert!(align_of::<Vector<T, N>>() >= align_of::<T>());
 That is, two distinct `repr(simd)` vector types that have the same `T` and the
 same `N` have the same size and alignment.
 
-The layout of elements within a vector is the same as that of `[T; N]` such that
-there is a a 1:1 correspondence between the indices of the vector and arrays:
+Vector elements are laid out in source field order, enabling random access to
+vector elements by reinterpreting the vector as an array:
 
 ```rust
 union U {
