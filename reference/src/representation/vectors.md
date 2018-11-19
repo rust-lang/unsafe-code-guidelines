@@ -87,3 +87,5 @@ unsafe {
   
 * Should unions containing a vector type and any number of ZSTs also be vector
   types? For example, should `MaybeUninit<Vector<T, N>>` also be a vector type?
+
+* Should we guarantee that `N` is a power-of-two ?
