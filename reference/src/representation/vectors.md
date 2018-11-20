@@ -14,7 +14,8 @@ currently different for each architecture.
 
 ## Vector types
 
-Vector types are `repr(simd)` homogeneous tuple-structs containing `N` elements of type `T`:
+Vector types are `repr(simd)` homogeneous tuple-structs containing `N` elements
+of type `T`:
 
 ```rust
 #[repr(simd)]
@@ -84,10 +85,8 @@ unsafe {
   
   [#36]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/36
   
-* Should unions containing a vector type and any number of ZSTs also be vector
-  types? For example, should `MaybeUninit<Vector<T, N>>` also be a vector type?
-  This should be documented for `unions` in general, and the rules for vectors
-  should follow from that. This document should, at most, mention that in the
-  context of vectors.
-
 * Should we require `N` to be a power-of-two?
+
+* `MaybeUninit<T>` does not have the same `repr` as `T`, so
+  `MaybeUninit<Vector<T, N>>` are not `repr(simd)`, which has performance
+  consequences and means that `MaybeUninit<Vector<T, N>>` is not C-FFI safe.
