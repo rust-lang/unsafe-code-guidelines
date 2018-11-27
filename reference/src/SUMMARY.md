@@ -15,5 +15,6 @@
   - [Uninitialized memory](./active_discussion/uninitialized_memory.md)
 - [Data representation](./representation.md)
   - [Structs and tuples](./representation/structs-and-tuples.md)
+  - [Integers and Floating Points] (./integers-floatingpoint.md)
 - [Optimizations](./optimizations.md)
   - [Optimizing immutable memory](./optimizations/immutable_memory.md) 
