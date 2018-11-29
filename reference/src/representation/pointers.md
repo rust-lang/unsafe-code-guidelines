@@ -17,7 +17,7 @@ and are at least one word.
 * If `T` is a sized type then the size of `&T` is one word.
 * The size of `&[T]` is two words.
 
-Raw pointer types have no requirements of their representation.
+### Notes
 
 The representations of `&T` and `&mut T` are the same.
 
@@ -38,8 +38,6 @@ struct Slice<T> {
   len: usize,
 }
 ```
-
-### Notes
 
 The validity requirements of `&T` include that all values are non-null, which
 impacts niche optimizations and hence representation of types which include `&T`.
