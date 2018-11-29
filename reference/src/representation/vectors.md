@@ -15,7 +15,7 @@ currently different for each architecture.
 ## Vector types
 
 Vector types are `repr(simd)` homogeneous tuple-structs containing `N` elements
-of type `T`:
+of type `T` where `N` is a power-of-two:
 
 ```rust
 #[repr(simd)]
@@ -85,8 +85,6 @@ unsafe {
   
   [#36]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/36
   
-* Should we require `N` to be a power-of-two?
-
 * `MaybeUninit<T>` does not have the same `repr` as `T`, so
   `MaybeUninit<Vector<T, N>>` are not `repr(simd)`, which has performance
   consequences and means that `MaybeUninit<Vector<T, N>>` is not C-FFI safe.
