@@ -17,6 +17,9 @@ and are at least one word.
 * If `T` is a sized type then the size of `&T` is one word.
 * The size of `&[T]` is two words.
 
+Note that we do not make any guarantees about the sizes of
+multi-trait objects `&(dyn T + U)`or references to dynamically sized types.
+
 ### Notes
 
 The representations of `&T` and `&mut T` are the same.
@@ -38,7 +41,3 @@ struct Slice<T> {
   len: usize,
 }
 ```
-
-The validity requirements of `&T` include that all values are non-null, which
-impacts niche optimizations and hence representation of types which include `&T`.
-In particular, `Option<&T>` is one word.
