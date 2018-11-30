@@ -29,7 +29,7 @@ The representation of `&T` when `T` is a trait is the same as that of:
 #[repr(C)]
 struct DynObject {
   data: &u8,
-  vtable: &usize,
+  vtable: &u8,
 }
 ```
 
