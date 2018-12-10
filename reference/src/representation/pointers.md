@@ -18,7 +18,7 @@ and are at least one word.
 * The size of `&[T]` is two words.
 
 Note that we do not make any guarantees about the sizes of
-multi-trait objects `&(dyn T + U)`or references to other dynamically sized types.
+multi-trait objects `&(dyn T + U)` or references to other dynamically sized types.
 
 ### Notes
 
