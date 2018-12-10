@@ -2,29 +2,35 @@
 
 ### Terminology
 
-Reference types are types of the form `&T` or `&mut T`.
+Reference types are types of the form `&T`, `&mut T` or `&dyn T`.
 
 Raw pointer types are types of the form `*const T` or `*mut T`.
 
 ### Representation
 
-The alignment of reference and raw pointer types is the word size.
+The alignment of `&T`, `&mut T`, `*const T` and `*mut T` are the same,
+and are at least the word size.
+
+* If `T` is a trait, then the alignment of `&dyn T` is the word size.
+* If `T` is a sized type then the alignment of `&T` is the word size.
+* The alignment of `&[T]` is the word size.
 
 The sizes of `&T`, `&mut T`, `*const T` and `*mut T` are the same,
 and are at least one word.
 
-* If `T` is a trait, then the size of `&T` is two words.
+* If `T` is a trait, then the size of `&dyn T` is two words.
 * If `T` is a sized type then the size of `&T` is one word.
 * The size of `&[T]` is two words.
-
-Note that we do not make any guarantees about the sizes of
-multi-trait objects `&(dyn T + U)` or references to other dynamically sized types.
 
 ### Notes
 
 The representations of `&T` and `&mut T` are the same.
 
-The representation of `&T` when `T` is a trait is the same as that of:
+We do not make any guarantees about the representation of
+multi-trait objects `&(dyn T + U)` or references to other dynamically sized types,
+other than that they are at least word-aligned, and have size at least one word.
+
+The representation of `&dyn T` when `T` is a trait is the same as that of:
 ```rust
 #[repr(C)]
 struct DynObject {
