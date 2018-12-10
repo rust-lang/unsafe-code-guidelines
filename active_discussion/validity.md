@@ -57,45 +57,46 @@ values.
 To start, we will create threads for each major category of types.
 
 * Integers and floating point types
-** Do we allow values that contain uninitialized bits?  If yes, what are the
-   rules for arithmetic and logical operations involving uninitialized bits,
-   e.g. in cases like `x * 0`?
+
+  * Do we allow values that contain uninitialized bits?  If yes, what are the
+    rules for arithmetic and logical operations involving uninitialized bits,
+    e.g. in cases like `x * 0`?
 
 * Raw pointers
-** Do we allow values that contain uninitialized bits?
-** Are there any requirements on the metadata?
+  * Do we allow values that contain uninitialized bits?
+  * Are there any requirements on the metadata?
 
 * References
-** Presumably, references must be non-NULL.
-** They probably also must be aligned, but is that required every time a
-   reference is taken?  Also see the [ongoing discussion in RFC 2582][RFC2582].
-** Can there ever be uninitialized bits in a reference?
-** Do they have to be dereferencable?  What exactly does that even mean?
-** Does `&[mut] T` have to point to data that is valid at `T`?  This interacts
-   with the question of whether `&*x` is allowed when `x` is a well-aligned
-   non-null dereferencable pointer that points to invalid data.
-** Out of scope: aliasing rules
+  * Presumably, references must be non-NULL.
+  * They probably also must be aligned, but is that required every time a
+    reference is taken?  Also see the [ongoing discussion in RFC 2582][RFC2582].
+  * Can there ever be uninitialized bits in a reference?
+  * Do they have to be dereferencable?  What exactly does that even mean?
+  * Does `&[mut] T` have to point to data that is valid at `T`?  This interacts
+    with the question of whether `&*x` is allowed when `x` is a well-aligned
+    non-null dereferencable pointer that points to invalid data.
+  * Out of scope: aliasing rules
 
 * Function pointers
-** Presumably, these must be non-NULL.  Anything else?  Can there ever be
-   uninitialized bits?
+  * Presumably, these must be non-NULL.  Anything else?  Can there ever be
+    uninitialized bits?
 
 * Unions
-** Do we make any restrictions here, or are unions just "bags of bits" that may
-   contain anything?  That would mean we can do no layout optimizations.
+  * Do we make any restrictions here, or are unions just "bags of bits" that may
+    contain anything?  That would mean we can do no layout optimizations.
 
 * Enums
-** Is there anything to say besides: The discriminant must be valid, and all
-   fields of the active variant must be valid at their respective types?
-** The padding between fields can be anything, including uninitialized.
+  * Is there anything to say besides: The discriminant must be valid, and all
+    fields of the active variant must be valid at their respective types?
+  * The padding between fields can be anything, including uninitialized.
 
 * Structs, tuples, arrays and all other aggregates (closures, ...)
-** Is there anything to say besides: All fields must be valid at their
-   respective types?
-** The padding between fields can be anything, including uninitialized.  It was
-** [recently determined][generators-maybe-uninit] that generators behave
-** different from other aggregates here.  Are we okay with that?  Should we push
-** for generator fields to reflect this in their types?
+  * Is there anything to say besides: All fields must be valid at their
+    respective types?
+  * The padding between fields can be anything, including uninitialized.  It was
+  * [recently determined][generators-maybe-uninit] that generators behave
+  * different from other aggregates here.  Are we okay with that?  Should we push
+  * for generator fields to reflect this in their types?
 
 [RFC2582]: https://github.com/rust-lang/rfcs/pull/2582
 [generators-maybe-uninit]: https://github.com/rust-lang/rust/pull/56100
