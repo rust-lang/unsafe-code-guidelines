@@ -38,6 +38,17 @@ being either 0, 1 or uninitialized.
 but I think we can mostly ignore the extra complications introduced by pointer
 values.
 
+In terms of comparing with C, the "uninitialized" bit corresponds to what C
+calls "indeterminate" data.  In particular, it is allowed to be a "trap
+representation".  Also, observing the same indeterminate data multiple times is
+allowed to yield different results.  That's why I am proposing we treat it as a
+third state a bit can be in.
+
+In terms of LLVM, the "uninitialized" bit corresponds to `poison`.  It is *not*
+the same as `undef`!  See
+[this paper](https://www.cs.utah.edu/~regehr/papers/undef-pldi17.pdf) for some
+more material on the topic.
+
 ### Extent of "always"
 
 One point we will have to figure out is what exactly "always" means.  Thinking
