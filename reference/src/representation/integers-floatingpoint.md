@@ -24,16 +24,19 @@ Types `usize` and `isize` are committed to having the same size as a native poin
 - how much a pointer of a certain type can be offseted,
 - the maximum size of Rust objects (because size_of/size_of_val return `usize`),
 - the maximum number of elements in an array ([T; N: usize]),
-- `usize`/`isize` in C FFI are compatible with C's `uintptr_t` / `intptr_t`.
+- `usize`/`isize` in C FFI are compatible with C's `uintptr_t` / `intptr_t` (and have the same size and alignment).
 
-The maximum size of any single value must fit within `isize` to [ensure that pointer diff is representable](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212703192).
+The maximum size of any single value must fit within `usize` to [ensure that pointer diff is representable](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212703192).
 
 `usize` and C’s `unsized` are *not* equivalent.
 
 ## Booleans
-The `bool` type has size 1 byte, but is not specified to be C-compatible. This [discussion](https://github.com/rust-lang/rust/pull/46176#issuecomment-359593446) has more details. For Rust to support a platform, the platform’s C must have the boolean type be a byte, where `true = 1` and `false = 0`.
+Rust's `bool` has the same layout as C17's` _Bool`, that is, its size and alignment are implementation-defined.
+
+Note: on all platforms that Rust's currently supports, the size and alignment of bool are 1, and its ABI class is INTEGER.
 
 For full ABI compatibility details, see [Gankro’s post] (https://gankro.github.io/blah/rust-layouts-and-abis/#the-layoutsabis-of-builtins).
+
 ## Relationship to C integer hierarchy
 C integers:
 - char: at least 8 bits
@@ -44,4 +47,14 @@ C integers:
 The C integer types specify a minimum size, but not the exact size. For this reason, Rust integer types are not necessarily compatible with the “corresponding” C integer type. Instead, use the corresponding fixed size data types (e.g. `i64` in Rust would correspond to `int64_t` in C).
 
 ## Controversies
-None
+There has been some debate about what to pick as the "official" behavior for bool:
+* Rust does what C does (this is what the lang team decided)
+    * and in all cases you care about, that is 1 byte that is 0 or 1
+or
+* Rust makes it 1 byte with values 0 or 1
+    * and in all cases you care about, this is what C does
+    
+Related discussions: [document the size of bool](https://github.com/rust-lang/rust/pull/46156), [bool== _Bool?](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/53#issuecomment-447050232), [bool ABI](https://github.com/rust-lang/rust/pull/46176#issuecomment-359593446)
+    
+
+
