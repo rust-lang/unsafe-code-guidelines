@@ -5,6 +5,7 @@
 Reference types are types of the form `&T`, `&mut T` or `&dyn T`.
 
 Raw pointer types are types of the form `*const T` or `*mut T`.
+We write `*T` when the mutability attribute is unimportant.
 
 ### Representation
 
@@ -28,7 +29,7 @@ and are at least one word.
 
 ### Notes
 
-The representations of `&T` and `&mut T` are the same.
+The representations of `&T`, `&mut T` and `*T` are the same.
 
 We do not make any guarantees about the representation of
 multi-trait objects `&(dyn T + U)` or references to other dynamically sized types,
@@ -38,8 +39,8 @@ The representation of `&dyn T` when `T` is a trait is the same as that of:
 ```rust
 #[repr(C)]
 struct DynObject {
-  data: &u8,
-  vtable: &u8,
+  data: *u8,
+  vtable: *u8,
 }
 ```
 
@@ -47,7 +48,7 @@ The representation of `&[T]` is the same as that of:
 ```rust
 #[repr(C)]
 struct Slice<T> {
-  ptr: &T,
+  ptr: *T,
   len: usize,
 }
 ```
