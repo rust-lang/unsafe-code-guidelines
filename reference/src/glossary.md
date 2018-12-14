@@ -7,6 +7,8 @@ This propagates recursively through references, but not through raw pointers.
 So, for example, if data pointed to by a `&T` or `& &mut T` is mutated, that's interior mutability.
 If data pointed to by a `*const T` or `&*const T` is mutated, that's *not* interior mutability.
 
+"live" here is not yet precisely defined, this will be fixed as part of developing a precise aliasing model.
+
 Interior mutability is only allowed inside [`UnsafeCell`](https://doc.rust-lang.org/core/cell/struct.UnsafeCell.html).
 
 #### Validity and safety invariant
