@@ -7,10 +7,14 @@ and which parts are still in a "preliminary" state.
 
 [#10]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/10
 
-## Background
+## Categories of enums
 
-**C-like enums.** The simplest form of enum is simply a list of
-variants:
+**Empty enums.** Enums with no variants can never be instantiated and
+are equivalent to the `!` type. They do not accept any `#[repr]`
+annotations.
+
+**Fieldless enums.** The simplest form of enum is one where none of
+the variants have any fields:
 
 ```rust
 enum SomeEnum {
@@ -19,13 +23,13 @@ enum SomeEnum {
   Variant3,
 ```
 
-Such enums are called "C-like" because they correspond quite closely
-with enums in the C language (though there are important differences
-as well, covered later). Presuming that they have more than one
-variant, these sorts of enums are always represented as a simple integer,
-though the size will vary.
+Such enums correspond quite closely with enums in the C language
+(though there are important differences as well). Presuming that they
+have more than one variant, these sorts of enums are always
+represented as a simple integer, though the size will vary.
 
-C-like enums may also specify the value of their discriminants explicitly:
+Fieldless enums may also specify the value of their discriminants
+explicitly:
 
 ```rust
 enum SomeEnum {
@@ -51,17 +55,9 @@ enum Foo {
 }
 ```
 
-**Option-like enums.** As a special case of data-carrying enums, we
-identify "option-like" enums as enums where all of the variants but
-one have no fields, and one variant has a single field. The most
-common example is `Option` itself. In some cases, as described below,
-the compiler may apply special optimization rules to the layout of
-option-like enums. The **payload** of an option-like enum is the value
-of that single field.
+## repr annotations accepted on enums
 
-## Enums with a specified representation
-
-Enums may be annotation using the following `#[repr]` tags:
+In general, enums may be annotation using the following `#[repr]` tags:
 
 - A specific integer type (called `Int` as a shorthand below):
   - `#[repr(u8)]`
@@ -79,25 +75,36 @@ Enums may be annotation using the following `#[repr]` tags:
   - `#[repr(C, u16)]`
   - etc
 
-We cover each of the categories below. The layout rules for enums with
-explicit `#[repr]` annotations are specified in [RFC 2195][].
+Note that manually specifying the alignment using `#[repr(align)]` is
+not permitted on an enum.
 
-[RFC 2195]: https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
+The set of repr annotations accepted by an enum depends on its category,
+as defined above:
 
-### Layout of an enum with no variants
+- Empty enums: no repr annotations are permitted.
+- Fieldless enums: `#[repr(Int)]`-style and `#[repr(C)]` annotations are permitted, but `#[repr(C, Int)]` annotations are not.
+- Data-carrying enums: all repr annotations are permitted.
 
-An enum with no variants can never be instantiated and is logically
-equivalent to the "never type" `!`. Such enums are guaranteed to have
-the same layout as `!` (zero size and alignment 1).
+## Enum layout rules
 
-### Layout of a C-like enum
+The rules for enum layout vary depending on the category.
 
-If there is no `#[repr]` attached to a C-like enum, it is guaranteed
-to be represented as an integer of sufficient size to store the
-discriminants for all possible variants. The size is selected by the
-compiler but must be at least a `u8`.
+### Layout of an empty enum
 
-When a `#[repr(Int)]`-style annotation is attached to a C-like enum
+An **empty enum** is an enum with no variants; empty enums can never
+be instantiated and are logically equivalent to the "never type"
+`!`. `#[repr]` annotations are not accepted on empty enums. Empty
+enums are guaranteed to have the same layout as `!` (zero size and
+alignment 1).
+
+### Layout of a fieldless enum
+
+If there is no `#[repr]` attached to a fieldless enum, it is
+guaranteed to be represented as an integer of sufficient size to store
+the discriminants for all possible variants. The size is selected by
+the compiler but must be at least a `u8`.
+
+When a `#[repr(Int)]`-style annotation is attached to a fieldless enum
 (one without any data for its variants), it will cause the enum to be
 represented as a simple integer of the specified size `Int`. This must
 be sufficient to store all the required discriminant values.
@@ -107,7 +114,7 @@ size as the C compiler would use for the given target for an
 equivalent C-enum declaration.
 
 Combining a `C` and `Int` representation (e.g., `#[repr(C, u8)]`) is
-not permitted on a C-like enum.
+not permitted on a fieldless enum.
 
 The values used for the discriminant will match up with what is
 specified (or automatically assigned) in the enum definition. For
@@ -128,12 +135,19 @@ enum Foo {
 **Unresolved question:** What about platforms where `-fshort-enums`
 are the default? Do we know/care about that?
 
-### Layout for enums that carry data
+### Layout of a data-carrying enums with an explicit repr annotation
 
-For enums that carry data, the layout differs depending on whether
-C-compatibility is requested or not.
+This section concerns data-carrying enums **with an explicit repr
+annotation of some form**. The memory layout of such cases was
+specified in [RFC 2195][] and is therefore normative.
 
-#### Non-C-compatible layouts
+[RFC 2195]: https://rust-lang.github.io/rfcs/2195-really-tagged-unions.html
+
+The layout of data-carrying enums that do **not** have an explicit
+repr annotation is generally undefined, but with certain specific
+exceptions: see the next section for details.
+
+#### Non-C-compatible representation selected
 
 When an enum is tagged with `#[repr(Int)]` for some integral type
 `Int` (e.g., `#[repr(u8)]`), it will be represented as a C-union of a
@@ -176,7 +190,7 @@ Note that the `TwoCasesVariantA` and `TwoCasesVariantB` structs are
 appears at offset 0 in both cases, so that we can read it to determine
 the current variant.
 
-#### C-compatible layouts.
+#### C-compatible representation selected
 
 When the `#[repr]` tag includes `C`, e.g., `#[repr(C)]` or `#[repr(C,
 u8)]`, the layout of enums is changed to better match C++ enums. In
@@ -184,7 +198,7 @@ this mode, the data is laid out as a tuple of `(discriminant, union)`,
 where `union` represents a C union of all the possible variants. The
 type of the discriminant will be the integral type specified (`u8`,
 etc) -- if no type is specified, then the compiler will select one
-based on what a size a C-like enum would have with the same number of
+based on what a size a fieldless enum would have with the same number of
 variants.
 
 This layout, while more compatible and arguably more obvious, is also
@@ -252,27 +266,26 @@ struct MyEnum {
 };
 ```
 
-## Enums without a specified representation
+### Layout of a data-carrying enums without a repr annotation
 
-If no explicit `#[repr]` attribute is used, then the layout of most
-enums is not specified, with one crucial exception: option-like enums
-may in some cases use a compact layout that is identical to their
-payload.
+If no explicit `#[repr]` attribute is used, then the layout of a
+data-carrying enum is typically **not specified**. However, in certain
+select cases, there are **guaranteed layout optimizations** that may
+apply, as described below.
+
+#### Discriminant elision on Option-like enums
 
 (Meta-note: The content in this section is not described by any RFC
 and is therefore "non-normative".)
 
-### Discriminant elision on Option-like enums
+**Definition.** An **option-like enum** is a 2-variant enum where:
 
-**Definition.** An **option-like enum** is an enum which has:
-
-- one variant with a single field,
-- other variants with no fields ("unit" variants).
+- one variant has a single field, and
+- the other variant has no fields (the "unit variant").
 
 The simplest example is `Option<T>` itself, where the `Some` variant
 has a single field (of type `T`), and the `None` variant has no
-fields.  But other enums that fit that same template (and even enums
-that include multiple `None`-like fields) fit. 
+fields. But other enums that fit that same template fit.
 
 **Definition.** The **payload** of an option-like enum is the single
 field which it contains; in the case of `Option<T>`, the payload has
@@ -284,15 +297,17 @@ may never be NULL, and hence defines a niche consisting of the
 bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
 and friends may never be zero, and hence also define the value of `0`
 as a niche. (Types that define niche values will say so as part of the
-description of their representation invariant.)
+description of their representation invariant, which -- as of this
+writing -- are the next topic up for discussion in the unsafe code
+guidelines process.)
 
 [`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
 
-**Option-like enums where the payload defines an adequate number of
-niche values are guaranteed to be represented without using any
-discriminant at all.** This is called **discriminant elision**.  If
-discriminant elision is in effect, then the layout of the enum is
-equal to the layout of its payload.
+**Option-like enums where the payload defines at least one niche value
+are guaranteed to be represented using the same memory layout as their
+payload.** This is called **discriminant elision**, as there is no
+explicit discriminant value stored anywhere. Instead, niche values are
+used to represent the unit variant.
 
 The most common example is that `Option<&u8>` can be represented as an
 nullable `&u8` reference -- the `None` variant is then represented
@@ -313,7 +328,8 @@ a nullable pointer. FFI interop often depends on this property.
 pointer (which is therefore equivalent to a C function pointer) . FFI
 interop often depends on this property.
 
-**Example.** Consider the following enum definitions:
+**Example.** The following enum definition is **not** option-like,
+as it has two unit variants:
 
 ```rust
 enum Enum1<T> {
@@ -321,56 +337,4 @@ enum Enum1<T> {
   Absent1,
   Absent2,
 }
-
-enum Enum2 {
-  A, B, C
-}  
 ```
-
-`Enum1<&u8>` is not eligible for discriminant elision, since `&u8`
-defines a single niche value, but `Enum1` has two unit
-variants. However, `Enum2` has only three legal values (0 for `A`, 1
-for `B`, and 2 for `C`), and hence defines a plethora of niche values[^caveat].
-Therefore, `Enum1<Enum2>` is guaranteed to be laid out the same as
-`Enum2` ([consider the results of applying
-`size_of`](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=eadff247f2c5713b8f3b6c9cda297711)).
-
-[^caveat]: Strictly speaking, niche values are considered part of the "representation invariant" for an enum and not its type. Therefore, this section is added only as a preview for future unsafe-code-guidelines discussion.
-
-### Other optimizations
-
-The previous section specified a relatively narrow set of layout
-optimizations that are **guaranteed** by the compiler. However, the
-compiler is always free to perform **more** optimizations than this
-minimal set. For example, the compiler presently treats `Result<T,
-()>` and `Option<T>` as equivalent, but this behavior is not
-guaranteed to continue as `Result<T, ()>` is not considered
-"option-like".
-
-As of this writing, the compiler's current behavior is to attempt to
-elide discriminants whenever possible. Furthermore, a variant whose
-only fields are of zero-size is considered a unit variant for this
-purpose. If eliding discriminants is not possible (e.g., because the
-payload does not define sufficient niche values), then the compiler
-will select an appropriate discriminant size `N` and use a
-representation roughly equivalent to `#[repr(N)]`, though without the
-strict `#[repr(C)]` guarantees on each struct. However, this behavior
-is not guaranteed to remain the same in future versions of the
-compiler and should not be relied upon. (While it is not expected that
-existing layout optimizations will be removed, it is possible -- it is
-also possible for the compiler to introduce new sorts of
-optimizations.)
-
-## Niche values
-
-C-like enums with N variants and no specified representation are
-guaranteed to supply niche values corresponding to 256 - N (presuming
-that is a positive number). This is because a C-like enum must be
-represented using an integer and that integer must correspond to a
-valid variant: the precise size of C-like enums is not specified but
-it must be at least one byte, which means that there are at least 256
-possible bitstrings (only N of which are valid).
-
-Other enums -- or enums with a specified representation -- may supply
-niches if their representation invariant permits it, but that is not
-**guaranteed**.
