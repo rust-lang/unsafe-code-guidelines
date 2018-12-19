@@ -189,7 +189,7 @@ Note that the `TwoCasesVariantA` and `TwoCasesVariantB` structs are
 `#[repr(C)]`; this is needed to ensure that the `TwoCasesTag` value
 appears at offset 0 in both cases, so that we can read it to determine
 the current variant.
-
+        
 #### C-compatible representation selected
 
 When the `#[repr]` tag includes `C`, e.g., `#[repr(C)]` or `#[repr(C,
@@ -203,7 +203,9 @@ variants.
 
 This layout, while more compatible and arguably more obvious, is also
 less efficient than the non-C compatible layout in some cases in terms
-of total size.
+of total size. For example, the `TwoCases` example given in the
+preivous section only occupies 4 bytes with `#[repr(u8)]`, but would
+occupy 6 bytes with `#[repr(C, u8)]`, as more padding is required.
 
 **Example.** The following enum:
 
