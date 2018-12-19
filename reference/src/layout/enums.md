@@ -147,7 +147,7 @@ The layout of data-carrying enums that do **not** have an explicit
 repr annotation is generally undefined, but with certain specific
 exceptions: see the next section for details.
 
-#### Non-C-compatible representation selected
+#### Explicit repr annotation without C compatibility
 
 When an enum is tagged with `#[repr(Int)]` for some integral type
 `Int` (e.g., `#[repr(u8)]`), it will be represented as a C-union of a
@@ -190,7 +190,7 @@ Note that the `TwoCasesVariantA` and `TwoCasesVariantB` structs are
 appears at offset 0 in both cases, so that we can read it to determine
 the current variant.
         
-#### C-compatible representation selected
+#### Explicit repr annotation with C compatibility
 
 When the `#[repr]` tag includes `C`, e.g., `#[repr(C)]` or `#[repr(C,
 u8)]`, the layout of enums is changed to better match C++ enums. In
