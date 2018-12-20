@@ -49,10 +49,16 @@ Moreover, such unsafe code must not return a non-UTF-8 string to the "outside" o
 To summarize: *Data must always be valid, but it only must be safe in safe code.*
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
 
+#### Layout / Representation
+
+The *layout* of a type defines its size and alignment as well as the offset of its subobjects, i.e., its fields/elements.
+Moreover, the layout of a type records its *function call ABI* (or just *ABI* for short): how the type is passed *by value* across a function boundary.
+
+We often use *representation* as a synonym for "layout".
+
 ### TODO
 
 * *niche*
-* *layout*
 * *tag*
 * *rvalue*
 * *lvalue*
