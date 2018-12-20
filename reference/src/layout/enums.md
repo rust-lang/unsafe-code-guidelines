@@ -180,6 +180,7 @@ This will be laid out equivalently to the following more
 complex Rust types:
 
 ```
+#[repr(C)]
 union TwoCasesRepr {
     A: TwoCasesVariantA,
     B: TwoCasesVariantB,
