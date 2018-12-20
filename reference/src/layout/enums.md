@@ -100,10 +100,13 @@ alignment 1).
 
 ### Layout of a fieldless enum
 
-If there is no `#[repr]` attached to a fieldless enum, it is
-guaranteed to be represented as an integer of sufficient size to store
-the discriminants for all possible variants. The size is selected by
-the compiler but must be at least a `u8`.
+If there is no `#[repr]` attached to a fieldless enum, the compiler
+will represent it using an integer of sufficient size to store the
+discriminants for all possible variants -- note that if there is only
+one variant, then 0 bits are required, so it is possible that the enum
+may have zero size. In the absence of a `#[repr]` annotation, the
+number of bits used by the compiler are not defined and are subject to
+change.
 
 When a `#[repr(Int)]`-style annotation is attached to a fieldless enum
 (one without any data for its variants), it will cause the enum to be
