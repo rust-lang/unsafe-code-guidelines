@@ -43,7 +43,7 @@ As in C, discriminant values that are not specified are defined as
 either 0 (for the first variant) or as one more than the prior
 variant.
 
-**Data-carrying enums.** Enums whose enums have fields are called
+**Data-carrying enums.** Enums whose variants have fields are called
 "data-carrying" enums. Note that for the purposes of this definition,
 it is not relevant whether those fields are zero-sized. Therefore this
 enum is considered "data-carrying":
