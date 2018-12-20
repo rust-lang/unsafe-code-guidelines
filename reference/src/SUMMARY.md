@@ -20,3 +20,4 @@
   - [Vectors](./representation/vectors.md)
 - [Optimizations](./optimizations.md)
   - [Optimizing immutable memory](./optimizations/immutable_memory.md) 
+- [Glossary](./glossary.md)
