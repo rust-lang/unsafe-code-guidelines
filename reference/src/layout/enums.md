@@ -21,6 +21,7 @@ enum SomeEnum {
   Variant1,
   Variant2,
   Variant3,
+}
 ```
 
 Such enums correspond quite closely with enums in the C language
@@ -132,8 +133,14 @@ enum Foo {
 }
 ```
 
-**Unresolved question:** What about platforms where `-fshort-enums`
-are the default? Do we know/care about that?
+**Note:** some C compilers offer flags (e.g., `-fshort-enums`) that
+change the layout of enums from the default settings that are standard
+for the platform. The integer size selected by `#[repr(C)]` is defined
+to match the **default** settings for a given target, when no such
+flags are supplied. If interop with code that uses other flags is
+desired, then one should either specify the sizes of enums manually or
+else use an alternate target definition that is tailored to the
+compiler flags in use.
 
 ### Layout of a data-carrying enums with an explicit repr annotation
 
@@ -316,11 +323,6 @@ nullable `&u8` reference -- the `None` variant is then represented
 using the niche value zero. This is because a valid `&u8` value can
 never be zero, so if we see a zero value, we know that this must be
 `None` variant.
-
-In order for the optimization to apply, the payload type must define a
-number of niches greater than or equal to the number of unit variants.
-In the case of `Option<T>`, this means that any niche at all will
-suffice, as there is only one unit variant (`None`).
 
 **Example.** The type `Option<&u32>` will be represented at runtime as
 a nullable pointer. FFI interop often depends on this property.
