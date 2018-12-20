@@ -310,9 +310,9 @@ may never be NULL, and hence defines a niche consisting of the
 bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
 and friends may never be zero, and hence also define the value of `0`
 as a niche. (Types that define niche values will say so as part of the
-description of their representation invariant, which -- as of this
-writing -- are the next topic up for discussion in the unsafe code
-guidelines process.)
+description of their validity invariant, which -- as of this writing
+-- are the next topic up for discussion in the unsafe code guidelines
+process.)
 
 [`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
 
