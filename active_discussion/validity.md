@@ -91,14 +91,44 @@ To start, we will create threads for each major category of types.
   * Are there any requirements on the metadata?
 
 * References
-  * Presumably, references must be non-NULL.
-  * They probably also must be aligned, but is that required every time a
-    reference is taken?  Also see the [ongoing discussion in RFC 2582][RFC2582].
-  * Can there ever be uninitialized bits in a reference?
-  * Do they have to be dereferencable?  What exactly does that even mean?
-  * Does `&[mut] T` have to point to data that is valid at `T`?  This interacts
-    with the question of whether `&*x` is allowed when `x` is a well-aligned
-    non-null dereferencable pointer that points to invalid data.
+
+    I propose splitting this discussion into three pieces.
+
+  * Bit-level properties
+    * Presumably, references must be non-NULL.
+    * They probably also must be aligned, but is that required every time a
+      reference is taken?  Also see the [ongoing discussion in RFC 2582][RFC2582].
+    * Can there ever be uninitialized bits in a reference?
+  * Memory-related properties
+    * Do references have to be dereferencable?  What exactly does that even
+      mean?  We have a design choice here to make this *not* part of validity,
+      but part of the aliasing model instead (and in fact, that is what miri
+      currently implements).  In terms of Stacked Borrows, the operation that
+      asserts references being dereferencable is `Retag`, and not the validity
+      check happening at the assignment.  That helps to keep validity
+      independent of the state of memory.
+    * Does `&[mut] T` have to point to data that is valid at `T`?  This interacts
+      with the question of whether `&*x` is allowed when `x` is a well-aligned
+      non-null dereferencable pointer that points to invalid data.
+  * Size-related properties
+    * For references to unsized types, does validity require the metadata to
+      make sense?  Valid metadata is required to even define a notion of
+      "dereferencable", because we have to specify the extent of memory that is
+      dereferencable (i.e., we have to specify how many bytes are
+      dereferencable).
+
+      On the other hand, this makes validity depend on memory, at least for
+      vtables.  However, vtables are somewhat special memory: They are never
+      deallocated and never mutated.  So while determining the size depends on
+      memory, we know for sure that the computed size cannot ever change for a
+      given reference.
+
+      All of this gets much, much more complicated with custom DSTs.  For
+      example, for a C-style string pointer, does validity require there to be a
+      0-terminator?  Should checking for validity, and/or retagging, really
+      execute arbitrary user-defined code to determine the extent of memory
+      covered by this reference?
+
   * Out of scope: aliasing rules
 
 * Function pointers
@@ -125,6 +155,11 @@ To start, we will create threads for each major category of types.
     [recently determined][generators-maybe-uninit] that generators behave
     different from other aggregates here.  Are we okay with that?  Should we push
     for generator fields to reflect this in their types?
+
+* `ManuallyDrop`
+  * `ManuallyDrop` might be special in terms of the validity invariant.
+    Probably it requires its data to be bitstring-valid, but does a
+    `ManuallyDrop<&T>` have to be dereferencable?
 
 [RFC2582]: https://github.com/rust-lang/rfcs/pull/2582
 [generators-maybe-uninit]: https://github.com/rust-lang/rust/pull/56100
