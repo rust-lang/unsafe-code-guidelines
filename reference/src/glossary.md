@@ -2,13 +2,14 @@
 
 #### Interior mutability
 
-*Interior Mutability* means mutating memory where there also exists a live shared reference immediately (i.e., non-transitively) pointing to the same memory.
-This propagates recursively through references, but not through raw pointers.
+*Interior Mutability* means mutating memory where there also exists a live shared reference pointing to the same memory; or mutating memory through a pointer derived from a shared reference.
+"live" here means a value that will be "used again" later.
+"derived from" means that the pointer was obtained by casting a shared reference and potentially adding an offset.
+This is not yet precisely defined, which will be fixed as part of developing a precise aliasing model.
+
+Finding live shared references propagates recursively through references, but not through raw pointers.
 So, for example, if data immediately pointed to by a `&T` or `& &mut T` is mutated, that's interior mutability.
 If data immediately pointed to by a `*const T` or `&*const T` is mutated, that's *not* interior mutability.
-
-"live" here means a value that will be "used again" later.
-This is not yet precisely defined, this will be fixed as part of developing a precise aliasing model.
 
 Interior mutability is only allowed inside [`UnsafeCell`](https://doc.rust-lang.org/core/cell/struct.UnsafeCell.html).
 
