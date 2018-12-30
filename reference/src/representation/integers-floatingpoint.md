@@ -49,9 +49,9 @@ The C integer types specify a minimum size, but not the exact size. For this rea
 ## Controversies
 There has been some debate about what to pick as the "official" behavior for bool:
 * Rust does what C does (this is what the lang team decided)
-    * and in all cases you care about, that is 1 byte that is 0 or 1
+    * and in all cases you care about, that is 1 byte
 or
-* Rust makes it 1 byte with values 0 or 1
+* Rust makes it 1 byte
     * and in all cases you care about, this is what C does
     
 Related discussions: [document the size of bool](https://github.com/rust-lang/rust/pull/46156), [bool== _Bool?](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/53#issuecomment-447050232), [bool ABI](https://github.com/rust-lang/rust/pull/46176#issuecomment-359593446)
