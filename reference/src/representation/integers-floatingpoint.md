@@ -35,7 +35,7 @@ Rust's `bool` has the same layout as C17's` _Bool`, that is, its size and alignm
 
 Note: on all platforms that Rust's currently supports, the size and alignment of bool are 1, and its ABI class is INTEGER.
 
-For full ABI compatibility details, see [Gankro’s post] (https://gankro.github.io/blah/rust-layouts-and-abis/#the-layoutsabis-of-builtins).
+For full ABI compatibility details, see [Gankro’s post](https://gankro.github.io/blah/rust-layouts-and-abis/#the-layoutsabis-of-builtins).
 
 ## Relationship to C integer hierarchy
 C integers:
