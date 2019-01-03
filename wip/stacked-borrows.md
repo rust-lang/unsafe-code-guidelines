@@ -147,7 +147,7 @@ On every memory access, we perform the following extra check for every location 
     - A `Shr` item matches any `Shr` tag (with or without timestamp).
     - When we are reading, a `Shr` item matches a `Uniq` tag.
     - If we pop a `FnBarrier(c)` where `c` is active, we have undefined behavior.
-
+    
     If we pop the entire stack without finding a match, then we have undefined behavior.
 
 ### Dereferencing a pointer
@@ -178,9 +178,7 @@ we determine the extent of memory that this place covers using `size_of_val` and
    We are done for this location.
    This can only happen for shared references (i.e., when the borrow is `Shr(_)`).
 3. Perform the actions that would also happen when an actual access happens through this reference (for shared references with borrow `Shr(_)` this is a read access, for mutable references with borrow `Uniq(_)` it is a write access).
-
     Now the location cannot be frozen any more: if the new borrow is `Uniq(_)`, we just unfroze; if it is `Shr(_)` and the location was already frozen, then the redundancy check (step 3) would have kicked in.
-
 4. If we want to push a barrier, push `FnBarrier(c)` to the location stack where `c` is the `CallId` if the current function call (i.e., of the topmost frame in the call stack).
 5. Check if the new tag is `Shr(Some(t))` and the location is inside an `UnsafeCell`.
     - If both conditions are satisfied, freeze the location with timestamp `t`.  If it is already frozen, do nothing.
