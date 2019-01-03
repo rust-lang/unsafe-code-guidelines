@@ -16,7 +16,7 @@ Moreover, there is a per-call-frame `CallId` as well as some global tracking sta
 
 ```rust
 // `nat` is the type of mathematical natural numbers, meaning we don't want to think about overflow.
-// Realistically, we can use `u64` and it will not be a problem.  (That's what Miri does.)
+// NOTE: Miri just uses `u64` which, realistically, will not overflow because we only ever increment by 1.
 type Timestamp = nat;
 
 // Extra per-pointer state (the "tag")
@@ -46,7 +46,7 @@ pub struct Tracking {
 }
 ```
 
-These exist separately, i.e., when a pointer is stored in memory, then we both have a tag stored as part of this pointer value (remember, [bytes are more than `u8`](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html), and every byte occupied by the pointer has a stack regulating access to this location.
+These exist separately, i.e., when a pointer is stored in memory, then we both have a tag stored as part of this pointer value (remember, [bytes are more than `u8`](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html)), and every byte occupied by the pointer has a stack regulating access to this location.
 Also these two do not interact, i.e., when loading a pointer from memory, we just load the tag that was stored as part of this pointer.
 The stack of a location, and the tag of a pointer stored at some location, do not have any effect on each other.
 
@@ -75,7 +75,7 @@ pub enum RetagKind {
 
     Currently, if the LHS of the assignment involves a `Deref`, no `Retag` is inserted.
     That's just a limitation of the current implementation: after executing this assignment, evaluating the place (the LHS) again could yield a different location in memory, which means we would retag the wrong thing.
-    Proper retagging here requires either a copy through a temporary, or making retagging integral part of the semantics if assignment.
+    Proper retagging here requires either a copy through a temporary, or making retagging integral part of the semantics of assignment.
 
 * A `Raw` retag happens after every assignment where the RHS is a cast from a reference to a raw pointer.
 
@@ -98,6 +98,7 @@ impl Tracking {
         self.clock += 1;
         val
     }
+}
 ```
 
 This method will never return the same value twice.
@@ -105,7 +106,7 @@ This method will never return the same value twice.
 ### Tracking function calls
 
 To attach metadata to a particular function call, we assign a fresh ID to every call stack (so this distinguishes multiple calls to the same function).
-IOW, the per-stack-frame `CallId` is initialized by the following method:
+In other words, the per-stack-frame `CallId` is initialized by the following method:
 
 ```rust
 impl Tracking {
@@ -114,9 +115,13 @@ impl Tracking {
         self.next_call += 1;
         id
     }
+}
 ```
 
+This method will never return the same value twice.
 We say that a `CallId` is *active* if the call stack contains a stack frame with that ID.
+
+**Note**: Miri uses a slightly more complex system with a `HashSet<CallId>` tracking the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
 
 ### Allocating memory
 
