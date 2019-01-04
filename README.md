@@ -24,7 +24,7 @@ should be addressed to [the moderation
 team](https://www.rust-lang.org/team.html#Moderation-team)
 immediately.
 
-[currentarea]: active_discussion/representation.md
+[currentarea]: active_discussion/layout.md
 [threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3Atopic-repr
 
 For people who are interested in this sort of thing, there is a team

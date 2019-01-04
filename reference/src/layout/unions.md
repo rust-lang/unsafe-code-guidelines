@@ -1,4 +1,4 @@
-# Representation of unions
+# Layout of unions
 
 **Disclaimer:** This chapter represents the consensus from issue
 [#13].  The statements in here are not (yet) "guaranteed"

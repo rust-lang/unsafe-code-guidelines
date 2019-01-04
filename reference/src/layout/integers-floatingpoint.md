@@ -1,9 +1,9 @@
-# Representation of Boolean, Floating Point, and Integral Types
+# Layout of Boolean, Floating Point, and Integral Types
 This chapter represents the consensus from issue [#9]. It documents the memory layout and considerations for `bool`, `usize`, `isize`, floating point types, and integral types.
 [#9]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/9
 
 ## Overview
-These are all scalar types, representing a single value. These types have no representation variants (no #[repr(C)] or #[repr(Rust)]. Their size is fixed and well-defined across FFI boundaries and map to their corresponding integral types in the C ABI.
+These are all scalar types, representing a single value. These types have no layout variants (no #[repr(C)] or #[repr(Rust)]. Their size is fixed and well-defined across FFI boundaries and map to their corresponding integral types in the C ABI.
 - `bool`: 1 byte
   - any `bool` can be cast into an integer, taking on the values 1 (true) or 0 (false)
 - `usize`, `isize`: pointer-sized unsigned/signed integer type
@@ -20,7 +20,7 @@ These are all scalar types, representing a single value. These types have no rep
   - represents [Unicode scalar value](http://www.unicode.org/glossary/#unicode_scalar_value)
 
 ##`usize`/`isize`
-Types `usize` and `isize` are committed to having the same size as a native pointer on the platform. The representation of `usize` determines the following:
+Types `usize` and `isize` are committed to having the same size as a native pointer on the platform. The layout of `usize` determines the following:
 - how much a pointer of a certain type can be offseted,
 - the maximum size of Rust objects (because size_of/size_of_val return `usize`),
 - the maximum number of elements in an array ([T; N: usize]),

@@ -1,4 +1,4 @@
-# Representation of vectors
+# Layout of vectors
 
 **Disclaimer:** This chapter represents the consensus from issue
 [#38]. The statements in here are not (yet) "guaranteed"

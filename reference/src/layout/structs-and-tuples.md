@@ -1,4 +1,4 @@
-# Representation of structs and tuples
+# Layout of structs and tuples
 
 **Disclaimer:** This chapter represents the consensus from issues
 [#11] and [#12].  The statements in here are not (yet) "guaranteed"
@@ -36,7 +36,7 @@ extend unsizing to other elements of tuples as well.
 Some related discussion:
 
 - [RFC #1582](https://github.com/rust-lang/rfcs/pull/1582) proposed
-  that tuple structs should have a "nested representation", where
+  that tuple structs should have a "nested layout", where
   e.g. `(T1, T2, T3)` would in fact be laid out as `(T1, (T2,
   T3))`. The purpose of this was to permit variadic matching and so
   forth against some suffix of the struct. This RFC was not accepted,
