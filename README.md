@@ -1,5 +1,7 @@
 # unsafe-code-guidelines
 
+[![Travis-CI Status]][travis]
+
 Home for the Unsafe Code Guidelines (UCG) effort. The goal of the Unsafe
 Code Guidelines effort is to collaboratively produce a "reference
 guide" for writing unsafe code that what kinds of things unsafe code
@@ -49,6 +51,18 @@ Guidelines Reference" here.][rr]
 
 [rr]: https://github.com/rust-rfcs/unsafe-code-guidelines/blob/master/reference/src/SUMMARY.md
 
+### Build instructions
+
+Make sure that `mdbook` is installed:
+
+> cargo install mdbook
+
+and execute `mdbook build` or `mdbook serve` in the `reference/` directory.
+
+### Link to the current version of the book
+
+[Here](https://rust-rfcs.github.io/unsafe-code-guidelines/book).
+
 ## Chat platform, discussion cadence
 
 Most of the discussion takes place here in GitHub issues. Many of us
@@ -77,3 +91,6 @@ effort to explain how to write Rust code, rather than a reference.
 [The nikomatsakis/rust-memory-model
 repository](https://github.com/nikomatsakis/rust-memory-model) was a
 previous effort and contains a lot of good links and info.
+
+[travis]: https://travis-ci.org/rust-rfcs/unsafe-code-guidelines
+[Travis-CI Status]: https://travis-ci.org/rust-rfcs/unsafe-code-guidelines.svg?branch=master

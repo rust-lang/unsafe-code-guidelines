@@ -12,7 +12,7 @@ not to change until an RFC ratifies them.
 In general, an anonymous tuple type `(T1..Tn)` of arity N is laid out
 "as if" there were a corresponding tuple struct declared in libcore:
 
-```rust
+```rust,ignore
 #[repr(Rust)]
 struct TupleN<P1..Pn:?Sized>(P1..Pn);
 ```
@@ -50,7 +50,7 @@ Some related discussion:
 
 Structs come in two principle varieties:
 
-```rust
+```rust,ignore
 // Structs with named fields
 struct Foo { f1: T1, .., fn: Tn }
 
@@ -61,7 +61,7 @@ struct Foo(T1, .., Tn);
 In terms of their layout, tuple structs can be understood as
 equivalent to a named struct with fields named `0..n-1`:
 
-```rust
+```rust,ignore
 struct Foo {
   0: T1,
   ...
@@ -283,7 +283,7 @@ void some_function(uint32_t value) { .. }
 It is **incorrect** to pass in a struct as that value, even if that
 struct is `#[repr(C)`] and has only one field:
 
-```rust
+```rust,ignore
 #[repr(C)]
 struct Foo { x: u32 }
 
@@ -390,5 +390,3 @@ proposal (and -- further -- it does not match our existing behavior):
   thread](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/31#discussion_r224955817)).
 - Many people would prefer the name ordering to be chosen for
   "readability" and not optimal layout.
-
-## Footnotes

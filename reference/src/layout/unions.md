@@ -9,7 +9,7 @@ not to change until an RFC ratifies them.
 The only degree of freedom the compiler has when computing the layout of a union
 like
 
-```rust
+```rust,ignore
 union U { f1: T1, f2: T2 }
 ```
 

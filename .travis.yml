@@ -1,0 +1,14 @@
+language: rust
+sudo: false
+rust: nightly
+
+install: cargo install mdbook
+script: cd reference && mdbook build && mdbook test
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  local-dir: reference/book
+  keep-history: false
+  on:
+    branch: master
