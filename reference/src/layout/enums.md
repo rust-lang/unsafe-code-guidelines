@@ -181,19 +181,22 @@ enum TwoCases {
 This will be laid out equivalently to the following more 
 complex Rust types:
 
-```
+```rust
 #[repr(C)]
 union TwoCasesRepr {
     A: TwoCasesVariantA,
     B: TwoCasesVariantB,
 }
         
+# #[derive(Copy, Clone)]        
 #[repr(u8)]
 enum TwoCasesTag { A, B }
 
+# #[derive(Copy, Clone)]
 #[repr(C)]
 struct TwoCasesVariantA(TwoCasesTag, u8, u16);
 
+# #[derive(Copy, Clone)]
 #[repr(C)]
 struct TwoCasesVariantB(TwoCasesTag, u16);
 ```
@@ -222,7 +225,7 @@ occupy 6 bytes with `#[repr(C, u8)]`, as more padding is required.
 
 **Example.** The following enum:
 
-```rust
+```rust,ignore
 #[repr(C, Int)]
 enum MyEnum {
     A(u32),
@@ -234,7 +237,7 @@ enum MyEnum {
 
 is equivalent to the following Rust definition:
 
-```rust
+```rust,ignore
 #[repr(C)]
 struct MyEnumRepr {
     tag: MyEnumTag,
@@ -257,7 +260,6 @@ struct MyEnumPayloadB(f32, u64);
 
 #[repr(C)]
 struct MyEnumPayloadC { x: u32, y: u8 }
-}
 ```
 
 This enum can also be represented in C++ as follows:
@@ -308,7 +310,7 @@ type `T`.
 
 **Definition.** In some cases, the payload type may contain illegal
 values, which are called **niches**. For example, a value of type `&T`
-may never be NULL, and hence defines a niche consisting of the
+may never be `NULL`, and hence defines a niche consisting of the
 bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
 and friends may never be zero, and hence also define the value of `0`
 as a niche. (Types that define niche values will say so as part of the
@@ -367,13 +369,25 @@ As presently implemented, the compiler will use the same layout for
 structs and for single variant enums (as long as they do not have a
 `#[repr]` annotation that overrides that choice). So, for example, the
 struct `SomeStruct` and the enum `SomeEnum` would have an equivalent
-layout ([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3697ac684c3d021892694956df957653))::
+layout ([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3697ac684c3d021892694956df957653)):
 
 ```rust
 struct SomeStruct;
 enum SomeEnum {
   SomeVariant,
 }
+
+# fn main() {
+# use std::mem;
+let x = SomeStruct;
+let y = SomeEnum::SomeVariant;
+assert_eq!(
+    mem::size_of_val(&x), 
+    mem::size_of_val(&y),
+    "types have different sizes",
+);
+println!("types both have size {}", std::mem::size_of_val(&x));
+# }
 ```
 
 Similarly, the struct `SomeStruct` and the enum `SomeVariant` in this
@@ -385,6 +399,18 @@ struct SomeStruct { x: u32 }
 enum SomeEnum {
   SomeVariant { x: u32 },
 }
+
+# fn main() {
+# use std::mem;
+let x = SomeStruct { x: 22 };
+let y = SomeEnum::SomeVariant { x: 22 };
+assert_eq!(
+    mem::size_of_val(&x), 
+    mem::size_of_val(&y),
+    "types have different sizes",
+);
+println!("types both have size {}", mem::size_of_val(&x));
+}
 ```
 
 In fact, the compiler will use this optimized layout even for enums
@@ -393,10 +419,22 @@ is uninhabited
 ([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3cc1484c5b91097f3dc2015b7c207a0e)):
 
 ```rust
+# enum Void { }
 struct SomeStruct { x: u32 }
 enum SomeEnum {
   SomeVariant { x: u32 },
   UninhabitedVariant { y: Void },
 }
-```    
 
+# fn main() {
+# use std::mem;
+let x = SomeStruct { x: 22 };
+let y = SomeEnum::SomeVariant { x: 22 };
+assert_eq!(
+    mem::size_of_val(&x), 
+    mem::size_of_val(&y),
+    "types have different sizes",
+);
+println!("types both have size {}", mem::size_of_val(&x));
+# }
+```

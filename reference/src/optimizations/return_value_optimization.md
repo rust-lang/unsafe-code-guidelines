@@ -1,6 +1,6 @@
 We should turn
 
-```rust
+```rust,ignore
 // y unused
 let mut x = f();
 g(&mut x);
@@ -10,7 +10,7 @@ y = x;
 
 into
 
-```rust
+```rust,ignore
 y = f();
 g(&mut y);
 ```

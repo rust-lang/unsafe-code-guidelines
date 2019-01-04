@@ -25,7 +25,7 @@ Moreover, arguments passed to a function must be valid at the type given in the 
 OPEN QUESTION: Are there more cases where data must be valid?
 
 In terms of code, some data computed by `TERM` is valid at type `T` if and only if the following program does not have UB:
-```rust
+```rust,ignore
 fn main() { unsafe {
   let t: T = std::mem::transmute(TERM);
 } }
@@ -37,7 +37,7 @@ The safety invariant can be temporarily violated by unsafe code, but must always
 It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- IOW, it is relevant when arguing whether some *library* can be used by safe code to *cause* UB.
 
 In terms of code, some data computed by `TERM` (possibly constructed from some `arguments` that can be *assumed* to satisfy the safety invariant) is valid at type `T` if and only if the following library function can be safely exposed to arbitrary (safe) code as part of the public library interface:
-```rust
+```rust,ignore
 pub fn make_something(arguments: U) -> T { unsafe {
   std::mem::transmute(TERM)
 } }

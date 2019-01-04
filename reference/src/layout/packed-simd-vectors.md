@@ -25,7 +25,7 @@ Packed SIMD vector types are `repr(simd)` homogeneous tuple-structs containing
 `N` elements of type `T` where `N` is a power-of-two and the size and alignment
 requirements of `T` are equal:
 
-```rust
+```rust,ignore
 #[repr(simd)]
 struct Vector<T, N>(T_0, ..., T_(N - 1));
 ```
@@ -36,7 +36,7 @@ The size of `Vector` is `N * size_of::<T>()` and its alignment is an
 _implementation-defined_ function of `T` and `N` greater than or equal to
 `align_of::<T>()`. That is:
 
-```rust
+```rust,ignore
 assert_eq!(size_of::<Vector<T, N>>(), size_of::<T>() * N);
 assert!(align_of::<Vector<T, N>>() >= align_of::<T>());
 ```
@@ -47,7 +47,7 @@ same `N` have the same size and alignment.
 Vector elements are laid out in source field order, enabling random access to
 vector elements by reinterpreting the vector as an array:
 
-```rust
+```rust,ignore
 union U {
    vec: Vector<T, N>,
    arr: [T; N]
@@ -70,7 +70,7 @@ unsafe {
 * **Blocked**: Should the layout of packed SIMD vectors be the same as that of
   homogeneous tuples ? Such that:
 
-  ```rust
+  ```rust,ignore
   union U {
     vec: Vector<T, N>,
     tup: (T_0, ..., T_(N-1)),
