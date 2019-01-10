@@ -1,4 +1,4 @@
-# Representation of Rust `enum` types
+# Layout of Rust `enum` types
 
 **Disclaimer:** Some parts of this section were decided in RFCs, but
 others represent the consensus from issue [#10]. The text will attempt
