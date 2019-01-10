@@ -346,3 +346,55 @@ enum Enum1<T> {
   Absent2,
 }
 ```
+
+## Unresolved questions
+
+### Layout of single variant enums
+
+[Issue #79.](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/79)
+
+Enums that contain a **single variant** and which do not have an
+explicit `#[repr]` annotation are an important special case. Since
+there is only a single variant, the enum must be instantiated with
+that variant, which means that the enum is in fact equivalent to a
+struct. The question then is to what extent we should **guarantee**
+that the two share an equivalent layout, and also how to define the
+interaction with uninhabited types.
+
+As presently implemented, the compiler will use the same layout for
+structs and for single variant enums (as long as they do not have a
+`#[repr]` annotation that overrides that choice). So, for example, the
+struct `SomeStruct` and the enum `SomeEnum` would have an equivalent
+layout ([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3697ac684c3d021892694956df957653))::
+
+```rust
+struct SomeStruct;
+enum SomeEnum {
+  SomeVariant,
+}
+```
+
+Similarly, the struct `SomeStruct` and the enum `SomeVariant` in this
+example would also be equivalent in their layout
+([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=924724764419f846c788a8763da45992)):
+
+```rust
+struct SomeStruct { x: u32 }
+enum SomeEnum {
+  SomeVariant { x: u32 },
+}
+```
+
+In fact, the compiler will use this optimized layout even for enums
+that define multiple variants, as long as all but one of the variants
+is uninhabited
+([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3cc1484c5b91097f3dc2015b7c207a0e)):
+
+```rust
+struct SomeStruct { x: u32 }
+enum SomeEnum {
+  SomeVariant { x: u32 },
+  UninhabitedVariant { y: Void },
+}
+```    
+
