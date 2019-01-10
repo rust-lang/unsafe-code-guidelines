@@ -3,7 +3,9 @@
 **Disclaimer:** Some parts of this section were decided in RFCs, but
 others represent the consensus from issue [#10]. The text will attempt
 to clarify which parts are "guaranteed" (owing to the RFC decision)
-and which parts are still in a "preliminary" state.
+and which parts are still in a "preliminary" state, at least until we
+start to open RFCs ratifying parts of the Unsafe Code Guidelines
+effort.
 
 [#10]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/10
 
