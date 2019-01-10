@@ -16,6 +16,7 @@
 - [Data layout](./layout.md)
   - [Structs and tuples](./layout/structs-and-tuples.md)
   - [Integers and Floating Points](./layout/integers-floatingpoint.md)
+  - [Enums](./layout/enums.md)
   - [Unions](./layout/unions.md)
   - [Vectors](./layout/vectors.md)
 - [Optimizations](./optimizations.md)
