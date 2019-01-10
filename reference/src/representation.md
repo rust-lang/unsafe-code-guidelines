@@ -1,23 +1,23 @@
-# Data structure representation
+# Data structure layout
 
 ## Introduction
 
-## Representation of scalars
+## Layout of scalars
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/9
 
-## Representation of enums 
+## Layout of enums 
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/10 
 
-## Representation of unions
+## Layout of unions
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/13
 
-## Representation of references and raw pointers
+## Layout of references and raw pointers
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/16
 
-## Representation of function pointers
+## Layout of function pointers
 
 https://github.com/rust-rfcs/unsafe-code-guidelines/issues/14

@@ -1,4 +1,4 @@
-# Data structure representation
+# Data structure layout
 
 ## Introduction
 
@@ -135,9 +135,9 @@ To start, we will create threads for each major categories of types
     - When using the C ABI, these map to the C pointer types, presumably
 - Raw pointers
     - Effectively same as integers?
-    - Is `ptr::null` etc guaranteed to be equal in representation to `0_usize`?
+    - Is `ptr::null` etc guaranteed to be equal to `0_usize`?
       - C does guarantee that `0` when cast to a pointer is NULL
-- Representation knobs:
+- Layout knobs:
     - Custom alignment ([RFC 1358])
     - Packed ([RFC 1240] talks about some safety issues)
 

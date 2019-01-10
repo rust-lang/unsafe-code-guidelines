@@ -1,4 +1,4 @@
-# Representation of reference and pointer types
+# Layout of reference and pointer types
 
 ### Terminology
 
@@ -29,13 +29,13 @@ and are at least one word.
 
 ### Notes
 
-The representations of `&T`, `&mut T` and `*T` are the same.
+The layouts of `&T`, `&mut T` and `*T` are the same.
 
-We do not make any guarantees about the representation of
+We do not make any guarantees about the layout of
 multi-trait objects `&(dyn T + U)` or references to other dynamically sized types,
 other than that they are at least word-aligned, and have size at least one word.
 
-The representation of `&dyn T` when `T` is a trait is the same as that of:
+The layout of `&dyn T` when `T` is a trait is the same as that of:
 ```rust
 #[repr(C)]
 struct DynObject {
@@ -44,7 +44,7 @@ struct DynObject {
 }
 ```
 
-The representation of `&[T]` is the same as that of:
+The layout of `&[T]` is the same as that of:
 ```rust
 #[repr(C)]
 struct Slice<T> {
@@ -53,4 +53,4 @@ struct Slice<T> {
 }
 ```
 
-The representation of `&str` is the same as that of `&[u8]`.
+The layout of `&str` is the same as that of `&[u8]`.
