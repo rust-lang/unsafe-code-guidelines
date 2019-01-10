@@ -8,7 +8,7 @@ can and cannot do.
 ## Active area of discussion
 
 At any given time, the UCG working group is focused on one particular
-**area**. The current area is [**Data Structure Representation**][currentarea] --
+**area**. The current area is [**Validity Invariants**][currentarea] --
 read that link for more background and information. You can find the
 [current discussion threads here][threads].
 
@@ -24,7 +24,7 @@ should be addressed to [the moderation
 team](https://www.rust-lang.org/team.html#Moderation-team)
 immediately.
 
-[currentarea]: active_discussion/layout.md
+[currentarea]: active_discussion/validity.md
 [threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3Atopic-repr
 
 For people who are interested in this sort of thing, there is a team
