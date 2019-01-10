@@ -117,7 +117,7 @@ The `#[repr(C)]` annotation is equivalent, but it selects the same
 size as the C compiler would use for the given target for an
 equivalent C-enum declaration.
 
-Combining a `C` and `Int` representation (e.g., `#[repr(C, u8)]`) is
+Combining a `C` and `Int` `repr` (e.g., `#[repr(C, u8)]`) is
 not permitted on a fieldless enum.
 
 The values used for the discriminant will match up with what is
