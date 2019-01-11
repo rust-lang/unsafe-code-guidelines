@@ -8,7 +8,16 @@ In Rust, a function pointer type, is either `fn(Args...) -> Ret`,
 A function pointer is the address of a function,
 and has function pointer type.
 The pointer is implicit in the `fn` type,
-and `fn` types are implicitly `'static`.
+and they have no lifetime of their own;
+therefore, function pointers are assumed to point to
+a block of code with static lifetime.
+This is not necessarily always true,
+since, for example, you can unload a dynamic library.
+Therefore, this is _only_ a safety invariant,
+not a validity invariant;
+as long as one doesn't call a function pointer which points to freed memory,
+it is not undefined behavior.
+
 
 In C, a function pointer type is `Ret (*)(Args...)`, or `Ret ABI (*)(Args...)`,
 and values of function pointer type are either a null pointer value,
