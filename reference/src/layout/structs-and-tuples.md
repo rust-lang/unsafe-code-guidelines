@@ -40,7 +40,7 @@ Some related discussion:
   e.g. `(T1, T2, T3)` would in fact be laid out as `(T1, (T2,
   T3))`. The purpose of this was to permit variadic matching and so
   forth against some suffix of the struct. This RFC was not accepted,
-  however. This lay out requires extra padding and seems somewhat
+  however. This layout requires extra padding and seems somewhat
   surprising: it means that the layout of tuples and tuple structs
   would diverge significantly from structs with named fields.
 
