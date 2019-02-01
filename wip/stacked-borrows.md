@@ -165,7 +165,7 @@ impl Stack {
         &mut self,
         bor: Borrow,
         kind: AccessKind,
-    ) -> EvalResult<'tcx> {
+    ) -> Result<(), String> {
         // Check if we can match the frozen "item".
         if self.frozen_since.is_some() {
             if kind == AccessKind::Read {
@@ -181,10 +181,10 @@ impl Stack {
         while let Some(&itm) = self.borrows.last() {
             match (itm, bor) {
                 (BorStackItem::FnBarrier(call), _) if barrier_is_active(call) => {
-                    return err!(MachineError(format!(
+                    return err!(
                         "Stopping looking for borrow being accessed ({:?}) because of barrier ({})",
                         bor, call
-                    )))
+                    )
                 }
                 (BorStackItem::Uniq(itm_t), Borrow::Uniq(bor_t)) if itm_t == bor_t => {
                     // Found matching unique item.  Continue after the match.
@@ -209,10 +209,10 @@ impl Stack {
             return Ok(())
         }
         // If we got here, we did not find our item.
-        err!(MachineError(format!(
+        err!(
             "Borrow being accessed ({:?}) does not exist on the stack",
             bor
-        )))
+        )
     }
 }
 ```
@@ -253,7 +253,7 @@ impl Stack {
     ) -> Result<Option<usize>, String> {
         // Exclude unique ref with frozen tag.
         if let (RefKind::Unique, Borrow::Shr(Some(_))) = (kind, bor) {
-            return Err(format!("Encountered mutable reference with frozen tag ({:?})", bor));
+            return err!("Encountered mutable reference with frozen tag ({:?})", bor);
         }
         // Checks related to freezing
         match bor {
@@ -261,7 +261,7 @@ impl Stack {
                 // We need the location to be frozen.
                 let frozen = self.frozen_since.map_or(false, |itm_t| itm_t <= bor_t);
                 return if frozen { Ok(None) } else {
-                    Err(format!("Location is not frozen long enough"))
+                    err!("Location is not frozen long enough")
                 }
             }
             Borrow::Shr(_) if self.frozen_since.is_some() => {
@@ -287,7 +287,7 @@ impl Stack {
             }
         }
         // If we got here, we did not find our item.  We have to error to satisfy U3.
-        Err(format!("Borrow being dereferenced ({:?}) does not exist on the stack", bor))
+        err!("Borrow being dereferenced ({:?}) does not exist on the stack", bor)
     }
 }
 ```
@@ -333,9 +333,9 @@ if kind == AccessKind::Dealloc {
     for &itm in self.borrows.iter().rev() {
         match itm {
             BorStackItem::FnBarrier(call) if barrier_tracking.is_active(call) => {
-                return err!(MachineError(format!(
+                return err!(
                     "Deallocating with active barrier ({})", call
-                )))
+                )
             }
             _ => {},
         }
