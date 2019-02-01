@@ -120,6 +120,7 @@ impl Tracking {
 
 This method will never return the same value twice.
 We say that a `CallId` is *active* if the call stack contains a stack frame with that ID.
+In the following, we pretend there exists a function `barrier_is_active(id)` that can check this.
 
 **Note**: Miri uses a slightly more complex system with a `HashSet<CallId>` tracking the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
 
@@ -150,6 +151,72 @@ On every memory access, we perform the following extra check for every location 
     
     If we pop the entire stack without finding a match, then we have undefined behavior.
 
+The per-location part in code:
+
+```rust
+pub enum AccessKind {
+    Read,
+    Write,
+    Dealloc,
+}
+
+impl Stack {
+    fn access(
+        &mut self,
+        bor: Borrow,
+        kind: AccessKind,
+    ) -> EvalResult<'tcx> {
+        // Check if we can match the frozen "item".
+        if self.frozen_since.is_some() {
+            if kind == AccessKind::Read {
+                // When we are frozen, we just accept all reads.  No harm in this.
+                // The deref already checked that `Uniq` items are in the stack, and that
+                // the location is frozen if it should be.
+                return Ok(());
+            }
+        }
+        // Unfreeze on writes.
+        self.frozen_since = None;
+        // Pop the stack until we have something matching.
+        while let Some(&itm) = self.borrows.last() {
+            match (itm, bor) {
+                (BorStackItem::FnBarrier(call), _) if barrier_is_active(call) => {
+                    return err!(MachineError(format!(
+                        "Stopping looking for borrow being accessed ({:?}) because of barrier ({})",
+                        bor, call
+                    )))
+                }
+                (BorStackItem::Uniq(itm_t), Borrow::Uniq(bor_t)) if itm_t == bor_t => {
+                    // Found matching unique item.  Continue after the match.
+                }
+                (BorStackItem::Shr, _) if kind == AccessKind::Read => {
+                    // When reading, everything can use a shared item!
+                    // We do not want to do this when writing: Writing to an `&mut`
+                    // should reaffirm its exclusivity (i.e., make sure it is
+                    // on top of the stack).  Continue after the match.
+                }
+                (BorStackItem::Shr, Borrow::Shr(_)) => {
+                    // Found matching shared item.  Continue after the match.
+                }
+                _ => {
+                    // Pop this, go on.
+                    self.borrows.pop().unwrap();
+                    continue
+                }
+            }
+            // If we got here, we found a matching item.  Congratulations!
+            if kind == AccessKind::Dealloc { /* to be discussed later */ }
+            return Ok(())
+        }
+        // If we got here, we did not find our item.
+        err!(MachineError(format!(
+            "Borrow being accessed ({:?}) does not exist on the stack",
+            bor
+        )))
+    }
+}
+```
+
 ### Dereferencing a pointer
 
 Every time a pointer gets dereferenced (evaluating the `Deref` place projection), we determine the extent of memory that this pointer covers using `size_of_val` and then we perform the following check on every location covered by the reference:
@@ -165,6 +232,65 @@ Every time a pointer gets dereferenced (evaluating the `Deref` place projection)
 
 Whenever we are checking whether an item is in the stack, we ignore barriers.
 Failing any of these checks means we have undefined behavior.
+
+The per-location part (starting at step 3 above) in code:
+
+```rust
+pub enum RefKind {
+    /// &mut
+    Unique,
+    /// & without interior mutability
+    Frozen,
+    /// * (raw pointer) or & to `UnsafeCell`
+    Raw,
+}
+
+impl Stack {
+    fn deref(
+        &self,
+        bor: Borrow,
+        kind: RefKind,
+    ) -> Result<Option<usize>, String> {
+        // Exclude unique ref with frozen tag.
+        if let (RefKind::Unique, Borrow::Shr(Some(_))) = (kind, bor) {
+            return Err(format!("Encountered mutable reference with frozen tag ({:?})", bor));
+        }
+        // Checks related to freezing
+        match bor {
+            Borrow::Shr(Some(bor_t)) if kind == RefKind::Frozen => {
+                // We need the location to be frozen.
+                let frozen = self.frozen_since.map_or(false, |itm_t| itm_t <= bor_t);
+                return if frozen { Ok(None) } else {
+                    Err(format!("Location is not frozen long enough"))
+                }
+            }
+            Borrow::Shr(_) if self.frozen_since.is_some() => {
+                return Ok(None) // Shared deref to frozen location, looking good
+            }
+            _ => {} // Not sufficient, go on looking.
+        }
+        // If we got here, we have to look for our item in the stack.
+        for (idx, &itm) in self.borrows.iter().enumerate().rev() {
+            match (itm, bor) {
+                (BorStackItem::Uniq(itm_t), Borrow::Uniq(bor_t)) if itm_t == bor_t => {
+                    // Found matching unique item.
+                    return Ok(Some(idx))
+                }
+                (BorStackItem::Shr, Borrow::Shr(_)) => {
+                    // Found matching shared/raw item.
+                    return Ok(Some(idx))
+                }
+                // Go on looking.  We ignore barriers!  When an `&mut` and an `&` alias,
+                // dereferencing the `&` is still possible (to reborrow), but doing
+                // an access is not.
+                _ => {}
+            }
+        }
+        // If we got here, we did not find our item.  We have to error to satisfy U3.
+        Err(format!("Borrow being dereferenced ({:?}) does not exist on the stack", bor))
+    }
+}
+```
 
 ### Reborrowing
 
@@ -200,3 +326,19 @@ For each reference (`&[mut] _`) and box (`Box<_>`) we encounter, and if `kind ==
 Memory deallocation first acts like a write access through the pointer used for deallocation.
 After that is done, we additionally check all `FnBarrier(c)` occurring in any stack on any of the deallocated locations.
 If any of the `c` is still active, we have undefined behavior.
+
+In code, do the following just before returning `Ok()` from `access`:
+```rust
+if kind == AccessKind::Dealloc {
+    for &itm in self.borrows.iter().rev() {
+        match itm {
+            BorStackItem::FnBarrier(call) if barrier_tracking.is_active(call) => {
+                return err!(MachineError(format!(
+                    "Deallocating with active barrier ({})", call
+                )))
+            }
+            _ => {},
+        }
+    }
+}
+```
