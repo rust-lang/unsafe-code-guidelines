@@ -3,10 +3,12 @@
 **Note:** This document is not normative nor endorsed by the UCG WG.  It is maintained by @RalfJung to reflect what is currently implemented in [Miri].
 
 For more background on the how and why of Stacked Borrows, see this [blog post on the first implementation][stacked-borrows-1] and this [follow-up][stacked-borrows-2].
+Also see some [notes from a discussion at the 2019 Rust All-Hands][all-hands].
 
 [Miri]: https://github.com/solson/miri/
 [stacked-borrows-1]: https://www.ralfj.de/blog/2018/11/16/stacked-borrows-implementation.html
 [stacked-borrows-2]: https://www.ralfj.de/blog/2018/12/26/stacked-borrows-barriers.html
+[all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
 
 ## Extra state
 
