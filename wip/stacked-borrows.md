@@ -24,12 +24,12 @@ type Timestamp = nat;
 // Extra per-pointer state (the "tag")
 pub enum Borrow {
     Uniq(Timestamp),
-    Shr(Option<Timestamp>),
+    Alias(Option<Timestamp>),
 }
 
 pub enum BorStackItem {
     Uniq(Timestamp),
-    Shr,
+    Raw,
     FnBarrier(CallId),
 }
 // Extra per-location state
@@ -130,7 +130,7 @@ In the following, we pretend there exists a function `barrier_is_active(id)` tha
 
 When allocating memory, we have to initialize the `Stack` associated with the new locations, and we have to choose a `Borrow` (a tag) for the initial pointer to this memory.
 
-For most memory, the stack of each freshly allocated memory location is `Stack { borrows: vec![Shr], frozen_since: None }`, and the initial pointer to that memory has tag `Shr(None)`.
+For most memory, the stack of each freshly allocated memory location is `Stack { borrows: vec![Raw], frozen_since: None }`, and the initial pointer to that memory has tag `Alias(None)`.
 
 The only exception is stack memory.
 Stack memory is handled by an environment (which is part of the information carried in a stack frame of the Rust abstract machine) that maps each local variable to a place.
@@ -147,8 +147,8 @@ On every memory access, we perform the following extra check for every location 
    (If this is a read access and we come here, the location is already unfrozen.)
 3. Pop the stack until the top item matches the tag of the pointer.
     - A `Uniq` item matches a `Uniq` tag with the same ID.
-    - A `Shr` item matches any `Shr` tag (with or without timestamp).
-    - When we are reading, a `Shr` item matches a `Uniq` tag.
+    - A `Raw` item matches any `Alias` tag (with or without timestamp).
+    - When we are reading, a `Raw` item matches a `Uniq` tag.
     - If we pop a `FnBarrier(c)` where `c` is active, we have undefined behavior.
     
     If we pop the entire stack without finding a match, then we have undefined behavior.
@@ -191,13 +191,13 @@ impl Stack {
                 (BorStackItem::Uniq(itm_t), Borrow::Uniq(bor_t)) if itm_t == bor_t => {
                     // Found matching unique item.  Continue after the match.
                 }
-                (BorStackItem::Shr, _) if kind == AccessKind::Read => {
+                (BorStackItem::Raw, _) if kind == AccessKind::Read => {
                     // When reading, everything can use a shared item!
                     // We do not want to do this when writing: Writing to an `&mut`
                     // should reaffirm its exclusivity (i.e., make sure it is
                     // on top of the stack).  Continue after the match.
                 }
-                (BorStackItem::Shr, Borrow::Shr(_)) => {
+                (BorStackItem::Raw, Borrow::Alias(_)) => {
                     // Found matching shared item.  Continue after the match.
                 }
                 _ => {
@@ -225,12 +225,12 @@ Every time a pointer gets dereferenced (evaluating the `Deref` place projection)
 
 1. The location must exist, i.e., the pointer must actually be dereferencable for this entire memory range it covers.
 2. If this is a raw pointer, stop here.  Raw accesses are checked as little as possible.
-3. If this is a unique reference and the tag is `Shr(Some(_))`, that's an error.
+3. If this is a unique reference and the tag is `Alias(Some(_))`, that's an error.
 4. If the tag is `Uniq`, make sure there is a matching `Uniq` item with the same ID on the stack.
-5. If the tag is `Shr(None)`, make sure that either the location is frozen or else there is a `Shr` item on the stack.
-6. If the tag is `Shr(Some(t))`, then the check depends on whether the location is inside an `UnsafeCell` or not, according to the type of the reference.
+5. If the tag is `Alias(None)`, make sure that either the location is frozen or else there is a `Raw` item on the stack.
+6. If the tag is `Alias(Some(t))`, then the check depends on whether the location is inside an `UnsafeCell` or not, according to the type of the reference.
     - Locations outside `UnsafeCell` must have `frozen_since` set to `t` or an older timestamp.
-    - `UnsafeCell` locations must either be frozen or else have a `Shr` item in their stack (same check as if the tag had no timestamp).
+    - `UnsafeCell` locations must either be frozen or else have a `Raw` item in their stack (same check as if the tag had no timestamp).
 
 Whenever we are checking whether an item is in the stack, we ignore barriers.
 Failing any of these checks means we have undefined behavior.
@@ -254,19 +254,19 @@ impl Stack {
         kind: RefKind,
     ) -> Result<Option<usize>, String> {
         // Exclude unique ref with frozen tag.
-        if let (RefKind::Unique, Borrow::Shr(Some(_))) = (kind, bor) {
+        if let (RefKind::Unique, Borrow::Alias(Some(_))) = (kind, bor) {
             return err!("Encountered mutable reference with frozen tag ({:?})", bor);
         }
         // Checks related to freezing
         match bor {
-            Borrow::Shr(Some(bor_t)) if kind == RefKind::Frozen => {
+            Borrow::Alias(Some(bor_t)) if kind == RefKind::Frozen => {
                 // We need the location to be frozen.
                 let frozen = self.frozen_since.map_or(false, |itm_t| itm_t <= bor_t);
                 return if frozen { Ok(None) } else {
                     err!("Location is not frozen long enough")
                 }
             }
-            Borrow::Shr(_) if self.frozen_since.is_some() => {
+            Borrow::Alias(_) if self.frozen_since.is_some() => {
                 return Ok(None) // Shared deref to frozen location, looking good
             }
             _ => {} // Not sufficient, go on looking.
@@ -278,8 +278,8 @@ impl Stack {
                     // Found matching unique item.
                     return Ok(Some(idx))
                 }
-                (BorStackItem::Shr, Borrow::Shr(_)) => {
-                    // Found matching shared/raw item.
+                (BorStackItem::Raw, Borrow::Alias(_)) => {
+                    // Found matching raw item.
                     return Ok(Some(idx))
                 }
                 // Go on looking.  We ignore barriers!  When an `&mut` and an `&` alias,
@@ -304,24 +304,24 @@ we determine the extent of memory that this place covers using `size_of_val` and
    Remember the position of the item matching the tag in the stack.
 2. Redundancy check, only happens if we will not push a barrier: if the new tag passes the checks performed on a dereference, and if the item that makes this check succeed is *above* the one we remembered in step 1 (where the "frozen" state is considered above every item in the stack), then stop.
    We are done for this location.
-   This can only happen for shared references (i.e., when the borrow is `Shr(_)`).
-3. Perform the actions that would also happen when an actual access happens through this reference (for shared references with borrow `Shr(_)` this is a read access, for mutable references with borrow `Uniq(_)` it is a write access).
-    Now the location cannot be frozen any more: if the new borrow is `Uniq(_)`, we just unfroze; if it is `Shr(_)` and the location was already frozen, then the redundancy check (step 3) would have kicked in.
+   This can only happen for shared references (i.e., when the borrow is `Alias(_)`).
+3. Perform the actions that would also happen when an actual access happens through this reference (for shared references with borrow `Alias(_)` this is a read access, for mutable references with borrow `Uniq(_)` it is a write access).
+    Now the location cannot be frozen any more: if the new borrow is `Uniq(_)`, we just unfroze; if it is `Alias(_)` and the location was already frozen, then the redundancy check (step 3) would have kicked in.
 4. If we want to push a barrier, push `FnBarrier(c)` to the location stack where `c` is the `CallId` if the current function call (i.e., of the topmost frame in the call stack).
-5. Check if the new tag is `Shr(Some(t))` and the location is inside an `UnsafeCell`.
+5. Check if the new tag is `Alias(Some(t))` and the location is inside an `UnsafeCell`.
     - If both conditions are satisfied, freeze the location with timestamp `t`.  If it is already frozen, do nothing.
-    - Otherwise, push a new item onto the stack: `Shr` if the tag is a `Shr(_)`, `Uniq(id)` if the tag is `Uniq(id)`.
+    - Otherwise, push a new item onto the stack: `Raw` if the tag is a `Alias(_)`, `Uniq(id)` if the tag is `Uniq(id)`.
 
 ### Retagging
 
 When executing `Retag(kind, place)`, we recursively visit all fields of this place, descending into compound types (`struct`, `enum`, arrays and so on) but not below any pointers.
 For each reference (`&[mut] _`) and box (`Box<_>`) we encounter, and if `kind == Raw` also for each raw pointer (`*[const,mut] _`), we perform the following steps:
 
-1. We compute a fresh tag: `Uniq(_)` for mutable references, `Box`, `Shr(Some(_))` for shared references, and `Shr(None)` for raw pointers.
+1. We compute a fresh tag: `Uniq(_)` for mutable references, `Box`, `Alias(Some(_))` for shared references, and `Alias(None)` for raw pointers.
 2. We determine if we will want to push a barrier.
    This is the case only if all of the following conditions are satisfied: `kind == FnBarrier`, the type of this pointer is a reference (not a box), and if this is a shared reference then we are not inside an `UnsafeCell`.
 3. We perform reborrowing with the new tag and indicating whether we ant a barrier pushed or not.
-4. If `kind == TwoPhase`, we perform *another* reborrow with the tag being `Shr(Some(t))` for some fresh timestamp `t`, and not pushing new barriers.
+4. If `kind == TwoPhase`, we perform *another* reborrow with the tag being `Alias(Some(t))` for some fresh timestamp `t`, and not pushing new barriers.
 
 ### Deallocating memory
 
