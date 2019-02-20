@@ -2,7 +2,9 @@
 
 **Note:** This document is not normative nor endorsed by the UCG WG.  It is maintained by @RalfJung to reflect what is currently implemented in [Miri].
 
-For more background on the how and why of Stacked Borrows, see this [blog post on the first implementation][stacked-borrows-1] and this [follow-up][stacked-borrows-2].
+This is not a guide!
+It is more of a reference.
+For a more guide-like introduction of Stacked Borrows, see this [blog post on the first implementation][stacked-borrows-1] and this [follow-up][stacked-borrows-2].
 Also see some [notes from a discussion at the 2019 Rust All-Hands][all-hands].
 
 [Miri]: https://github.com/solson/miri/
@@ -17,31 +19,50 @@ Every pointer value has a *tag* (in addition to the location in memory that the 
 Moreover, there is a per-call-frame `CallId` as well as some global tracking state.
 
 ```rust
+/// Timestamps: a monotonically increasing counter.
 // `nat` is the type of mathematical natural numbers, meaning we don't want to think about overflow.
 // NOTE: Miri just uses `u64` which, realistically, will not overflow because we only ever increment by 1.
 type Timestamp = nat;
 
-// Extra per-pointer state (the "tag")
+/// Extra per-pointer state (the "tag"), which must match the stack of the locations that
+/// are accessed with this pointer.
 pub enum Borrow {
+    /// A unique (mutable) reference.
     Uniq(Timestamp),
+    /// An aliasing reference.  This is also used by raw pointers, which do not track details
+    /// of how or when they were created, hence the timestamp is optional.
+    /// Shr(Some(_)) does NOT mean that the destination of this reference is frozen;
+    /// that depends on the type!  Only those parts outside of an `UnsafeCell` are actually
+    /// frozen.
     Alias(Option<Timestamp>),
 }
 
+/// An item on the per-location stack, controlling which pointers may access this location.
 pub enum BorStackItem {
+    /// Indicates the unique reference that may mutate this location.
     Uniq(Timestamp),
+    /// Indicates that the location has been mutably shared.  Used for raw pointers as
+    /// well as for unfrozen shared references.
     Raw,
+    /// A barrier, tracking the function it belongs to. As long as that function executes,
+    /// the barrier may not be popped off the stack.
     FnBarrier(CallId),
 }
-// Extra per-location state
+/// Per-location stack of borrow items, with the most recently created item on top.
+/// Making use of an item towards the bottom of the stack pops the top items,
+/// meaning the corresponding references may not be used any more.
+/// The stack may have exactly one "frozen" item on top, which is stored separately.
+/// The stack can also contain function barriers, which may not be popped while the
+/// function they belong to still runs.
 pub struct Stack {
     borrows: Vec<BorStackItem>, // used as a stack; never empty
     frozen_since: Option<Timestamp>, // virtual frozen "item" on top of the stack
 }
 
-// Extra per-call-frame state
+/// Extra per-call-frame state: an ID uniquely identifying a stack frame.
 type CallId = nat;
 
-// Extra global state
+/// Extra global state: the next unused `Timestamp`, as well as the next unused `CallId`.
 pub struct Tracking {
     clock: Timestamp,
     next_call: CallId,
@@ -55,7 +76,7 @@ The stack of a location, and the tag of a pointer stored at some location, do no
 ## Retag statement
 
 Stacked Borrows introduces a new operation (a new MIR statement) on the Rust abstract machine.
-*Retagging* operates on a place, and it also carries a flag indicating the kind of retag that is being performed:
+*Retagging* operates on a place (Rust's equivalent of a C lvalue; see [the glossary](../reference/src/glossary.md)), and it also carries a flag indicating the kind of retag that is being performed:
 
 ```rust
 pub enum RetagKind {
