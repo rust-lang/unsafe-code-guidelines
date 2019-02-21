@@ -106,7 +106,7 @@ pub enum RetagKind {
 
 * A `Default` retag happens on the return value of every function that gets called (i.e., this is the first statement in the basic block that the call will return to).
 
-* The automatically generated drop shims perform a `Raw` retag of their argument because they use it as a raw pointer.
+* The automatically generated drop shims (generated as the body of `ptr::real_drop_in_place`) perform a `Raw` retag of their argument because they use it as a raw pointer.
 
 ## Operational semantics
 
