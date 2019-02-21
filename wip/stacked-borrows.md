@@ -319,7 +319,7 @@ impl Stack {
 
 We define the notion of "reborrowing", which will be used below to define the semantics of `Retag`.
 Reborrowing takes a (typed) place, whether to push a barrier, and the new borrow that this place is to be reborrowed for.
-we determine the extent of memory that this place covers using `size_of_val` and then we perform the following actions on every location covered by the place:
+We determine the extent of memory that this place covers using `size_of_val` and then we perform the following actions on every location covered by the place:
 
 1. Perform the checks that would also happen on a dereference.
    Remember the position of the item matching the tag in the stack.
