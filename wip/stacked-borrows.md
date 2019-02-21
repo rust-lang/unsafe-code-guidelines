@@ -365,3 +365,12 @@ if kind == AccessKind::Dealloc {
     }
 }
 ```
+
+## Adjustments to libstd
+
+libstd needed some patches to comply with this model. These provide a good opportunity to review if we are okay with the requirements that Stacked Borrows places onto unsafe code.
+
+* [`VecDeque` creating overlapping mutable references](https://github.com/rust-lang/rust/pull/56161)
+* [Futures turning a shared reference into a mutable one](https://github.com/rust-lang/rust/pull/56319)
+* [`str` turning a shared reference into a mutable one](https://github.com/rust-lang/rust/pull/58200)
+* [`BTreeMap` creating mutable references that overlap with shared references](https://github.com/rust-lang/rust/pull/58431)
