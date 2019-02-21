@@ -60,9 +60,12 @@ pub struct Stack {
 }
 
 /// Extra per-call-frame state: an ID uniquely identifying a stack frame.
+/// (The order of `CallId` does not matter, they are only ever compared for equality.)
 type CallId = nat;
 
-/// Extra global state: the next unused `Timestamp`, as well as the next unused `CallId`.
+/// Extra global state: the next `Timestamp`, as well as the next `CallId`.
+/// Both are just monotonically increasing counters, ensuring they are unique
+/// (for `CallId`) and properly ordered (for `Timestamp`).
 pub struct Tracking {
     clock: Timestamp,
     next_call: CallId,
