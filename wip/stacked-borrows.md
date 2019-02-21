@@ -66,6 +66,7 @@ type CallId = nat;
 /// Extra global state: the next `Timestamp`, as well as the next `CallId`.
 /// Both are just monotonically increasing counters, ensuring they are unique
 /// (for `CallId`) and properly ordered (for `Timestamp`).
+/// Also see the code for `increment_clock` and `new_call` below.
 pub struct Tracking {
     clock: Timestamp,
     next_call: CallId,
