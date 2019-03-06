@@ -12,11 +12,12 @@ element type. If the element type is `repr(C)` the layout of the array is
 guaranteed to be the same as the layout of a C array with the same element type.
 
 > **Note**: the type of array arguments in C function signatures, e.g., `void
-> foo(T x[N])`, decays to a pointer. That is, these functions do not take an
-> array as an argument, but a pointer to the element type instead. Array types
-> are therefore _improper C types_ (not C FFI safe) in Rust foreign function
-> declarations, e.g., `extern { fn foo(x: [T; N]) -> [U; M]; }`. Pointers to
-> arrays are fine: `extern { fn foo(x: *const [T; N]) -> *const [U; M]; }`.
+> foo(T x[N])`, decays to a pointer. That is, these functions do not take arrays
+> as an arguments, they take a pointer to the first element of the array
+> instead. Array types are therefore _improper C types_ (not C FFI safe) in Rust
+> foreign function declarations, e.g., `extern { fn foo(x: [T; N]) -> [U; M];
+> }`. Pointers to arrays are fine: `extern { fn foo(x: *const [T; N]) -> *const
+> [U; M]; }`.
 
 The _stride_ of the array is the distance between a pair of consecutive values
 within the array, and it is constant for all element pairs. It is computed as
