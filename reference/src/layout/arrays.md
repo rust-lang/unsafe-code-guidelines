@@ -69,8 +69,8 @@ However, a future Rust implementation could implement a layout optimization that
 reduces the size of `A` to `3`. For the elements of `B` to be properly aligned,
 `B` would need to choose a `stride == 4`, resulting in a `stride > size`.
 
-Guaranteeing `stride >= size` is forward-compatible such the layout-optimization
-proposals:
+Guaranteeing `stride >= size` is forward-compatible with such
+layout-optimization proposals:
   
   * [rust-lang/rfcs/1397: Spearate size and stride for types](https://github.com/rust-lang/rfcs/issues/1397)
   * [rust-lang/rust/17027: Collapse trailing padding](https://github.com/rust-lang/rust/issues/17027)
