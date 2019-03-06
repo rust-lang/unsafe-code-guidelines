@@ -18,6 +18,7 @@
   - [Integers and Floating Points](./layout/integers-floatingpoint.md)
   - [Enums](./layout/enums.md)
   - [Unions](./layout/unions.md)
+  - [Arrays](./layout/arrays.md)
   - [Vectors](./layout/vectors.md)
 - [Optimizations](./optimizations.md)
   - [Optimizing immutable memory](./optimizations/immutable_memory.md) 

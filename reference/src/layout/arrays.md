@@ -1,0 +1,33 @@
+# Layout of Rust array types
+
+Array types, `[T; N]`, store `N` values of type `T` contiguously with a constant
+_stride_ (the distance between each two consecutive values).
+
+The offset of the first array element is `0`.
+
+The stride of the array is computed as the size of the element type rounded up
+to the next multiple of the alignment of the element type. That is, the _stride_
+of an array can be larger than the element size iff the alignment requirements
+of the element are larger than its size.
+
+Having a stride larger than the element size allows:
+
+```rust,ignore
+struct A(u16, u8); // size_of == 3, align_of == 4
+type B = [A; 4];  // => stride == 4 > 3
+```
+
+The size and alignment of `Vector` element types match, such that `Vector` types
+and arrays are layout compatible.
+
+`repr(C)` arrays have the same layout as C arrays and are passed by pointer in C
+FFI according to the C ABI.
+
+## Unresolved questions
+
+### Stride > size
+
+The current layout guarantees for `repr(Rust)` structs guarantee that Rust is forward-compatible with proposals allowing `stride > size`, like:
+  
+  * [rust-lang/rfcs/1397: Spearate size and stride for types](https://github.com/rust-lang/rfcs/issues/1397)
+  * [rust-lang/rust/17027: Collapse trailing padding](https://github.com/rust-lang/rust/issues/17027)

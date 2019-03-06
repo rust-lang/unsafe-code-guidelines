@@ -15,7 +15,8 @@ currently different for each architecture.
 ## Vector types
 
 Vector types are `repr(simd)` homogeneous tuple-structs containing `N` elements
-of type `T` where `N` is a power-of-two:
+of type `T` where `N` is a power-of-two and the size and alignment requirements
+of `T` are equal:
 
 ```rust
 #[repr(simd)]
