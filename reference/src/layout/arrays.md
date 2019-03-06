@@ -25,9 +25,10 @@ allow the use of SSE instructions.
 [layout of structs and tuples]: ./structs-and-tuples.md
 [SysV AMD64 ABI]: https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf
 
-The [layout of Vector types][Vector] [^2] requires the _size_ and _alignment_ of the [Vector]
-elements to match. That is, types with [Vector] layout are layout compatible with
-arrays having the same element type and number of elements as the Vector.
+The [layout of Vector types][Vector] [^2] requires the _size_ and _alignment_ of
+the [Vector] elements to match. That is, types with [Vector] layout are layout
+compatible with arrays having the same element type and the same number of
+elements as the Vector.
 
 [^2]: The [Vector] layout is the layout of `repr(simd)` types like `__m128`.
 [Vector]: ./vectors.md
