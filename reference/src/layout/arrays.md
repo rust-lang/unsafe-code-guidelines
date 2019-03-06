@@ -7,35 +7,34 @@ the array.
 The _offset_ of the first array element is `0`, that is, a pointer to the array
 and a pointer to its first element both point to the same memory address.
 
+The _alignment_ of array types is greater or equal to the alignment of its
+element type. If the element type is `repr(C)` the layout of the array is
+guaranteed to be the same as the layout of a C array with the same element type.
+
 The _stride_ of the array is computed as the _size_ of the element type rounded up
 to the next multiple of the _alignment_ of the element type.
 
 When the element _size_ is a multiple of the element's _alignment_, then `stride
 == size`, and the elements are laid out contiguously in memory, e.g., `[u8; 4]`.
-In this case, the _size_ of the array can be computed as `size_of::<T>() * N`[^1],
+In this case, the _size_ of the array can be computed as `size_of::<T>() * N`,
 and a pointer to the `i`-th element of the array can be obtained by offsetting a
-pointer to the first element of the array by `i`[^2].
+pointer to the first element of the array by `i`[^1].
 
 > **Note:** In the current Rust implementation, _size_ is always a multiple of
 > the element's _alignment_, and therefore `stride == size` always holds. This
 > is, however, not guaranteed by the [layout of structs and tuples].
 
-[^1]: The alignment of the array is, however, unspecified. For example, the
-[SysV AMD64 ABI] requires array arguments to be at least 16 byte aligned to
-allow the use of SSE instructions.
-
-[^2]: When `stride > size` the pointer needs to be advanced by the array
+[^1]: When `stride > size` the pointer needs to be advanced by the array
     _stride_ instead of by the element _size_.
 
 [layout of structs and tuples]: ./structs-and-tuples.md
-[SysV AMD64 ABI]: https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf
 
-The [layout of Vector types][Vector] [^3] requires the _size_ and _alignment_ of
+The [layout of Vector types][Vector] [^2] requires the _size_ and _alignment_ of
 the [Vector] elements to match. That is, types with [Vector] layout are layout
 compatible with arrays having the same element type and the same number of
 elements as the [Vector].
 
-[^3]: The [Vector] layout is the layout of `repr(simd)` types like [`__m128`].
+[^2]: The [Vector] layout is the layout of `repr(simd)` types like [`__m128`].
 
 [Vector]: vectors.md
 [`__m128`]: https://doc.rust-lang.org/core/arch/x86_64/struct.__m128.html
