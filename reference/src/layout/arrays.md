@@ -11,8 +11,17 @@ The _alignment_ of array types is greater or equal to the alignment of its
 element type. If the element type is `repr(C)` the layout of the array is
 guaranteed to be the same as the layout of a C array with the same element type.
 
-The _stride_ of the array is computed as the _size_ of the element type rounded up
-to the next multiple of the _alignment_ of the element type.
+> **Note**: the type of array arguments in C function signatures, e.g., `void
+> foo(T x[N])`, decays to a pointer. That is, these functions do not take an
+> array as an argument, but a pointer to the element type instead. Array types
+> are therefore _improper C types_ (not C FFI safe) in Rust foreign function
+> declarations, e.g., `extern { fn foo(x: [T; N]) -> [U; M]; }`. Pointers to
+> arrays are fine: `extern { fn foo(x: *const [T; N]) -> *const [U; M]; }`.
+
+The _stride_ of the array is the distance between a pair of consecutive values
+within the array, and it is constant for all element pairs. It is computed as
+the _size_ of the element type rounded up to the next multiple of the
+_alignment_ of the element type.
 
 When the element _size_ is a multiple of the element's _alignment_, then `stride
 == size`, and the elements are laid out contiguously in memory, e.g., `[u8; 4]`.
