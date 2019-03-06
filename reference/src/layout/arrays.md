@@ -17,10 +17,12 @@ struct A(u16, u8); // size_of == 3, align_of == 4
 type B = [A; 4];  // => stride == 4 > 3
 ```
 
-The size and alignment of [`Vector`] element types match, such that [`Vector`] types
-and arrays are layout compatible.
+The size and alignment of the element types supported by the [Vector] layout
+[^1] match. Therefore, types with [Vector] layout are layout compatible with
+arrays of the same element type and number of elements.
 
-[`Vector`]: ./vectors.md
+[^1]: The Vector layout is the layout of `repr(simd)` types like `__m128`.
+[Vector]: ./vectors.md
 
 ## Unresolved questions
 
