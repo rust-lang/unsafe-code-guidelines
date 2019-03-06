@@ -20,9 +20,6 @@ type B = [A; 4];  // => stride == 4 > 3
 The size and alignment of [`Vector`] element types match, such that [`Vector`] types
 and arrays are layout compatible.
 
-`repr(C)` arrays have the same layout as C arrays and are passed by pointer in C
-FFI according to the C ABI.
-
 [`Vector`]: ./vectors.md
 
 ## Unresolved questions
