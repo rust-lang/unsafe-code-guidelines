@@ -1,7 +1,8 @@
 # Layout of Rust array types
 
 Array types, `[T; N]`, store `N` values of type `T` contiguously with a constant
-_stride_ (the distance between each two consecutive values).
+_stride_, where _stride_ is the distance between each pair of consecutive values
+within the array.
 
 The offset of the first array element is `0`.
 
