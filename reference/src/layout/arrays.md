@@ -14,9 +14,14 @@ When the element _size_ is a multiple of the element's _alignment_, then `stride
 == size`, and the elements are laid out contiguously in memory, e.g., `[u8; 4]`.
 In this case, the size of the array can be computed as `size_of::<T>() * N`[^1].
 
-[^1]: The alignment of the array is, however, unspecified.
+> **Note:** In the current Rust implementation, _size_ is always a multiple of
+> the element's _alignment_, and therefore `stride == size` always holds. This
+> is, however, not guaranteed by the [layout of structs and tuples].
 
-The [layout of Vector types] [^2] requires the size and alignment of the Vector
+[^1]: The alignment of the array is, however, unspecified.
+[layout of structs and tuples]: ./structs-and-tuples.md
+
+The [layout of Vector types] [^2] requires the _size_ and _alignment_ of the Vector
 elements to match. That is, types with Vector layout are layout compatible with
 arrays having the same element type and number of elements as the Vector.
 
@@ -27,26 +32,25 @@ arrays having the same element type and number of elements as the Vector.
 
 ### Guaranteeing `stride == size` ?
 
-The element _size_ is not guaranteed to be a multiple of the element's
-alignment. In:
+Currently, the [layout of structs and tuples] does not guarantee that the
+element _size_ is a multiple of its _alignment_. For example, consider:
 
 ```rust,ignore
 struct A(u16, u8);
 type B = [A; 4];
 ```
 
-and in the current Rust implementation, `A` has an alignment and a size of `4`,
-and `B` has a size of `16`. However, the size of `A` is not guaranteed by the
-[layout of structs and tuples].
+In the current Rust implementation, `A` has an alignment and a size of `4`, and
+`B` has a size of `16`, such that `B` contains four `A`s that are contiguously
+laid in memory. 
 
-[layout of structs and tuples]: ./structs-and-tuples.md
+However, a future Rust implementation could, as a layout optimization, choose a
+smaller size for `A` (that is, `3`). For `A` elements to be properly aligned
+within `B`, then `B` would need to choose a `stride == 4`, resulting in a
+`stride > size`.
 
-If a future Rust implementation wanted to use a smaller size for `A`, that is, a
-`size == 3`, then `B` would need a `stride == 4` to ensure that its elements are
-properly aligned, resulting in a `stride > size`.
-
-The current guarantee that `stride >= size` is forward-compatible with the open
-proposals about allowing `A` to have a size of `3`:
+Guaranteeing `stride >= size` is forward-compatible such the layout-optimization
+proposals:
   
   * [rust-lang/rfcs/1397: Spearate size and stride for types](https://github.com/rust-lang/rfcs/issues/1397)
   * [rust-lang/rust/17027: Collapse trailing padding](https://github.com/rust-lang/rust/issues/17027)
