@@ -4,7 +4,8 @@ Array types, `[T; N]`, store `N` values of type `T` contiguously with a constant
 _stride_, where _stride_ is the distance between each pair of consecutive values
 within the array.
 
-The offset of the first array element is `0`.
+The offset of the first array element is `0`, that is, a pointer to the array
+and a pointer to its first element have the same address.
 
 The stride of the array is computed as the size of the element type rounded up
 to the next multiple of the alignment of the element type. That is, the _stride_
