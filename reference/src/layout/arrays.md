@@ -27,7 +27,9 @@ FFI according to the C ABI.
 
 ### Stride > size
 
-The current layout guarantees for `repr(Rust)` structs guarantee that Rust is forward-compatible with proposals allowing `stride > size`, like:
+In the current Rust implementation, `size >= align` and hence `stride == size`
+always holds. However, `stride == size` is not guaranteed here to be
+forward-compatible with proposals allowing `stride > size`, like:
   
   * [rust-lang/rfcs/1397: Spearate size and stride for types](https://github.com/rust-lang/rfcs/issues/1397)
   * [rust-lang/rust/17027: Collapse trailing padding](https://github.com/rust-lang/rust/issues/17027)
