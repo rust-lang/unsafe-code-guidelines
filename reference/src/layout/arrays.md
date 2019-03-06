@@ -5,7 +5,7 @@ _stride_, where _stride_ is the distance between each pair of consecutive values
 within the array.
 
 The _offset_ of the first array element is `0`, that is, a pointer to the array
-and a pointer to its first element have the same address.
+and a pointer to its first element point to the same memory address.
 
 The _stride_ of the array is computed as the _size_ of the element type rounded up
 to the next multiple of the _alignment_ of the element type.
@@ -18,8 +18,12 @@ In this case, the size of the array can be computed as `size_of::<T>() * N`[^1].
 > the element's _alignment_, and therefore `stride == size` always holds. This
 > is, however, not guaranteed by the [layout of structs and tuples].
 
-[^1]: The alignment of the array is, however, unspecified.
+[^1]: The alignment of the array is, however, unspecified. For example, the
+[SysV AMD64 ABI] requires array arguments to be at least 16 byte aligned to
+allow the use of SSE instructions.
+
 [layout of structs and tuples]: ./structs-and-tuples.md
+[SysV AMD64 ABI]: https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf
 
 The [layout of Vector types] [^2] requires the _size_ and _alignment_ of the Vector
 elements to match. That is, types with Vector layout are layout compatible with
