@@ -1,4 +1,4 @@
-# Layout of vectors
+# Layout of packed SIMD vectors
 
 **Disclaimer:** This chapter represents the consensus from issue
 [#38]. The statements in here are not (yet) "guaranteed"
@@ -6,17 +6,17 @@ not to change until an RFC ratifies them.
 
 [#38]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/38
 
-Rust currently exposes vector types like `__m128` to users, but it does not
-expose a way for users to construct their own vector types.
+Rust currently exposes packed SIMD vector types like `__m128` to users, but it
+does not expose a way for users to construct their own vector types.
 
-The set of currently-exposed vector types is _implementation-defined_ and it is
-currently different for each architecture.
+The set of currently-exposed packed SIMD vector types is
+_implementation-defined_ and it is currently different for each architecture.
 
-## Vector types
+## Packed SIMD vector types
 
-Vector types are `repr(simd)` homogeneous tuple-structs containing `N` elements
-of type `T` where `N` is a power-of-two and the size and alignment requirements
-of `T` are equal:
+Packed SIMD vector types are `repr(simd)` homogeneous tuple-structs containing
+`N` elements of type `T` where `N` is a power-of-two and the size and alignment
+requirements of `T` are equal:
 
 ```rust
 #[repr(simd)]

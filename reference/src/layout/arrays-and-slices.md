@@ -1,4 +1,6 @@
-# Layout of Rust array types
+# Layout of Rust array types and slices
+
+## Layout of Rust array types 
 
 Array types, `[T; N]`, store `N` values of type `T` with a constant _stride_.
 Here, _stride_ is the distance between each pair of consecutive values within
@@ -24,6 +26,8 @@ within the array, and it is constant for all element pairs. It is computed as
 the _size_ of the element type rounded up to the next multiple of the
 _alignment_ of the element type.
 
+### Special case `stride == size`
+
 When the element _size_ is a multiple of the element's _alignment_, then `stride
 == size`, and the elements are laid out contiguously in memory, e.g., `[u8; 4]`.
 In this case, the _size_ of the array can be computed as `size_of::<T>() * N`,
@@ -39,15 +43,21 @@ pointer to the first element of the array by `i`[^1].
 
 [layout of structs and tuples]: ./structs-and-tuples.md
 
-The [layout of Vector types][Vector] [^2] requires the _size_ and _alignment_ of
-the [Vector] elements to match. That is, types with [Vector] layout are layout
-compatible with arrays having the same element type and the same number of
-elements as the [Vector].
+### Layout compatibility with packed SIMD vectors
+
+The [layout of packed SIMD vector types][Vector] [^2] requires the _size_ and
+_alignment_ of the [vector] elements to match. That is, types with [packed SIMD
+vector] layout are layout compatible with arrays having the same element type
+and the same number of elements as the [vector].
 
 [^2]: The [Vector] layout is the layout of `repr(simd)` types like [`__m128`].
 
-[Vector]: vectors.md
+[Vector]: packed-simd-vectors.md
 [`__m128`]: https://doc.rust-lang.org/core/arch/x86_64/struct.__m128.html
+
+## Layout of Rust slices
+
+The layout of a slice `[T]` of length `N` is the same as that of a `[T; N]` array. 
 
 ## Unresolved questions
 
