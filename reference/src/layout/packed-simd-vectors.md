@@ -6,11 +6,15 @@ not to change until an RFC ratifies them.
 
 [#38]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/38
 
-Rust currently exposes packed SIMD vector types like `__m128` to users, but it
+Rust currently exposes packed[^1] SIMD vector types like `__m128` to users, but it
 does not expose a way for users to construct their own vector types.
 
 The set of currently-exposed packed SIMD vector types is
 _implementation-defined_ and it is currently different for each architecture.
+
+[^1]: _packed_ denotes that these SIMD vectors have a compile-time fixed size,
+    distinguishing these from SIMD vector types whose size is only known at
+    run-time. Rust currently only supports _packed_ SIMD vector types.
 
 ## Packed SIMD vector types
 
