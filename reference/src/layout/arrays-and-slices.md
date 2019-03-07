@@ -21,9 +21,8 @@ guaranteed to be the same as the layout of a C array with the same element type.
 > }`. Pointers to arrays are fine: `extern { fn foo(x: *const [T; N]) -> *const
 > [U; M]; }`, and `struct`s and `union`s containing arrays are also fine.
 
-The _stride_ of the array is the distance between a pair of consecutive values
-within the array, and it is constant for all element pairs. It is computed as
-the _size_ of the element type rounded up to the next multiple of the
+The _stride_ of the array is constant for all element pairs and it is computed
+as the _size_ of the element type rounded up to the next multiple of the
 _alignment_ of the element type.
 
 ### Special case `stride == size`
