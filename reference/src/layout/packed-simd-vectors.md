@@ -60,8 +60,8 @@ unsafe {
 
 ### Unresolved questions
 
-* **Blocked**: Should the layout of vectors be the same as that of homogeneous
-  tuples ? Such that:
+* **Blocked**: Should the layout of packed SIMD vectors be the same as that of
+  homogeneous tuples ? Such that:
 
   ```rust
   union U {

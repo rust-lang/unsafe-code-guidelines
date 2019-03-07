@@ -46,11 +46,11 @@ pointer to the first element of the array by `i`[^1].
 ### Layout compatibility with packed SIMD vectors
 
 The [layout of packed SIMD vector types][Vector] [^2] requires the _size_ and
-_alignment_ of the [vector] elements to match. That is, types with [packed SIMD
-vector] layout are layout compatible with arrays having the same element type
-and the same number of elements as the [vector].
+_alignment_ of the vector elements to match. That is, types with [packed SIMD
+vector][Vector] layout are layout compatible with arrays having the same element
+type and the same number of elements as the vector.
 
-[^2]: The [Vector] layout is the layout of `repr(simd)` types like [`__m128`].
+[^2]: The [packed SIMD vector][Vector] layout is the layout of `repr(simd)` types like [`__m128`].
 
 [Vector]: packed-simd-vectors.md
 [`__m128`]: https://doc.rust-lang.org/core/arch/x86_64/struct.__m128.html
