@@ -14,7 +14,10 @@ _implementation-defined_ and it is currently different for each architecture.
 
 [^1]: _packed_ denotes that these SIMD vectors have a compile-time fixed size,
     distinguishing these from SIMD vector types whose size is only known at
-    run-time. Rust currently only supports _packed_ SIMD vector types.
+    run-time. Rust currently only supports _packed_ SIMD vector types. This is
+    elaborated further in [RFC2366].
+    
+[RFC2366]: https://github.com/gnzlbg/rfcs/blob/ppv/text/0000-ppv.md#interaction-with-cray-vectors
 
 ## Packed SIMD vector types
 
