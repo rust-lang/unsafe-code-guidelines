@@ -19,7 +19,7 @@ guaranteed to be the same as the layout of a C array with the same element type.
 > instead. Array types are therefore _improper C types_ (not C FFI safe) in Rust
 > foreign function declarations, e.g., `extern { fn foo(x: [T; N]) -> [U; M];
 > }`. Pointers to arrays are fine: `extern { fn foo(x: *const [T; N]) -> *const
-> [U; M]; }`.
+> [U; M]; }`, and `struct`s and `union`s containing arrays are also fine.
 
 The _stride_ of the array is the distance between a pair of consecutive values
 within the array, and it is constant for all element pairs. It is computed as
