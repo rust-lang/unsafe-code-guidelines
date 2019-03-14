@@ -1,4 +1,4 @@
-# Layout of vectors
+# Layout of packed SIMD vectors
 
 **Disclaimer:** This chapter represents the consensus from issue
 [#38]. The statements in here are not (yet) "guaranteed"
@@ -6,16 +6,24 @@ not to change until an RFC ratifies them.
 
 [#38]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/38
 
-Rust currently exposes vector types like `__m128` to users, but it does not
-expose a way for users to construct their own vector types.
+Rust currently exposes packed[^1] SIMD vector types like `__m128` to users, but it
+does not expose a way for users to construct their own vector types.
 
-The set of currently-exposed vector types is _implementation-defined_ and it is
-currently different for each architecture.
+The set of currently-exposed packed SIMD vector types is
+_implementation-defined_ and it is currently different for each architecture.
 
-## Vector types
+[^1]: _packed_ denotes that these SIMD vectors have a compile-time fixed size,
+    distinguishing these from SIMD vector types whose size is only known at
+    run-time. Rust currently only supports _packed_ SIMD vector types. This is
+    elaborated further in [RFC2366].
+    
+[RFC2366]: https://github.com/gnzlbg/rfcs/blob/ppv/text/0000-ppv.md#interaction-with-cray-vectors
 
-Vector types are `repr(simd)` homogeneous tuple-structs containing `N` elements
-of type `T` where `N` is a power-of-two:
+## Packed SIMD vector types
+
+Packed SIMD vector types are `repr(simd)` homogeneous tuple-structs containing
+`N` elements of type `T` where `N` is a power-of-two and the size and alignment
+requirements of `T` are equal:
 
 ```rust
 #[repr(simd)]
@@ -59,8 +67,8 @@ unsafe {
 
 ### Unresolved questions
 
-* **Blocked**: Should the layout of vectors be the same as that of homogeneous
-  tuples ? Such that:
+* **Blocked**: Should the layout of packed SIMD vectors be the same as that of
+  homogeneous tuples ? Such that:
 
   ```rust
   union U {
