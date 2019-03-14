@@ -31,6 +31,10 @@ and are at least one word.
 
 The layouts of `&T`, `&mut T` and `*T` are the same.
 
+If `T` is sized, references and pointers to `T` have a size and alignment of one
+word and have therefore the same layout as C pointers - they can be used in C FFI
+where pointers are expected.
+
 We do not make any guarantees about the layout of
 multi-trait objects `&(dyn T + U)` or references to other dynamically sized types,
 other than that they are at least word-aligned, and have size at least one word.
