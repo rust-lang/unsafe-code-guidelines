@@ -38,6 +38,25 @@ Note: on all platforms that Rust's currently supports, the size and alignment of
 
 For full ABI compatibility details, see [Gankro’s post](https://gankro.github.io/blah/rust-layouts-and-abis/#the-layoutsabis-of-builtins).
 
+## Fixed-width integer types
+
+Rust's fixed-width integer types `{i,u}{8,16,32,64}` have the same layout as the
+C fixed-width integer types from the `<stdint.h>` header
+`{u,}int{8,16,32,64}_t`. That is:
+
+* these types have no padding bits,
+* their size exactly matches their bit-width,
+* negative values of signed integer types are represented using `2`'s complement.
+
+Therefore these integer types are safe to use directly in C FFI where the
+fixed-width integer types are expected.
+
+## Fixed-width floating point types
+
+Rust's `f32` and `f64` types have the same layout as C's `float` and `double`
+types, respectively. Therefore these floating-point types are safe to use
+directly in C FFI where the appropriate C types are expected.
+
 ## Relationship to C integer hierarchy
 C integers:
 - char: at least 8 bits
