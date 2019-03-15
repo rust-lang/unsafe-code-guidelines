@@ -4,7 +4,7 @@
 
 - [Data layout](./layout.md)
   - [Structs and tuples](./layout/structs-and-tuples.md)
-  - [Scalar types](./layout/scalar.md)
+  - [Scalars](./layout/scalars.md)
   - [Enums](./layout/enums.md)
   - [Unions](./layout/unions.md)
   - [Pointers](./layout/pointers.md)
