@@ -1,8 +1,7 @@
-# Layout of Boolean, Floating Point, and Integral Types
+# Layout of scalar types
 
 This chapter represents the consensus from issue [#9]. It documents the memory
-layout and considerations for `bool`, floating point types (`f{32, 64}`), and
-integral types (`{i,u}{8,16,32,64,128,size}`).
+layout and considerations for `bool`, `char`, floating point types (`f{32, 64}`), and integral types (`{i,u}{8,16,32,64,128,size}`).
 
 These types are all scalar types, representing a single value, and have no
 layout `#[repr()]` flags.
@@ -48,21 +47,9 @@ The layout of `usize` determines the following:
 - the maximum number of elements in an array (`[T; N: usize]`),
 - how much a pointer of a certain type can be offseted (limited by `usize::max_value()`).
 
-> **FIXME**: Pointer `add` operates on `usize`, but pointer `offset` operates on
-> `isize`, so unless by "offseted" we mean something different from `ptr.offset`
-> above, `usize::max_value()` does not determine how much a pointer can be
-> "offseted". We should probably be more specific here and call out `ptr.add`
-> and `ptr.offset` explicitly.
-
 The maximum size of any single value must fit within `usize` to [ensure that
 pointer diff is
 representable](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212703192).
-
-> **FIXME**: This does not make sense. We state that the layout of `usize`
-> determines the maximum size of an object, and then argue that this is to
-> ensure that pointer diff is representable, which won't be the case if the size
-> of an object is `usize::max_val()`. The link cited actually states that, right
-> now, the largest size of a Rust object is limited by `isize::max_value()`.
 
 [pointer types]: ./pointers.md
 

@@ -44,7 +44,7 @@ multi-trait objects `&(dyn T + U)` or references to other dynamically sized type
 other than that they are at least word-aligned, and have size at least one word.
 
 The layout of `&dyn T` when `T` is a trait is the same as that of:
-```rust
+```rust,ignore
 #[repr(C)]
 struct DynObject {
   data: *u8,
@@ -53,7 +53,7 @@ struct DynObject {
 ```
 
 The layout of `&[T]` is the same as that of:
-```rust
+```rust,ignore
 #[repr(C)]
 struct Slice<T> {
   ptr: *T,
