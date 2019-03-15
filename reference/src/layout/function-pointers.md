@@ -81,6 +81,11 @@ bool for_all(struct Cons const *self, bool (*func)(int, void *), void *thunk);
 ```
 
 ```rust
+# use std::{
+#    ffi::c_void,
+#    os::raw::c_int,
+# };
+#
 pub struct Cons {
   data: c_int,
   next: Option<Box<Cons>>,
@@ -117,9 +122,6 @@ pub extern "C" fn for_all(
     }
     it = node.next.as_ref().map(|x| &**x);
   }
+  true
 }
 ```
-
-### Unresolved Questions
-
-- dunno
