@@ -22,16 +22,19 @@ taking on the values 1 (`true`) or 0 (`false`).
 
 ## `char`
 
-Rust char is 32-bit wide and represents [Unicode scalar value](http://www.unicode.org/glossary/#unicode_scalar_value).
+Rust char is 32-bit wide and represents an [unicode scalar value]. The alignment
+of `char` is _implementation-defined_.
+
+[unicode scalar value]: http://www.unicode.org/glossary/#unicode_scalar_value
 
 > **Note**: Rust `char` type is not layout compatible with C / C++ `char` types.
 > The C / C++ `char` types correspond to either Rust's `i8` or `u8` types on all
 > currently supported platforms, depending on their signedness. Rust does not
 > support C platforms in which C `char` is not 8-bit wide.
 
-## `usize`/`isize`
+## `isize` and `usize`
 
-The `usize` and `isize` types are pointer-sized signed and unsigned integers.
+The `isize` and `usize` types are pointer-sized signed and unsigned integers.
 They have the same layout as the [pointer types] for which the pointee is
 `Sized`, and are layout compatible with C's `uintptr_t` and `intptr_t` types.
 
