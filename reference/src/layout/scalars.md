@@ -68,18 +68,17 @@ C does not expose equivalent types in `<stdint.h>`.
 
 Rust fixed-width integer types are therefore safe to use directly in C FFI where 
 the corresponding C fixed-width integer types are expected.
-integer types are expected.
 
 ### Layout compatibility with C native integer types
 
 The specification of native C integer types, `char`, `short`, `int`, `long`,
-... as well as their `unsigned` variants, has a lower bound on their  size,
+... as well as their `unsigned` variants, guarantees a lower bound on their  size,
 e.g., `short` is _at least_ 16-bit wide and _at least_ as wide as `char`.
-Their actual exact sizes are _implementation-defined_. 
+Their exact sizes are _implementation-defined_. 
 
 Libraries like `libc` use knowledge of this _implementation-defined_ behavior on
 each platform to select a layout-compatible Rust fixed-width integer type when
-interfacing with native C integer types.
+interfacing with native C integer types (e.g. `libc::c_int`).
 
 > **Note**: Rust does not support C platforms on which the C native integer type
 > are not compatible with any of Rust's fixed-width integer type (e.g. because
