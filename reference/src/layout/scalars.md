@@ -48,8 +48,11 @@ They have the same layout as the [pointer types] for which the pointee is
 > `getelementptr` instruction uses signed-integer field offsets. Rust calls
 > `getelementptr` with the `inbounds` flag which assumes that field offsets do
 > not overflow,
+>
 > * the maximum number of elements in an array is `usize::max_value()` (`[T; N:
->   usize]`),
+>   usize]`. Only ZST arrays can probably be this large in practice, non-ZST
+>   arrays are bound by the maximum size of Rust values,
+>
 > * the maximum value by which a pointer can be offseted using `ptr.add(count:
 >   usize)` is `usize::max_value()`.
 >
