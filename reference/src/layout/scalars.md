@@ -41,25 +41,20 @@ They have the same layout as the [pointer types] for which the pointee is
 > `unsigned` is at least as large as a short, allowed to have padding bits, etc.
 > but it is not necessarily pointer-sized.
 
-The layout of `usize` determine the following:
-
-- the maximum size of Rust values is _implementation-defined_, but can at most
-  be `usize::max_value` since `mem::size_of` and `mem::size_of_val` return
-  `usize`,
-- the maximum number of elements in an array is _implementation-defined_, but
-  can at most be `usize::max_value()` since `[T; N: usize]`,
-- the maximum value by which a pointer can be offseted is
-  _implementation-defined_, but can at most be `usize::max_value()` since
-  `ptr.add(count: usize)`.
-
-> **Note**: in the current Rust implementation:
+> **Note**: in the current Rust implementation, the layouts of `isize` and
+> `usize` determine the following:
 > 
 > * the maximum size of Rust values is limited to `isize::max_value()`. The LLVM
 > `getelementptr` instruction uses signed-integer field offsets. Rust calls
 > `getelementptr` with the `inbounds` flag which assumes that field offsets do
 > not overflow,
-> * the maximum number of elements in an array is `usize::max_value()`,
-> * the maximum value by which a pointer can be offseted is `usize::max_value()`.
+> * the maximum number of elements in an array is `usize::max_value()` (`[T; N:
+>   usize]`),
+> * the maximum value by which a pointer can be offseted using `ptr.add(count:
+>   usize)` is `usize::max_value()`.
+>
+> These limits have not gone through the RFC process and are not guaranteed to
+> hold.
 
 [pointer types]: ./pointers.md
 
