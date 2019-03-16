@@ -41,15 +41,25 @@ They have the same layout as the [pointer types] for which the pointee is
 > `unsigned` is at least as large as a short, allowed to have padding bits, etc.
 > but it is not necessarily pointer-sized.
 
-The layout of `usize` determines the following:
+The layout of `usize` determine the following:
 
-- the maximum size of Rust objects (`size_of` and `size_of_val` return `usize`),
-- the maximum number of elements in an array (`[T; N: usize]`),
-- how much a pointer of a certain type can be offseted (limited by `usize::max_value()`).
+- the maximum size of Rust values is _implementation-defined_, but can at most
+  be `usize::max_value` since `mem::size_of` and `mem::size_of_val` return
+  `usize`,
+- the maximum number of elements in an array is _implementation-defined_, but
+  can at most be `usize::max_value()` since `[T; N: usize]`,
+- the maximum value by which a pointer can be offseted is
+  _implementation-defined_, but can at most be `usize::max_value()` since
+  `ptr.add(count: usize)`.
 
-The maximum size of any single value must fit within `usize` to [ensure that
-pointer diff is
-representable](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/5#discussion_r212703192).
+> **Note**: in the current Rust implementation:
+> 
+> * the maximum size of Rust values is limited to `isize::max_value()`. The LLVM
+> `getelementptr` instruction uses signed-integer field offsets. Rust calls
+> `getelementptr` with the `inbounds` flag which assumes that field offsets do
+> not overflow,
+> * the maximum number of elements in an array is `usize::max_value()`,
+> * the maximum value by which a pointer can be offseted is `usize::max_value()`.
 
 [pointer types]: ./pointers.md
 
@@ -74,6 +84,7 @@ the corresponding C fixed-width integer types are expected.
 The specification of native C integer types, `char`, `short`, `int`, `long`,
 ... as well as their `unsigned` variants, guarantees a lower bound on their  size,
 e.g., `short` is _at least_ 16-bit wide and _at least_ as wide as `char`.
+
 Their exact sizes are _implementation-defined_. 
 
 Libraries like `libc` use knowledge of this _implementation-defined_ behavior on
