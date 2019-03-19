@@ -6,7 +6,7 @@ install: cargo install mdbook
 script: cd reference && mdbook build && mdbook test
 deploy:
   provider: script
-  script: curl -LsSf https://git.io/fhJ8n | rustc - && (cd reference/book && ../../rust_out)
+  script: curl -LsSf https://git.io/fhJ8n | rustc - && (cd book && ../rust_out)
   skip_cleanup: true
   keep-history: false
   on:
