@@ -92,5 +92,5 @@ effort to explain how to write Rust code, rather than a reference.
 repository](https://github.com/nikomatsakis/rust-memory-model) was a
 previous effort and contains a lot of good links and info.
 
-[travis]: https://travis-ci.org/rust-rfcs/unsafe-code-guidelines
-[Travis-CI Status]: https://travis-ci.org/rust-rfcs/unsafe-code-guidelines.svg?branch=master
+[travis]: https://travis-ci.com/rust-lang/unsafe-code-guidelines
+[Travis-CI Status]: https://travis-ci.com/rust-lang/unsafe-code-guidelines.svg?branch=master
