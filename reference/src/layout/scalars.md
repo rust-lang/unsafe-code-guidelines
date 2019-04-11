@@ -19,6 +19,15 @@ taking on the values 1 (`true`) or 0 (`false`).
 
 [Rust Layout and ABIs]: https://gankro.github.io/blah/rust-layouts-and-abis/#the-layoutsabis-of-builtins
 
+<details><summary><b>Rationale</b></summary> This allows directly using `bool` in the
+  FFI to interface with C's `_Bool` without having to use a `c_bool` type alias.
+  This might require Rust programs to define and use a `struct Bool(u8);` on
+  platforms where `_Bool` is larger than 1 byte to save space. [T-Lang
+  decided](https://github.com/rust-lang/rust/pull/46176#issuecomment-359593446)
+  that simplifying C FFI on all platforms is a better trade-off than
+  having small `bool`s on uncommon platforms.
+</details>
+
 ## `char`
 
 Rust char is 32-bit wide and represents an [unicode scalar value]. The alignment
