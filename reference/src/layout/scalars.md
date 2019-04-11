@@ -44,10 +44,10 @@ They have the same layout as the [pointer types] for which the pointee is
 > **Note**: in the current Rust implementation, the layouts of `isize` and
 > `usize` determine the following:
 > 
-> * the maximum size of Rust _values_ is limited to `isize::max_value()`. The LLVM
-> `getelementptr` instruction uses signed-integer field offsets. Rust calls
-> `getelementptr` with the `inbounds` flag which assumes that field offsets do
-> not overflow,
+> * the maximum size of Rust _allocations_ is limited to `isize::max_value()`.
+>   The LLVM `getelementptr` instruction uses signed-integer field offsets. Rust
+>   calls `getelementptr` with the `inbounds` flag which assumes that field
+>   offsets do not overflow,
 >
 > * the maximum number of elements in an array is `usize::max_value()` (`[T; N:
 >   usize]`. Only ZST arrays can probably be this large in practice, non-ZST
