@@ -53,8 +53,8 @@ They have the same layout as the [pointer types] for which the pointee is
 >   usize]`. Only ZST arrays can probably be this large in practice, non-ZST
 >   arrays are bound by the maximum size of Rust values,
 >
-> * the maximum value by which a pointer can be offseted using `ptr.add(count:
->   usize)` is `usize::max_value()`.
+> * the maximum value in bytes by which a pointer can be offseted using
+>   `ptr.add` or `ptr.offset` is `isize::max_value()`.
 >
 > These limits have not gone through the RFC process and are not guaranteed to
 > hold.
