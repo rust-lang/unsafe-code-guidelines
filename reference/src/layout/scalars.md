@@ -63,19 +63,25 @@ They have the same layout as the [pointer types] for which the pointee is
 
 ## Fixed-width integer types
 
-Rust's signed and unsigned fixed-width integer types `{i,u}{8,16,32,64}` have
-the same layout as the C fixed-width integer types from the `<stdint.h>` header
-`{u,}int{8,16,32,64}_t`. That is:
+For all Rust's fixed-width integer types `{i,u}{8,16,32,64,128}` it holds that:
 
 * these types have no padding bits,
 * their size exactly matches their bit-width,
 * negative values of signed integer types are represented using 2's complement.
 
-This properties also hold for Rust's 128-bit wide `{i,u}128` integer types, but
-C does not expose equivalent types in `<stdint.h>`.
+Furthermore, Rust's signed and unsigned fixed-width integer types
+`{i,u}{8,16,32,64}` have the same layout the C fixed-width integer types from
+the `<stdint.h>` header `{u,}int{8,16,32,64}_t`. These fixed-width integer types
+are therefore safe to use directly in C FFI where the corresponding C
+fixed-width integer types are expected.
 
-Rust fixed-width integer types are therefore safe to use directly in C FFI where 
-the corresponding C fixed-width integer types are expected.
+The alignment of Rust's `{i,u}128` is _unspecified_ and allowed to change.
+
+> **Note**: While the C standard does not define fixed-width 128-bit wide
+> integer types, many C compilers provide non-standard `__int128` types as a
+> language extension. The layout of `{i,u}128` in the current Rust
+> implementation does **not** match that of these C types, see 
+> [rust-lang/#54341](https://github.com/rust-lang/rust/issues/54341).
 
 ### Layout compatibility with C native integer types
 
