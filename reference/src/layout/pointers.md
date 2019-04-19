@@ -39,7 +39,7 @@ word and have therefore the same layout as C pointers.
 > or, in the case of `&mut T`, aliasing.
 
 We do not make any guarantees about the layout of
-multi-trait objects `&(dyn Tr + Ur)` or references to other dynamically sized types,
+multi-trait objects `&(dyn Trait1 + Trait2)` or references to other dynamically sized types,
 other than that they are at least word-aligned, and have size at least one word.
 
 The layout of `&dyn Trait` when `Trait` is a trait is the same as that of:
