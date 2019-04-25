@@ -60,7 +60,7 @@ enum Foo {
 
 ## repr annotations accepted on enums
 
-In general, enums may be annotation using the following `#[repr]` tags:
+In general, enums may be annotated using the following `#[repr]` tags:
 
 - A specific integer type (called `Int` as a shorthand below):
   - `#[repr(u8)]`
