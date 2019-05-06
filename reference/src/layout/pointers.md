@@ -51,7 +51,7 @@ struct DynObject {
 }
 ```
 
-> **note**: In the layout equivalence of `&dyn mut Trait` the field `data` is of the type `*mut u8`.
+> **note**: In the layout of `&dyn mut Trait` the field `data` is of the type `*mut u8`.
 
 The layout of `&[T]` is the same as that of:
 ```rust
@@ -62,7 +62,7 @@ struct Slice<T> {
 }
 ```
 
-> **note**: In the layout equivalence of `&mut [T]` the field `ptr` is of the type `*mut T`.
+> **note**: In the layout of `&mut [T]` the field `ptr` is of the type `*mut T`.
 
 The layout of `&str` is the same as that of `&[u8]`, and the layout of `&mut str` is
 the same as that of `&mut [u8]`.
