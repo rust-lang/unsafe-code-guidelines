@@ -286,7 +286,7 @@ let protector = if protect {
     None
 };
 let perm = match ref_kind {
-    RefKind::Unique =>
+    RefKind::Unique { two_phase: false } =>
         Permission::Unique,
     RefKind::Raw { mutable: true } |
     RefKind::Unique { two_phase: true } =>
@@ -311,7 +311,7 @@ For each reference (`&[mut] _`) and box (`Box<_>`) we encounter, and if `kind ==
 1. We compute a fresh tag: `Untagged` for raw pointers, `Tag(Tracking::new_ptr_id())` for everything else.
 2. We determine if we will want to protect the items we are going to generate:
    This is the case only if `kind == FnEntry` and the type of this pointer is a reference (not a box).
-3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique`.
+3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique { two_phase: false }`.
 
 ### Deallocating memory
 
