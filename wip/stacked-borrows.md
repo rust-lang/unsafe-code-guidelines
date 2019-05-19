@@ -41,8 +41,11 @@ pub enum Permission {
     Unique,
     /// Grants shared mutable access.
     SharedReadWrite,
-    /// Greants shared read-only access.
+    /// Grants shared read-only access.
     SharedReadOnly,
+    /// Grants no access, but separates two groups of SharedReadWrite so they are not
+    /// all considered mutually compatible.
+    Disabled,
 }
 
 /// An item on the per-location stack, controlling which pointers may access this location and how.
@@ -55,10 +58,12 @@ pub struct Item {
     protector: Option<CallId>,
 }
 /// Per-location stack of borrow items.
-/// Making use of an item towards the bottom of the stack removes all the items  above it that are
-/// "incompatible" (see below).
 pub struct Stack {
-    borrows: Vec<Item>, // used *mostly* as a stack; never empty
+    /// Used *mostly* as a stack; never empty.
+    /// Invariants:
+    /// * Above a `SharedReadOnly` there can only be more `SharedReadOnly`.
+    /// * Except for `Untagged`, no tag occurs in the stack more than once.
+    borrows: Vec<Item>,
 }
 
 /// Extra per-call-frame state: the ID of this function call.
@@ -163,32 +168,23 @@ pub enum AccessKind {
 
 /// This defines for a given permission, whether it permits the given kind of access.
 fn grants(self: Permission, access: AccessKind) -> bool {
-    match (self, access) {
-        // Unique and SharedReadWrite allow any kind of access.
-        (Permission::Unique, _) |
-        (Permission::SharedReadWrite, _) =>
-            true,
-        // SharedReadOnly only permits read access.
-        (Permission::SharedReadOnly, AccessKind::Read) =>
-            true,
-        (Permission::SharedReadOnly, AccessKind::Write) =>
-            false,
-    }
+    // Disabled grants nothing. Otherwise, all items grant read access, and except for SharedReadOnly they grant write access.
+    self != Permission::Disabled && (access == AccessKind::Read || self != Permission::SharedReadOnly)
 }
 ```
 
 Based on this, we define the *granting* item in a stack (for a given tag and access) to be the topmost item that grants the given access to this tag:
 
 ```rust
-/// Find the item granting the given kind of access to the given tag, and where that item is in the stack.
-fn find_granting(self: &Stack, access: AccessKind, tag: Tag) -> Option<(usize, Permission)> {
+/// Find the item granting the given kind of access to the given tag, and return where that item is in the stack.
+fn find_granting(self: &Stack, access: AccessKind, tag: Tag) -> Option<usize> {
     self.borrows.iter()
         .enumerate() // we also need to know *where* in the stack
         .rev() // search top-to-bottom
         // Return permission of first item that grants access.
         .find_map(|(idx, item)|
             if item.perm.grants(access) && tag == item.tag {
-                Some((idx, item.perm))
+                Some(idx)
             } else {
                 None
             }
@@ -196,56 +192,10 @@ fn find_granting(self: &Stack, access: AccessKind, tag: Tag) -> Option<(usize, P
 }
 ```
 
-The following table defines whether an item (granting some access) is compatible with another item (living on top of the first in the stack):
-
-|↓ **Granting item** \ **Compatible with** → | `Unique`  | `SharedReadWrite`   | `SharedReadOnly`  |
-|---:|---|---|---|
-|`Unique`                                    | no | only reads | only reads  |
-|`SharedReadWrite`                           | no | yes  | only reads |
-|`SharedReadOnly`                            | no | no  | only reads |
-
-The same is expressed by the following code:
-```rust
-/// This defines for a given permission, which other permissions it can tolerate "above" itself
-/// for which kinds of accesses.
-/// If true, then `other` is allowed to remain on top of `self` when `access` happens.
-fn compatible_with(self: Permission, access: AccessKind, other: Permission) -> bool {
-    use self::Permission::*;
-
-    match (self, access, other) {
-        // Some cases are impossible.
-        (SharedReadOnly, _, SharedReadWrite) |
-        (SharedReadOnly, _, Unique) =>
-            bug!("There can never be a SharedReadWrite or a Unique on top of a SharedReadOnly"),
-        // When `other` is `SharedReadOnly`, that is NEVER compatible with
-        // write accesses.
-        // This makes sure read-only pointers become invalid on write accesses (ensures F2a).
-        (_, AccessKind::Write, SharedReadOnly) =>
-            false,
-        // When `other` is `Unique`, that is compatible with nothing.
-        // This makes sure unique pointers become invalid on incompatible accesses (ensures U2).
-        (_, _, Unique) =>
-            false,
-        // When we are unique and this is a write/dealloc, we tolerate nothing.
-        // This makes sure we re-assert uniqueness ("being on top") on write accesses.
-        // (This is particularily important such that when a new mutable ref gets created, it gets
-        // pushed onto the right item -- this behaves like a write and we assert uniqueness of the
-        // pointer from which this comes, *if* it was a unique pointer.)
-        (Unique, AccessKind::Write, _) =>
-            false,
-        // `SharedReadWrite` items can tolerate any other akin items for any kind of access.
-        (SharedReadWrite, _, SharedReadWrite) =>
-            true,
-        // Any item can tolerate read accesses for shared items.
-        // This includes unique items!  Reads from unique pointers do not invalidate
-        // other pointers.
-        (_, AccessKind::Read, SharedReadWrite) |
-        (_, AccessKind::Read, SharedReadOnly) =>
-            true,
-        // That's it.
-    }
-}
-```
+In general, the structure of the stack looks as follows:
+On the top, we might have a bunch of `SharedReadOnly` items. Below that, we have "blocks" consisting of either a single `Unique` item, or a bunch of consecutive `SharedReadWrite`.
+`Disabled` items serve to separate two blocks of `SharedReadWrite` that would otherwise be considered one block.
+Using any item within a block is equivalent to using any other item in that same block.
 
 ### Allocating memory
 
@@ -264,50 +214,69 @@ We also initialize the stack of all the memory locations in this new memory allo
 On every memory access, we perform the following extra operation for every location that gets accessed (i.e., for a 4-byte access, this happens for each of the 4 bytes):
 
 1. Find the granting item. If there is none, this is UB.
-2. For every item `item` above the granting item in the stack: if the granting item is not compatible with `item`, remove `item` from the stack.
-   If furthermore `item` is protected (`item.protector.is_some()`) by an active call, this is UB.
+2. Check if this is a read access or a write access.
+    - For write accesses, pop all *blocks* above the one containing the granting item. That is, remove all items above the granting one, except if the granting item is a `SharedReadWrite` in which case the consecutive `SharedReadWrite` above it are kept (but everything beyond is popped).
+    - For read accesses, disable all `Unique` items above the granting one: change their permission to `Disabled`.  This means they cannot be used any more.  We do not remove them from the stack to avoid merging two blocks of `SharedReadWrite`.
 
 ### Reborrowing
 
 Adding new permissions to the stack happens by reborrowing pointers.
 
 **Granting a pointer permission to a location.**
-To grant new permissions to a location, we need a parent tag (the tag of the pointer from which the new pointer is derived), an `Item` for the newly created pointer that should be added to the stack (this indicates both which pointer is granted access and what the permission is), and a boolean indicating whether this is a "weak" or a "strong" grant operation.
-As a signature, this would be
+To grant new permissions to a location, we need a parent tag (the tag of the pointer from which the new pointer is derived), and an `Item` for the newly created pointer that should be added to the stack (this indicates both which pointer is granted access and what the permission is).
+As a Rust signature, this would be:
 ```rust
 fn grant(
     self: &mut Stacks,
     derived_from: Tag,
-    weak: bool,
     new: Item,
 )
 ```
 We proceed as follows:
 
 1. Find the granting item for the parent tag. If there is none, this is UB.
-2. Check if we are operating weakly or strongly.
-    - If we are working weakly, just add the item directly above the granting item in the stack.
-    - For strong grant operations, perform the actions of an access (this is a write access if `new.perm.grants(AccessKind::Write)`, i.e. if the new item grants write permission, and a read access otherwise).
+2. Check if we are adding a `SharedReadWrite`.
+    - If yes, add the new item on top of the current block.
+    - If no, perform the actions of an access (this is a write access if `new.perm.grants(AccessKind::Write)`, i.e. if the new item grants write permission, and a read access otherwise).
       Then push the new item to the top of the stack.
 
 **Reborrowing a pointer.**
 To reborrow a pointer, we are given:
-- a (typed) place, i.e., a location in memory, a tag, a size (saying how many bytes this place covers) and the type of the data we expect there;
+- a (typed) place, i.e., a location in memory, a tag and the type of the data we expect there (from which we can compute the size);
 - which kind of reference/pointer this is (`Unique`, `Shared` or a raw pointer which might be mutable or not);
 - a `new_tag: Tag` for the reborrowed pointer;
-- whether this reborrow needs to be protected and/or is forced to be "weak".
+- whether this reborrow needs to be protected.
 
-We will grant `new_tag` permission for all the locations covered by this place.
-The parent tag is given by the place.
+The type of the place and the kind of reference/pointer together give the full type of the reference/pointer (or as much of it was we need).
+As a Rust signature, this would be:
+```rust
+pub enum RefKind {
+    /// `&mut` and `Box`.
+    Unique { two_phase: bool },
+    /// `&` with or without interior mutability.
+    Shared,
+    /// `*mut`/`*const` (raw pointers).
+    Raw { mutable: bool },
+}
+
+fn reborrow(
+    self: &mut MiriInterpContext,
+    place: MPlaceTy<Tag>,
+    kind: RefKind,
+    new_tag: Tag,
+    protect: bool,
+)
+```
+
+We will grant `new_tag` permission for all the locations covered by this place, by calling `grant` for each location.
+The parent tag (`derived_from`) is given by the place.
 If the reborrow is protected, the new item will have its protector set to the `CallId` of the current function call (i.e., of the topmost frame in the call stack).
 The interesting question is which permission to use for the new item:
-- For `Unique`, the permission is `Unique`.
+- For non-two-phase `Unique`, the permission is `Unique`.
+- For mutable raw pointers and two-phase `Unique`, the permission is `SharedReadWrite`.
 - For `Shared`, the permission is different for locations inside of and outside of `UnsafeCell`.
   Inside `UnsafeCell`, it is `SharedReadWrite`; outside it is `SharedReadOnly`.
-- For mutable raw pointers, the permission is `SharedReadWrite`.
 - For immutable raw pointers, the rules are the same as for `Shared`.
-
-The grant will be done weakly if the permission is `SharedReadWrite` or we forced to be "weak".
 
 So, basically, for every location, we call `grant` like this:
 ```rust
@@ -317,18 +286,19 @@ let protector = if protect {
     None
 };
 let perm = match ref_kind {
-    RefKind::Unique => Permission::Unique,
-    RefKind::Raw { mutable: true } => Permission::SharedReadWrite,
+    RefKind::Unique =>
+        Permission::Unique,
+    RefKind::Raw { mutable: true } |
+    RefKind::Unique { two_phase: true } =>
+        Permission::SharedReadWrite,
     RefKind::Raw { mutable: false } |
     RefKind::Shared =>
-      if inside_unsafe_cell { Permission::SharedReadWrite }
-      else { Permission::SharedReadOnly }
+        if inside_unsafe_cell { Permission::SharedReadWrite }
+        else { Permission::SharedReadOnly }
 };
-let weak = (perm == Permission::SharedReadWrite) || force_weak;
 
 location.stack.grant(
   place.tag,
-  weak,
   Item { tag: new_tag, perm, protector }
 );
 ```
@@ -341,8 +311,7 @@ For each reference (`&[mut] _`) and box (`Box<_>`) we encounter, and if `kind ==
 1. We compute a fresh tag: `Untagged` for raw pointers, `Tag(Tracking::new_ptr_id())` for everything else.
 2. We determine if we will want to protect the items we are going to generate:
    This is the case only if `kind == FnEntry` and the type of this pointer is a reference (not a box).
-3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `Unique`.  We enforce weak mode if `kind == TwoPhase`.
-4. If `kind == TwoPhase`, we perform *another* reborrow from the *new* place (with the freshly generated tag), with the "new" tag set to the tag of the *old* place and treating it like a shared reference (without protection or forcing weak mode).  Basically, we pretend that the old pointer is actually a shared reference derived from the new pointer.  This allows reading from the old pointer without invalidating the new one.
+3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique`.
 
 ### Deallocating memory
 
