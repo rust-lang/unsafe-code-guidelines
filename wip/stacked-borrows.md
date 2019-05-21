@@ -4,11 +4,16 @@
 
 This is not a guide!
 It is more of a reference.
-For a more guide-like introduction of Stacked Borrows, see this [blog post][stacked-borrows-2].
-Also see some [notes from a discussion at the 2019 Rust All-Hands][all-hands], but note that those refer to a previous version of Stacked Borrows.
+For more background, see the following blog-posts:
+
+* [Stacked Borrows 0.1](https://www.ralfj.de/blog/2018/08/07/stacked-borrows.html) is the initial idea of what Stacked Borrows might look like before anything got implemented. This post is interesting for some of the historical context it gives, but is largely superseded by the next post.
+* [Stacked Borrows 1.0](https://www.ralfj.de/blog/2018/11/16/stacked-borrows-implementation.html) is the first version that got implemented. This post is a self-contained, improved introduction to Stacked Borrows.
+* [Stacked Borrows 1.1](https://www.ralfj.de/blog/2018/12/26/stacked-borrows-barriers.html) extends Stacked Borrows 1 with partial support for two-phase borrows and explains the idea of "barriers".
+* We took some notes when [discussing Stacked Borrows 1.1 at the 2019 Rust All-Hands][all-hands].
+* [Stacked Borrows 2.0](https://www.ralfj.de/blog/2019/04/30/stacked-borrows-2.html) is a re-design of Stacked Borrows 1 that maintains the original core ideas, but changes the mechanism to support more precise tracking of shared references.
+* [Stacked Borrows 2.1](https://www.ralfj.de/blog/2019/05/21/stacked-borrows-2.1.html) slightly tweaks the rules for read and write accesses and describes a high-level way of thinking about the new shape of the "stack" in Stacked Borrows 2.
 
 [Miri]: https://github.com/solson/miri/
-[stacked-borrows-2]: https://www.ralfj.de/blog/2019/04/30/stacked-borrows-2.html
 [all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
 
 ## Extra state
