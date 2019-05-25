@@ -1,96 +1,84 @@
-# unsafe-code-guidelines
-
-[![Travis-CI Status]][travis]
-
-Home for the Unsafe Code Guidelines (UCG) effort. The goal of the Unsafe
-Code Guidelines effort is to collaboratively produce a "reference
-guide" for writing unsafe code that what kinds of things unsafe code
-can and cannot do.
-
-## Active area of discussion
-
-At any given time, the UCG working group is focused on one particular
-**area**. The current area is [**Validity Invariants**][currentarea] --
-read that link for more background and information. You can find the
-[current discussion threads here][threads].
-
-Ideas for future "areas of discussion" are represented as [issues
-labeled with the "proposed discussion topic"
-label](https://github.com/rust-rfcs/unsafe-code-guidelines/labels/proposed%20discussion%20topic). Feel
-free to open more such issues if you have a question that doesn't
-match any of the existing issues!
-
-We follow the [Rust code of
-conduct](https://www.rust-lang.org/en-US/conduct.html).  Any concerns
-should be addressed to [the moderation
-team](https://www.rust-lang.org/team.html#Moderation-team)
-immediately.
-
-[currentarea]: active_discussion/validity.md
-[threads]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues?q=is%3Aopen+is%3Aissue+label%3Atopic-repr
-
-For people who are interested in this sort of thing, there is a team
-in the rust-lang org called `WG-unsafe-code-guidelines`. Send a
-private message to @nikomatsakis on [internals] if you would like to
-be added. This team is commonly cc'd when curious situations arise.
-Being a member of this GitHub team simply indicates that you would
-like to be notified and does not imply any particular decision making
-power.
-
-[internals]: https://internals.rust-lang.org/
-
-## The "Unsafe Code Guidelines Reference"
-
-Results from past discussions are written up in the "Unsafe Code
-Guidelines Reference", which lives in this repository. It is largely a
-work-in-progress right now. Note that, unless we state otherwise, the
-information in there is mostly a "recommendation" and still subject to
-change -- once made official, the intention is to migrate this
-information into the Rust Reference proper. [Read the "Unsafe Code
-Guidelines Reference" here.][rr]
-
-[rr]: https://github.com/rust-rfcs/unsafe-code-guidelines/blob/master/reference/src/SUMMARY.md
-
-### Build instructions
-
-Make sure that `mdbook` is installed:
-
-> cargo install mdbook
-
-and execute `mdbook build` or `mdbook serve` in the `reference/` directory.
-
-### Link to the current version of the book
-
-[Here](https://rust-rfcs.github.io/unsafe-code-guidelines/book).
-
-## Chat platform, discussion cadence
-
-Most of the discussion takes place here in GitHub issues. Many of us
-do hangout on [Zulip], however, in the `wg-unsafe-code-guidelines`
-stream.
-
-[Zulip]: https://rust-lang.zulipchat.com/#narrow/stream/136281-wg-unsafe-code-guidelines
-
-Every two weeks on Thursday at 9:00 UTC-4 (13:00 UTC), we hold a brief,
-non-technical meeting to decide whether to keep the current area of
-discussion or to adopt a new one. Prior to this meeting, we update the
-"area of discussion" document with summaries of the threads. The
-meeting takes place on [Zulip] and all are welcome to attend.
-
-A more complete description of our process can be found in [the `process.md` file][p].
-
-[p]: process.md
-
-## See also
-
-The [Rustonomicon](https://doc.rust-lang.org/nightly/nomicon/) is a
-draft document discussing unsafe code. It is intended to be brought
-into agreement with the content here. It represents an organized
-effort to explain how to write Rust code, rather than a reference.
-
-[The nikomatsakis/rust-memory-model
-repository](https://github.com/nikomatsakis/rust-memory-model) was a
-previous effort and contains a lot of good links and info.
+[![Travis-CI Status]][travis] [![UCG Book]][ucg_book] 
 
 [travis]: https://travis-ci.com/rust-lang/unsafe-code-guidelines
 [Travis-CI Status]: https://travis-ci.com/rust-lang/unsafe-code-guidelines.svg?branch=master
+[UCG Book]: https://img.shields.io/badge/UCG%20Book-Unsafe%20Code%20Guidelines%20Book-blue.svg
+[ucg_book]: https://rust-lang.github.io/unsafe-code-guidelines
+
+UCG WG - Rust's Unsafe Code Guidelines Working Group
+===
+
+The goal of the UCG WG is to produce the [Unsafe Code Guidelines
+Reference][ucg_book]: a "guide" for writing unsafe code that "recommends" what
+kinds of things unsafe code can and cannot do. It is largely a work-in-progress
+right now.
+
+Unless we state otherwise, the information in the guide is mostly a
+"recommendation" and still subject to change. The main goal for the WG in 2019
+is to RFC parts of the guide into the language specification, and move those
+parts into the [Rust Language Reference] proper.
+
+[Rust Language Reference]: https://doc.rust-lang.org/reference/index.html
+
+> **note**: the instructions to build the UCG reference book are in the
+> [`.travis.yml`][travis_yml] file.
+
+[travis_yml]: .travis.yml
+
+## Process 
+
+A more complete description of our process is available in [the `process.md`
+file][process]. Briefly:
+
+[process]: process.md
+
+* **active discussion area**: At any given time, the UCG working group is
+  focused on one particular **area** of discussion. The current area is
+  [**Validity Invariants**][current_area] -- read that link for more background
+  and information. You can find the [active discussion threads
+  here][active_discussion].
+
+[current_area]: active_discussion/validity.md
+[active_discussion]: https://github.com/rust-lang/unsafe-code-guidelines/issues?q=is%3Aissue+is%3Aopen+label%3A%22active+discussion+topic%22
+
+* **communication channels**: Most of the discussion takes place here in GitHub
+  issues. Many of us do also hang out on [Zulip's `wg-unsafe-code-guidelines`
+  stream][Zulip]. There is rust-lang org team called
+  [`WG-unsafe-code-guidelines`][rust_team] that is commonly cc'd when curious
+  situations arise. Send a private message to @nikomatsakis on [internals] or
+  [Zulip] if you would like to be added (note: membership does not imply any
+  particular decision-making power).
+
+[Zulip]: https://rust-lang.zulipchat.com/#narrow/stream/136281-wg-unsafe-code-guidelines
+[rust_team]: https://github.com/orgs/rust-lang/teams/wg-unsafe-code-guidelines
+[internals]: https://internals.rust-lang.org/
+
+* **meetings**: Every Thursday at 12:15 UTC-4 (16:15 UTC), we hold a brief
+  _non-technical_ meeting on [Zulip] to triage issues, PRs, assign work, etc.
+  Everybody is welcome to attend.
+
+Ideas for future "areas of discussion" are represented as [issues labeled with
+the "proposed discussion topic" label][proposed_discussion]. Feel free to open
+more such issues if you have a question that doesn't match any of the existing
+issues!
+
+[proposed_discussion]: https://github.com/rust-rfcs/unsafe-code-guidelines/labels/proposed%20discussion%20topic
+
+We follow the [Rust's Code of Conduct]. Any concerns should be addressed to the
+[moderation team] immediately.
+
+[Rust's Code of Conduct]: https://www.rust-lang.org/en-US/conduct.html
+[moderation team]: https://www.rust-lang.org/team.html#Moderation-team
+
+## See also
+
+The [Rustonomicon] is a draft document discussing unsafe code. It is intended to
+be brought into agreement with the content here. It represents an organized
+effort to explain how to write Rust code, rather than a reference.
+
+[Rustonomicon]: https://doc.rust-lang.org/nightly/nomicon/
+
+The [nikomatsakis/rust-memory-model] was a previous effort and contains a lot of
+good links and information.
+
+[nikomatsakis/rust-memory-model]: https://github.com/nikomatsakis/rust-memory-model
