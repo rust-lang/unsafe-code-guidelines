@@ -1,7 +1,10 @@
 language: rust
 sudo: false
 rust: nightly
-cache: cargo
+cache:
+  directories:
+    - $HOME/.cargo/.crates.toml
+    - $HOME/.cargo/bin/mdbook
 install: cargo install mdbook
 script: bash -c "cd reference && mdbook build && mdbook test"
 env:
