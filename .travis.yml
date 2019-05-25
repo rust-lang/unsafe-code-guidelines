@@ -3,7 +3,7 @@ sudo: false
 rust: nightly
 
 install: cargo install mdbook
-script: cd reference && mdbook build && mdbook test
+script: bash -c "cd reference && mdbook build && mdbook test"
 env:
   RUSTINFRA_DEPLOY_DIR: reference/book
 import:
