@@ -4,10 +4,7 @@ rust: nightly
 
 install: cargo install mdbook
 script: cd reference && mdbook build && mdbook test
-deploy:
-  provider: script
-  script: curl -LsSf https://git.io/fhJ8n | rustc - && (cd book && RUST_BACKTRACE=1 ../rust_out)
-  skip_cleanup: true
-  keep-history: false
-  on:
-    branch: master
+env:
+  RUSTINFRA_DEPLOY_DIR: reference/book
+import:
+  - rust-lang/simpleinfra/travis-configs/static-websites.yml
