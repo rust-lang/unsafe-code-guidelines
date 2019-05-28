@@ -2,7 +2,7 @@ language: rust
 sudo: false
 rust: nightly
 cache: cargo
-install: cargo install mdbook
+install: cargo install mdbook || true
 script: bash -c "cd reference && mdbook build && mdbook test"
 env:
   RUSTINFRA_DEPLOY_DIR: reference/book
