@@ -3,7 +3,7 @@
 ### Terminology
 
 In Rust, a function pointer type, is either `fn(Args...) -> Ret`,
-`extern "ABI" fn(Args...) -> Ret`, `unsafe fn(Args...) -> Ret`, and
+`extern "ABI" fn(Args...) -> Ret`, `unsafe fn(Args...) -> Ret`, or
 `unsafe extern "ABI" fn(Args...) -> Ret`.
 A function pointer is the address of a function,
 and has function pointer type.
