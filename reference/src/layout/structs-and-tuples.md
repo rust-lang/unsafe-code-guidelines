@@ -236,7 +236,7 @@ produce layout- or ABI-compatible results.
 The `#[repr(align(N))]` attribute may be used to raise the alignment
 of a struct, as described in [The Rust Reference][TRR-align].
 
-[TRR-align]: (https://doc.rust-lang.org/stable/reference/type-layout.html#the-align-representation).
+[TRR-align]: https://doc.rust-lang.org/stable/reference/type-layout.html#the-align-representation
 
 ### Packed layout
 
