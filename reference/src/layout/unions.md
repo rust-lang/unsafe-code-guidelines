@@ -22,7 +22,7 @@ there.
 
 For unions tagged `#[repr(C)]`, the compiler will apply the C layout scheme.  Per
 sections [6.5.8.5] and [6.7.2.1.16] of the C11 specification, this means that
-the offset of every field is 0.  Unsafe code can case a pointer to the union to
+the offset of every field is 0.  Unsafe code can cast a pointer to the union to
 a field type to obtain a pointer to any field, and vice versa.
 
 [6.5.8.5]: http://port70.net/~nsz/c/c11/n1570.html#6.5.8p5
