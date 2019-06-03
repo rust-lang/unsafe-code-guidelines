@@ -1,7 +1,7 @@
 # Summary
 
-[Glossary](./glossary.md)
-
+- [Introduction](./introduction.md)
+- [Glossary](./glossary.md)
 - [Data layout](./layout.md)
   - [Structs and tuples](./layout/structs-and-tuples.md)
   - [Scalars](./layout/scalars.md)

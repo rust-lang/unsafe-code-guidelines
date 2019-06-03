@@ -1,5 +1,5 @@
 [book]
-authors = ["Niko Matsakis"]
+authors = ["UCG WG"]
 multilingual = false
 src = "src"
 title = "Unsafe Code Guidelines Reference"
