@@ -1,5 +1,5 @@
 [book]
-authors = ["UCG WG"]
+authors = ["The Rust Project Developers"]
 multilingual = false
 src = "src"
 title = "Unsafe Code Guidelines Reference"
