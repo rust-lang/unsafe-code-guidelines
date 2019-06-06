@@ -72,7 +72,7 @@ pub struct Stack {
 }
 
 /// Extra per-call-frame state: the ID of this function call.
-pub struct FrameExtre {
+pub struct FrameExtra {
     id: CallId,
 }
 
