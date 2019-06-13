@@ -10,8 +10,8 @@ UCG WG - Rust's Unsafe Code Guidelines Working Group
 
 The goal of the UCG WG is to produce the [Unsafe Code Guidelines
 Reference][ucg_book]: a "guide" for writing unsafe code that "recommends" what
-kinds of things unsafe code can and cannot do. It is largely a work-in-progress
-right now.
+kinds of things unsafe code can and cannot do, and that documents which
+guarantees unsafe code may rely on. It is largely a work-in-progress right now.
 
 Unless we state otherwise, the information in the guide is mostly a
 "recommendation" and still subject to change. The main goal for the WG in 2019
