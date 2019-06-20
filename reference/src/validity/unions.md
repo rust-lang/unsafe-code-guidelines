@@ -6,7 +6,7 @@ represents the consensus from issue [#73]. The statements in here are not (yet)
 
 ## Validity of unions with zero-sized fields
 
-A union containing a zero-sized field can contain any value. An example of such
+A union containing a zero-sized field can contain any bit pattern. An example of such
 an union is [`MaybeUninit`].
 
 [#73]: https://github.com/rust-lang/unsafe-code-guidelines/issues/73
