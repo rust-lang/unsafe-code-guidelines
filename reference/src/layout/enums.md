@@ -292,11 +292,15 @@ apply, as described below.
 
 #### Discriminant elision on Option-like enums
 
-(Meta-note: The content in this section is not described by any RFC
-and is therefore "non-normative".)
+(Meta-note: The content in this section is not fully described by any RFC and is
+therefore "non-normative". Parts of it were specified in
+[rust-lang/rust#60300].
 
-**Definition.** An **option-like enum** is a 2-variant enum where:
+[rust-lang/rust#60300]: https://github.com/rust-lang/rust/pull/60300
 
+**Definition.** An **option-like enum** is a 2-variant `enum` where:
+
+- the `enum` has no explicit `#[repr(...)]`, and
 - one variant has a single field, and
 - the other variant has no fields (the "unit variant").
 
@@ -313,12 +317,20 @@ values, which are called **niches**. For example, a value of type `&T`
 may never be `NULL`, and hence defines a niche consisting of the
 bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
 and friends may never be zero, and hence also define the value of `0`
-as a niche. (Types that define niche values will say so as part of the
-description of their validity invariant, which -- as of this writing
--- are the next topic up for discussion in the unsafe code guidelines
-process.)
+as a niche. 
 
 [`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
+
+The niche values of a type are parts of its validity invariant which, as of this
+writing, is the current active discussion topic in the unsafe code guidelines
+process. [rust-lang/rust#60300] specifies that the following types have a niche:
+
+* `&T`
+* `&mut T`
+* `extern "C" fn`
+* `core::num::NonZero*`
+* `core::ptr::NonNull<T>`
+* `#[repr(transparent)] struct` around one of the types in this list.
 
 **Option-like enums where the payload defines at least one niche value
 are guaranteed to be represented using the same memory layout as their
@@ -348,6 +360,17 @@ enum Enum1<T> {
   Present(T),
   Absent1,
   Absent2,
+}
+```
+
+**Example.** The following enum definition is **not** option-like,
+as it has an explicit `repr` attribute.
+
+```rust
+#[repr(u8)]
+enum Enum2<T> {
+  Present(T),
+  Absent1,
 }
 ```
 
