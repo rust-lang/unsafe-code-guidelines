@@ -294,7 +294,7 @@ apply, as described below.
 
 (Meta-note: The content in this section is not fully described by any RFC and is
 therefore "non-normative". Parts of it were specified in
-[rust-lang/rust#60300].
+[rust-lang/rust#60300]).
 
 [rust-lang/rust#60300]: https://github.com/rust-lang/rust/pull/60300
 
