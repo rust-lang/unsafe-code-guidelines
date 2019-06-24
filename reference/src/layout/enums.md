@@ -321,10 +321,11 @@ as a niche.
 
 [`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
 
-The niche values of a type are parts of its validity invariant which, as of this
-writing, is the current active discussion topic in the unsafe code guidelines
-process. [rust-lang/rust#60300] specifies that the following types have at least
-one niche (the all-zeros bit-pattern):
+The niche values must be disjoint from the values allowed by the validity
+invariant. The validity invariant is, as of this writing, is the current active
+discussion topic in the unsafe code guidelines process. [rust-lang/rust#60300]
+specifies that the following types have at least one niche (the all-zeros
+bit-pattern):
 
 * `&T`
 * `&mut T`
