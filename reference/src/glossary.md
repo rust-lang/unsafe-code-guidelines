@@ -61,7 +61,7 @@ In this document, *layout* and *representation* are not synonyms.
 
 #### Niche
 
-Invalid bit-patterns that will be used by layout optimizations.
+The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
 
 For example, `&mut T` has at least one niche, the "all zeros" bit-pattern. This
 niche is used by layout optimizations like "`enum` discriminant elision" to
