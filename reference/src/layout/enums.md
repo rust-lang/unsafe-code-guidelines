@@ -313,18 +313,18 @@ field which it contains; in the case of `Option<T>`, the payload has
 type `T`.
 
 **Definition.** In some cases, the payload type may contain illegal
-values, which are called **niches**. For example, a value of type `&T`
-may never be `NULL`, and hence defines a niche consisting of the
+values, which are called **[niches][niche]**. For example, a value of type `&T`
+may never be `NULL`, and hence defines a [niche] consisting of the
 bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
 and friends may never be zero, and hence also define the value of `0`
-as a niche. 
+as a [niche]. 
 
 [`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
 
-The niche values must be disjoint from the values allowed by the validity
+The [niche] values must be disjoint from the values allowed by the validity
 invariant. The validity invariant is, as of this writing, the current active
 discussion topic in the unsafe code guidelines process. [rust-lang/rust#60300]
-specifies that the following types have at least one niche (the all-zeros
+specifies that the following types have at least one [niche] (the all-zeros
 bit-pattern):
 
 * `&T`
@@ -334,15 +334,15 @@ bit-pattern):
 * `core::ptr::NonNull<T>`
 * `#[repr(transparent)] struct` around one of the types in this list.
 
-**Option-like enums where the payload defines at least one niche value
+**Option-like enums where the payload defines at least one [niche] value
 are guaranteed to be represented using the same memory layout as their
 payload.** This is called **discriminant elision**, as there is no
-explicit discriminant value stored anywhere. Instead, niche values are
+explicit discriminant value stored anywhere. Instead, [niche] values are
 used to represent the unit variant.
 
 The most common example is that `Option<&u8>` can be represented as an
 nullable `&u8` reference -- the `None` variant is then represented
-using the niche value zero. This is because a valid `&u8` value can
+using the [niche] value zero. This is because a valid `&u8` value can
 never be zero, so if we see a zero value, we know that this must be
 `None` variant.
 
@@ -375,6 +375,8 @@ enum Enum2<T> {
   Absent1,
 }
 ```
+
+[niche]: ../glossary.html#niche
 
 ## Unresolved questions
 
