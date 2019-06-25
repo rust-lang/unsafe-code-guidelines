@@ -69,7 +69,7 @@ guarantee that `Option<&mut T>` has the same size as `&mut T`.
 
 While all niches are invalid bit-patterns, not all invalid bit-patterns are
 niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
-`&mut T`, but this bit-pattern is not used by layout optimizations, and is not a
+`&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
 
 
