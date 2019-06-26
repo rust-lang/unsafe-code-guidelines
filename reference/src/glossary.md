@@ -106,30 +106,20 @@ pub enum Abi {
 }
 ```
 
-where:
-
-```rust,norun
-enum Integer { I8, I16, I32, I64, I128, }
-enum FloatTy { F32, F64, }
-
-enum Scalar {
-    Int(Integer, /*signedness:*/ bool),
-    Float(FloatTy),
-    Pointer
-}
-```
+where a `Scalar` is either a primitive integer, floating point, or a pointer to
+a sized type.
 
 For example, the call ABI of:
 
-* `i32` is `Scalar::Int(I32,true)`,
+* `i32` is `Scalar(I32)`,
 * `#[repr(C)] struct Wrapper(i32);` is `Aggregate { sized: true }`.
-* `#[repr(transparent)] struct Wrapper(i32);` is `Scalar::Int(I32,true)`.
+* `#[repr(transparent)] struct Wrapper(i32);` is `Scalar(I32)`.
 
 The call ABI of `repr(Rust)` types is unspecified. The following is not
 guaranteed, but right now the call ABI of:
 
 * `/*#[repr(Rust)]*/ struct Wrapper(i32);` (without `repr(transparent)`) is also
-  `Scalar::Int(I32, true)` - only larger `struct`s are aggregates.
+  `Scalar(I32)` - only larger `struct`s are aggregates.
 
 ### TODO
 
