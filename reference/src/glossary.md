@@ -106,9 +106,34 @@ pub enum Abi {
 }
 ```
 
-For example, the call ABI of `i32` is `Scalar`. The call ABI of `struct
-Wrapper(i32);` is also `Scalar`. But the call ABI of `#[repr(C)] struct
-Wrapper(i32)l` is `Aggregate { sized: true }`.
+where
+
+```rust,norun
+enum Integer { I8, I16, I32, I64, I128, }
+enum FloatTy { F32, F64, }
+
+enum Primitive {
+    Int(Integer, /*signedness:*/ bool),
+    Float(FloatTy),
+    Pointer
+}
+
+struct Scalar {
+    value: Primitive,
+    valid_range: RangeInclusive<u128>,
+}
+```
+
+For example, right now, the call ABI of:
+
+* `i32` is `Scalar`,
+* `struct Wrapper(i32);` (without `repr(transparent)`) is also `Scalar` (only larger `struct`s are aggregates),
+* `#[repr(C)] struct Wrapper(i32);` is `Aggregate { sized: true }` - required by `repr(C****.
+
+**NOTE**: the call ABI of `repr(Rust)` types is unspecified, so the "call ABI"
+of `repr(Rust)` types is not guaranteed and `unsafe` code shall not rely on it.
+That is, code that requires `struct Wrapper(i32);` to have the same ABI as `i32`
+needs to use `repr(transparent)`. f
 
 ### TODO
 
