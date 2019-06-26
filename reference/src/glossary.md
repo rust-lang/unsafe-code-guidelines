@@ -53,8 +53,13 @@ For some more information, see [this blog post](https://www.ralfj.de/blog/2018/0
 
 #### Layout
 
-The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
-Moreover, the layout of a type records its *function call ABI* (or just *ABI* for short): how the type is passed *by value* across a function boundary.
+The *layout* of a type defines:
+
+* its size,
+* its alignment,
+* its field offsets (e.g. fields of structs, union, enums, arrays, ...)
+* its [niches][Niche],
+* its call abi.
 
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
 In this document, *layout* and *representation* are not synonyms.
@@ -73,6 +78,28 @@ niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
 `&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
 
+#### Call ABI
+
+The call ABI is how a type is passed *by value* across a function boundary.
+
+Note: The call ABI is not stable. Currently, it is one of:
+
+```rust,norun
+pub enum Abi {
+    Uninhabited,
+    Scalar(Scalar),
+    Vector {
+        element: Scalar,
+        count: u64
+    },
+    Aggregate {
+        // If true, the layout size of the aggregate is exact.
+        // Otherwise, the layout size of the aggregate is
+        // a lower bound.
+        sized: bool,
+    }
+}
+```
 
 ### TODO
 
