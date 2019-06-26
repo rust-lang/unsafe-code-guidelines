@@ -85,7 +85,7 @@ the layout of, e.g., `Option<T>`, from the layout of `T`.
 
 #### Call ABI
 
-The call ABI is how a type is passed *by value* across a function boundary.
+The *call ABI* determines how a type is passed *by value* across a function boundary.
 
 Note: The call ABI is not stable. Currently, it is one of:
 
