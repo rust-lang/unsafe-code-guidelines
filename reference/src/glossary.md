@@ -106,6 +106,10 @@ pub enum Abi {
 }
 ```
 
+For example, the call ABI of `i32` is `Scalar`. The call ABI of `struct
+Wrapper(i32);` is also `Scalar`. But the call ABI of `#[repr(C)] struct
+Wrapper(i32)l` is `Aggregate { sized: true }`.
+
 ### TODO
 
 * *tag*
