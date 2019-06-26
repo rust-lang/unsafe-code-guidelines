@@ -121,15 +121,15 @@ enum Scalar {
 
 For example, the call ABI of:
 
-* `i32` is `Scalar`,
+* `i32` is `Scalar::Int(I32,true)`,
 * `#[repr(C)] struct Wrapper(i32);` is `Aggregate { sized: true }`.
-* `#[repr(transparent)] struct Wrapper(i32);` is `Scalar`.
+* `#[repr(transparent)] struct Wrapper(i32);` is `Scalar::Int(I32,true)`.
 
 The call ABI of `repr(Rust)` types is unspecified. The following is not
 guaranteed, but right now the call ABI of:
 
 * `/*#[repr(Rust)]*/ struct Wrapper(i32);` (without `repr(transparent)`) is also
-  `Scalar` - only larger `struct`s are aggregates.
+  `Scalar::Int(I32, true)` - only larger `struct`s are aggregates.
 
 ### TODO
 
