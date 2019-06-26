@@ -64,6 +64,7 @@ The *layout* of a type defines:
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
 In this document, *layout* and *representation* are not synonyms.
 
+<<<<<<< HEAD
 #### Niche
 
 The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
@@ -77,6 +78,10 @@ While all niches are invalid bit-patterns, not all invalid bit-patterns are
 niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
 `&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
+=======
+Note: due to discriminant-elision optimizations, niches are required to compute
+the layout of, e.g., `Option<T>`, from the layout of `T`.
+>>>>>>> Add note about why niches need to be part of the layout
 
 #### Call ABI
 
