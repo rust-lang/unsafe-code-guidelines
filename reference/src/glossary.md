@@ -89,8 +89,8 @@ The *call ABI* determines how a type is passed *by value* across a function boun
 
 Note: The call ABI is not stable. Currently, it is one of:
 
-```rust,norun
-pub enum Abi {
+```rust,ignore
+enum Abi {
     Uninhabited,
     Scalar(Scalar),
     Vector {
