@@ -35,7 +35,8 @@ of `char` is _implementation-defined_.
 
 The `isize` and `usize` types are pointer-sized signed and unsigned integers.
 They have the same layout as the [pointer types] for which the pointee is
-`Sized`, and are layout compatible with C's `uintptr_t` and `intptr_t` types.
+`Sized`, and are layout compatible with C's `uintptr_t` and `intptr_t` types,
+and are therefore at least 16-bit wide.
 
 > **Note**: Rust's `usize` and C's `unsigned` types are **not** equivalent. C's
 > `unsigned` is at least as large as a short, allowed to have padding bits, etc.
@@ -58,6 +59,19 @@ They have the same layout as the [pointer types] for which the pointee is
 >
 > These limits have not gone through the RFC process and are not guaranteed to
 > hold.
+
+<details><summary><b>Rationale</b></summary> 
+
+C99 [7.18.2.4](https://port70.net/~nsz/c/c99/n1256.html#7.18.2.4) "Limits of
+integer types capable of holding object pointers" provides the following minimum
+range of values that the pointer-holding integer types must support:
+
+* `intptr_t`: `[INTPTR_MIN, INTPTR_MAX] = [-(2^15 - 1), 2^15 - 1]` 
+* `uintptr_t`: `[0, UINTPTR_MAX] = [0, 2^16 - 1]`
+
+That is, `isize`/`usize` are at least 16-bit wide.
+
+</details>
 
 [pointer types]: ./pointers.md
 
