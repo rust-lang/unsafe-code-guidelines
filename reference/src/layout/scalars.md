@@ -69,7 +69,11 @@ range of values that the pointer-holding integer types must support:
 * `intptr_t`: `[INTPTR_MIN, INTPTR_MAX] = [-(2^15 - 1), 2^15 - 1]` 
 * `uintptr_t`: `[0, UINTPTR_MAX] = [0, 2^16 - 1]`
 
-That is, `isize`/`usize` are at least 16-bit wide.
+That is, `isize`/`usize` are at least 16-bit wide. `libcore` relies on
+this guarantee and unconditionally provides:
+
+* `impl From<i16> for isize`,
+* `impl From<u16> for usize`.
 
 </details>
 
