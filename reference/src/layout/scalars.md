@@ -40,9 +40,8 @@ They have the same layout as the [pointer types] for which the pointee is
 > **Note**: C99 [7.18.2.4](https://port70.net/~nsz/c/c99/n1256.html#7.18.2.4)
 > requires `uintptr_t` and `intptr_t` to be at least 16-bit wide. That is, on
 > all platforms that we currently support, which have a C platform,
-> `isize`/`usize` are at least 16-bit wide. `libcore` relies on this guarantee
-> to unconditionally provide impls of `From<i16>`/`From<u16>` for
-> `isize`/`usize`.
+> `isize`/`usize` are at least 16-bit wide. Currently, `libcore` unconditionally
+> provides impls of `From<i16>`/`From<u16>` for `isize`/`usize`.
 
 > **Note**: Rust's `usize` and C's `unsigned` types are **not** equivalent. C's
 > `unsigned` is at least as large as a short, allowed to have padding bits, etc.
