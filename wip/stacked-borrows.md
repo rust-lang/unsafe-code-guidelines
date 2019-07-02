@@ -239,10 +239,11 @@ fn grant(
 ```
 We proceed as follows:
 
-1. Find the granting item for the parent tag. If there is none, this is UB.
-2. Check if we are adding a `SharedReadWrite`.
+1. We consider this operation as corresponding to a write access if `new.perm.grants(AccessKind::Write)`, and to a read access otherwise.
+2. Find the granting item for this access and the parent tag. If there is none, this is UB.
+3. Check if we are adding a `SharedReadWrite`.
     - If yes, add the new item on top of the current block.
-    - If no, perform the actions of an access (this is a write access if `new.perm.grants(AccessKind::Write)`, i.e. if the new item grants write permission, and a read access otherwise).
+    - If no, perform the actions of the corresponding access.
       Then push the new item to the top of the stack.
 
 **Reborrowing a pointer.**
