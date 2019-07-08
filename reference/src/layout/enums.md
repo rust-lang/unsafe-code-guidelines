@@ -378,90 +378,72 @@ enum Enum2<T> {
 
 [niche]: ../glossary.html#niche
 
-## Unresolved questions
-
 ### Layout of single variant enums
 
-[Issue #79.](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/79)
+**Single variant data-carrying*** enums without a `repr()` annotation have the
+same layout as the variant field. **Single variant fieldless** enums have the
+same layout as a unit struct.
 
-Enums that contain a **single variant** and which do not have an
-explicit `#[repr]` annotation are an important special case. Since
-there is only a single variant, the enum must be instantiated with
-that variant, which means that the enum is in fact equivalent to a
-struct. The question then is to what extent we should **guarantee**
-that the two share an equivalent layout, and also how to define the
-interaction with uninhabited types.
-
-As presently implemented, the compiler will use the same layout for
-structs and for single variant enums (as long as they do not have a
-`#[repr]` annotation that overrides that choice). So, for example, the
-struct `SomeStruct` and the enum `SomeEnum` would have an equivalent
-layout ([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3697ac684c3d021892694956df957653)):
+Here:
 
 ```rust
-struct SomeStruct;
-enum SomeEnum {
-  SomeVariant,
-}
-
+# use std::mem::{size_of, align_of};
+struct UnitStruct;
+enum SingleVariantFieldless { FieldlessVariant }
 # fn main() {
-# use std::mem;
-let x = SomeStruct;
-let y = SomeEnum::SomeVariant;
-assert_eq!(
-    mem::size_of_val(&x), 
-    mem::size_of_val(&y),
-    "types have different sizes",
-);
-println!("types both have size {}", std::mem::size_of_val(&x));
+assert_eq!(size_of::<SingleVariantFieldless>(), size_of::<UnitStruct>());
+assert_eq!(align_of::<SingleVariantFieldless>(), align_of::<UnitStruct>());
+// assert_eq!(call_abi_of::<SingleVariantFieldless>(), call_abi_of::<UnitStruct>());
+// assert_eq!(niches_of::<SingleVariantFieldless>(), niches_of::<UnitStruct>());
 # }
 ```
 
-Similarly, the struct `SomeStruct` and the enum `SomeVariant` in this
-example would also be equivalent in their layout
-([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=924724764419f846c788a8763da45992)):
+the single-variant fieldless enum `SingleVariantFieldless` has the same layout
+as `UnitStruct`.
+
+Here: 
 
 ```rust
+# use std::mem::{size_of, align_of};
 struct SomeStruct { x: u32 }
-enum SomeEnum {
-  SomeVariant { x: u32 },
+enum SingleVariantDataCarrying {
+  DataCarryingVariant(SomeStruct),
 }
-
 # fn main() {
-# use std::mem;
-let x = SomeStruct { x: 22 };
-let y = SomeEnum::SomeVariant { x: 22 };
-assert_eq!(
-    mem::size_of_val(&x), 
-    mem::size_of_val(&y),
-    "types have different sizes",
-);
-println!("types both have size {}", mem::size_of_val(&x));
-}
-```
-
-In fact, the compiler will use this optimized layout even for enums
-that define multiple variants, as long as all but one of the variants
-is uninhabited
-([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3cc1484c5b91097f3dc2015b7c207a0e)):
-
-```rust
-# enum Void { }
-struct SomeStruct { x: u32 }
-enum SomeEnum {
-  SomeVariant { x: u32 },
-  UninhabitedVariant { y: Void },
-}
-
-# fn main() {
-# use std::mem;
-let x = SomeStruct { x: 22 };
-let y = SomeEnum::SomeVariant { x: 22 };
-assert_eq!(
-    mem::size_of_val(&x), 
-    mem::size_of_val(&y),
-    "types have different sizes",
-);
-println!("types both have size {}", mem::size_of_val(&x));
+# assert_eq!(size_of::<SingleVariantDataCarrying>(), size_of::<SomeStruct>());
+# assert_eq!(align_of::<SingleVariantDataCarrying>(), align_of::<SomeStruct>());
 # }
 ```
+
+the single-variant data-carrying enum `SingleVariantDataCarrying` has the same
+layout as `SomeStruct`.
+
+### Layout of multi-variant enums with one inhabited variant
+
+The layout of **multi-variant** enums with **one inhabited variant** is the same
+as that of the single-variant enum containing that same inhabited variant.
+
+Here:
+
+```rust
+# use std::mem::{size_of, align_of};
+struct SomeStruct { x: u32 }
+enum SingleVariantDataCarrying {
+    DataCarryingVariant(SomeStruct),
+}
+enum Void0 {}
+enum Void1 {}
+enum MultiVariantSingleHabited {
+  DataCarryingVariant(SomeStruct),
+  Uninhabited0(Void0),
+  Uninhabited1(Void1),
+}
+# fn main() {
+# use std::mem;
+# assert_eq!(size_of::<SingleVariantDataCarrying>(), size_of::<MultiVariantSingleHabited>());
+# assert_eq!(align_of::<SingleVariantDataCarrying>(), align_of::<MultiVariantSingleHabited>());
+# }
+```
+
+the `MultiVariantSingleHabited` enum has the same layout as
+`SingleVariantDataCarrying`.
