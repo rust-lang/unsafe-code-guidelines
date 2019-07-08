@@ -128,6 +128,20 @@ Structs with default layout are zero-sized, if they contain no fields of
 non-zero size. That is, either the type has no fields, or all of its fields have
 zero size.
 
+For example, all these types are zero-sized:
+
+```rust
+# use std::mem::size_of;
+struct Zst0;
+struct Zst1(Zst0);
+struct Zst2(Zst1, Zst0);
+# fn main() {
+# assert_eq!(size_of::<Zst0>(), 0);
+# assert_eq!(size_of::<Zst1>(), 0);
+# assert_eq!(size_of::<Zst2>(), 0);
+# }
+```
+
 #### Unresolved questions
 
 During the course of the discussion in [#11] and [#12], various
