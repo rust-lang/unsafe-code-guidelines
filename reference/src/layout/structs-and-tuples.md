@@ -122,6 +122,7 @@ compiler will not reorder it, to allow for the possibility of
 unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
+<<<<<<< HEAD
 #### Zero-sized structs
 
 For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
@@ -141,6 +142,28 @@ struct Zst2(Zst1, Zst0);
 # }
 ```
 
+=======
+#### Default layout of structs with a single non-zero-sized field
+
+The default layout of structs with a single non-zero-sized field is the same as
+the layout of that field if the alignment requirement of all other fields is 1.
+
+For example, the layout of:
+
+```rust
+struct SomeStruct(i32, ());
+```
+
+is the same as the layout of `i32`, but the layout of:
+
+```rust
+#[repr(align(16))] struct Zst;
+struct SomeOtherStruct(i32, Zst);
+```
+
+is **unspecified**, since there is a zero-sized field in `SomeOtherStruct` with
+alignment greater than 1.
+
 #### Unresolved questions
 
 During the course of the discussion in [#11] and [#12], various
@@ -150,14 +173,14 @@ issue has been opened for further discussion on the repository. This
 section documents the questions and gives a few light details, but the
 reader is referred to the issues for further discussion.
 
-**Single-field structs ([#34]).** If you have a struct with single field
-(`struct Foo { x: T }`), should we guarantee that the memory layout of
-`Foo` is identical to the memory layout of `T` (note that ABI details
-around function calls may still draw a distinction, which is why
-`#[repr(transparent)]` is needed). What about zero-sized types like
-`PhantomData`?
+**Zero-sized structs ([#37]).** If you have a struct which --
+transitively -- contains no data of non-zero size, then the size of
+that struct will be zero as well. These zero-sized structs appear
+frequently as exceptions in other layout considerations (e.g.,
+single-field structs). An example of such a struct is
+`std::marker::PhantomData`.
 
-[#34]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/34
+[#37]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/37
 
 **Homogeneous structs ([#36]).** If you have homogeneous structs, where all
 the `N` fields are of a single type `T`, can we guarantee a mapping to
