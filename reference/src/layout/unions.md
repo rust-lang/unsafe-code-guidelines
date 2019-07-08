@@ -6,28 +6,98 @@ not to change until an RFC ratifies them.
 
 [#13]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/13
 
-The only degree of freedom the compiler has when computing the layout of a union
-like
+### Layout of individual union fields
 
-```rust,ignore
-union U { f1: T1, f2: T2 }
+The layout of each union field is determined by its type. 
+
+<details><summary><b>Rationale</b></summary>
+
+This is required to allow creating references to union fields:
+
+```rust
+# fn main() { unsafe {
+# #[derive(Copy, Clone)]
+struct T1;
+union U { f1: T1 }
+let u = U { f1: T1 };
+let t1: &T1 = &u.f1;
+// &T1 works for all references
+# }}
 ```
+</details>
 
-is to determine the offset of the fields. The layout of these fields themselves
-is already entirely determined by their types, and since we intend to allow
-creating references to fields (`&u.f1`), unions do not have any wiggle-room
-there.
+### Unions with default layout ("`repr(Rust)`")
 
-### Default layout ("repr rust")
+**The default layout of unions is**, in general, **not specified.** 
 
-**The default layout of unions is not specified.** As of this writing, we want
-to keep the option of using non-zero offsets open for the future; whether this
-is useful depends on what exactly the compiler-assumed invariants about union
-contents are.
+<details><summary><b>Rationale</b></summary>
+
+As of this writing, we want to keep the option of using non-zero offsets open
+for the future; whether this is useful depends on what exactly the
+compiler-assumed invariants about union contents are. This might become clearer
+after the validity of unions
+([unsafe-code-guidelines/73](https://github.com/rust-lang/unsafe-code-guidelines/issues/73))
+is settled.
 
 Even if the offsets happen to be all 0, there might still be differences in the
 function call ABI.  If you need to pass unions by-value across an FFI boundary,
 you have to use `#[repr(C)]`.
+
+</details>
+
+#### Layout of unions with a single non-zero-sized field
+
+The layout of unions with a single non-zero-sized field is the same as the
+layout of that field if:
+
+* that field has no padding bits, and
+* the alignment requirement of all zero-sized fields is 1.
+
+For example, here:
+
+```rust
+# use std::mem::{size_of, align_of};
+# #[derive(Copy, Clone)]
+#[repr(transparent)]
+struct SomeStruct(i32);
+# #[derive(Copy, Clone)]
+struct Zst;
+union U0 {
+   f0: SomeStruct,
+   f1: Zst,
+}
+# fn main() {
+# assert_eq!(size_of::<U0>(), size_of::<SomeStruct>());
+# assert_eq!(align_of::<U0>(), align_of::<SomeStruct>());
+# }
+```
+
+the union `U0` has the same layout as `SomeStruct`, because `SomeStruct` has no
+padding bits - it is equivalent to an `i32` due to `repr(transparent)` - and
+because the alignment of `Zst` is 1.
+
+On the other hand, here:
+
+```rust
+# use std::mem::{size_of, align_of};
+# #[derive(Copy, Clone)]
+struct SomeOtherStruct(i32);
+# #[derive(Copy, Clone)]
+#[repr(align(16))] struct Zst2;
+union U1 {
+   f0: SomeOtherStruct,
+   f1: Zst2,
+}
+# fn main() {
+# assert_eq!(size_of::<U1>(), align_of::<Zst2>());
+# assert_eq!(align_of::<U1>(), align_of::<Zst2>());
+assert_eq!(align_of::<Zst2>(), 16);
+# }
+```
+
+the alignment requirement of `Zst2` is not 1, and `SomeOtherStruct` has an
+unspecified layout and could contain padding bits. Therefore, the layout of `U1`
+is **unspecified**.
 
 ### C-compatible layout ("repr C")
 
