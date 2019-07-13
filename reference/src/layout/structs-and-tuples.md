@@ -124,15 +124,15 @@ x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
 #### Zero-sized structs
 
-Structs with default layout are zero-sized, if they contain no fields of
-non-zero size. That is, either the type has no fields, or all of its fields have
-zero size.
+Structs with default layout or default layout with increased alignment are
+zero-sized, if they contain no fields of non-zero size. That is, either the type
+has no fields, or all of its fields have zero size.
 
 For example, all these types are zero-sized:
 
 ```rust
 # use std::mem::size_of;
-struct Zst0;
+#[repr(align(32))] struct Zst0;
 struct Zst1(Zst0);
 struct Zst2(Zst1, Zst0);
 # fn main() {
