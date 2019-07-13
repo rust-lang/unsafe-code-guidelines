@@ -380,6 +380,8 @@ enum Enum2<T> {
 
 ### Layout of single variant enums
 
+> **NOTE**: the guarantees in this section have not been approved by an RFC process.
+
 **Single variant data-carrying*** enums without a `repr()` annotation have the
 same layout as the variant field. **Single variant fieldless** enums have the
 same layout as a unit struct.
@@ -419,6 +421,8 @@ the single-variant data-carrying enum `SingleVariantDataCarrying` has the same
 layout as `SomeStruct`.
 
 ### Layout of multi-variant enums with one inhabited variant
+
+> **NOTE**: the guarantees in this section have not been approved by an RFC process.
 
 The layout of **multi-variant** enums with **one inhabited variant** is the same
 as that of the single-variant enum containing that same inhabited variant.
