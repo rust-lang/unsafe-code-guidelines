@@ -27,8 +27,8 @@ _alignment_ of the element type.
 
 ### Arrays of zero-size
 
-Arrays `[T; N]` have zero size if their count `N` is zero, or their element `T`
-has zero-size.
+Arrays `[T; N]` have zero size if and only if their count `N` is zero or their
+element type `T` is zero-sized.
 
 ### Special case `stride == size`
 
