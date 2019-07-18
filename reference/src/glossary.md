@@ -59,9 +59,23 @@ Moreover, the layout of a type records its *function call ABI* (or just *ABI* fo
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
 In this document, *layout* and *representation* are not synonyms.
 
+#### Niche
+
+The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
+
+For example, `&mut T` has at least one niche, the "all zeros" bit-pattern. This
+niche is used by layout optimizations like ["`enum` discriminant
+elision"](layout/enums.html#discriminant-elision-on-option-like-enums) to
+guarantee that `Option<&mut T>` has the same size as `&mut T`.
+
+While all niches are invalid bit-patterns, not all invalid bit-patterns are
+niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
+`&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
+niche.
+
+
 ### TODO
 
-* *niche*
 * *tag*
 * *rvalue*
 * *lvalue*

@@ -292,11 +292,15 @@ apply, as described below.
 
 #### Discriminant elision on Option-like enums
 
-(Meta-note: The content in this section is not described by any RFC
-and is therefore "non-normative".)
+(Meta-note: The content in this section is not fully described by any RFC and is
+therefore "non-normative". Parts of it were specified in
+[rust-lang/rust#60300]).
 
-**Definition.** An **option-like enum** is a 2-variant enum where:
+[rust-lang/rust#60300]: https://github.com/rust-lang/rust/pull/60300
 
+**Definition.** An **option-like enum** is a 2-variant `enum` where:
+
+- the `enum` has no explicit `#[repr(...)]`, and
 - one variant has a single field, and
 - the other variant has no fields (the "unit variant").
 
@@ -309,26 +313,36 @@ field which it contains; in the case of `Option<T>`, the payload has
 type `T`.
 
 **Definition.** In some cases, the payload type may contain illegal
-values, which are called **niches**. For example, a value of type `&T`
-may never be `NULL`, and hence defines a niche consisting of the
+values, which are called **[niches][niche]**. For example, a value of type `&T`
+may never be `NULL`, and hence defines a [niche] consisting of the
 bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
 and friends may never be zero, and hence also define the value of `0`
-as a niche. (Types that define niche values will say so as part of the
-description of their validity invariant, which -- as of this writing
--- are the next topic up for discussion in the unsafe code guidelines
-process.)
+as a [niche]. 
 
 [`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
 
-**Option-like enums where the payload defines at least one niche value
+The [niche] values must be disjoint from the values allowed by the validity
+invariant. The validity invariant is, as of this writing, the current active
+discussion topic in the unsafe code guidelines process. [rust-lang/rust#60300]
+specifies that the following types have at least one [niche] (the all-zeros
+bit-pattern):
+
+* `&T`
+* `&mut T`
+* `extern "C" fn`
+* `core::num::NonZero*`
+* `core::ptr::NonNull<T>`
+* `#[repr(transparent)] struct` around one of the types in this list.
+
+**Option-like enums where the payload defines at least one [niche] value
 are guaranteed to be represented using the same memory layout as their
 payload.** This is called **discriminant elision**, as there is no
-explicit discriminant value stored anywhere. Instead, niche values are
+explicit discriminant value stored anywhere. Instead, [niche] values are
 used to represent the unit variant.
 
 The most common example is that `Option<&u8>` can be represented as an
 nullable `&u8` reference -- the `None` variant is then represented
-using the niche value zero. This is because a valid `&u8` value can
+using the [niche] value zero. This is because a valid `&u8` value can
 never be zero, so if we see a zero value, we know that this must be
 `None` variant.
 
@@ -350,6 +364,19 @@ enum Enum1<T> {
   Absent2,
 }
 ```
+
+**Example.** The following enum definition is **not** option-like,
+as it has an explicit `repr` attribute.
+
+```rust
+#[repr(u8)]
+enum Enum2<T> {
+  Present(T),
+  Absent1,
+}
+```
+
+[niche]: ../glossary.html#niche
 
 ## Unresolved questions
 
