@@ -3,7 +3,7 @@
 #### Aliasing
 
 (Please note: a full aliasing model for Rust has not yet been constructed, but
-at the moment we can give the following guidelines.)
+at the moment we can give the following definition.)
 
 *Aliasing* is any time one pointer or reference points to a "span" of memory
 that overlaps with the span of another pointer or reference. A span of memory is
