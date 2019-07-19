@@ -23,8 +23,8 @@ fn main() {
 }
 ```
 
-In this case, both `r` and `s` alias each other, since they both point to the
-memory of `u`.
+In this case, both `r` and `s` alias each other, since they both point to all of
+the bytes of `u`.
 
 However, `head` and `tail` do not alias each other: `head` points to the first
 byte of `u` and `tail` points to the other seven bytes of `u` after it.
