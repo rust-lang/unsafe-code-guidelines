@@ -38,6 +38,11 @@ One interesting side effect of these rules is that references and pointers to
 Zero Sized Types _never_ alias each other, because their span length is always 0
 bytes.
 
+It is also important to know that LLVM IR has a `noalias` attribute that works
+somewhat differently from this definition. However, that's considered a low
+level detail of a particular Rust implementation. When programming Rust, the
+Abstract Rust Machine is intended to operate according to the definition here.
+
 #### Interior mutability
 
 *Interior Mutation* means mutating memory where there also exists a live shared reference pointing to the same memory; or mutating memory through a pointer derived from a shared reference.
