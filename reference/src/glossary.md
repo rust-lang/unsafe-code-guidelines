@@ -14,7 +14,7 @@ If data immediately pointed to by a `*const T` or `&*const T` is mutated, that's
 *Interior mutability* refers to the ability to perform interior mutation without causing UB.
 All interior mutation in Rust has to happen inside an [`UnsafeCell`](https://doc.rust-lang.org/core/cell/struct.UnsafeCell.html), so all data structures that have interior mutability must (directly or indirectly) use `UnsafeCell` for this purpose.
 
-#### Validity and safety invariant
+#### Validity Invariant
 
 The *validity invariant* is an invariant that all data must uphold any time it is accessed or copied in a typed manner.
 This invariant is known to the compiler and exploited by optimizations such as improved enum layout or eliding in-bounds checks.
@@ -30,6 +30,8 @@ fn main() { unsafe {
   let t: T = std::mem::transmute(TERM);
 } }
 ```
+
+#### Safety Invariant
 
 The *safety* invariant is an invariant that safe code may assume all data to uphold.
 This invariant is used to justify which operations safe code can perform.
