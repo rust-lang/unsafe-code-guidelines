@@ -52,15 +52,22 @@ If data immediately pointed to by a `*const T` or `&*const T` is mutated, that's
 *Interior mutability* refers to the ability to perform interior mutation without causing UB.
 All interior mutation in Rust has to happen inside an [`UnsafeCell`](https://doc.rust-lang.org/core/cell/struct.UnsafeCell.html), so all data structures that have interior mutability must (directly or indirectly) use `UnsafeCell` for this purpose.
 
-#### Layout
+#### Validity and safety invariant
 
-The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
-Moreover, the layout of a type records its *function call ABI* (or just *ABI* for short): how the type is passed *by value* across a function boundary.
+The *validity invariant* is an invariant that all data must uphold any time it is accessed or copied in a typed manner.
+This invariant is known to the compiler and exploited by optimizations such as improved enum layout or eliding in-bounds checks.
 
-Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
-In this document, *layout* and *representation* are not synonyms.
+In terms of MIR statements, "accessed or copied" means whenever an assignment statement is executed.
+That statement has a type (LHS and RHS must have the same type), and the data being assigned must be valid at that type.
+Moreover, arguments passed to a function must be valid at the type given in the callee signature, and the return value of a function must be valid at the type given in the caller signature.
+OPEN QUESTION: Are there more cases where data must be valid?
 
-#### Safety Invariant
+In terms of code, some data computed by `TERM` is valid at type `T` if and only if the following program does not have UB:
+```rust,ignore
+fn main() { unsafe {
+  let t: T = std::mem::transmute(TERM);
+} }
+```
 
 The *safety* invariant is an invariant that safe code may assume all data to uphold.
 This invariant is used to justify which operations safe code can perform.
@@ -82,6 +89,14 @@ Moreover, such unsafe code must not return a non-UTF-8 string to the "outside" o
 To summarize: *Data must always be valid, but it only must be safe in safe code.*
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
 
+#### Layout
+
+The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
+Moreover, the layout of a type records its *function call ABI* (or just *ABI* for short): how the type is passed *by value* across a function boundary.
+
+Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
+In this document, *layout* and *representation* are not synonyms.
+
 #### Niche
 
 The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
@@ -96,22 +111,6 @@ niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
 `&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
 
-#### Validity Invariant
-
-The *validity invariant* is an invariant that all data must uphold any time it is accessed or copied in a typed manner.
-This invariant is known to the compiler and exploited by optimizations such as improved enum layout or eliding in-bounds checks.
-
-In terms of MIR statements, "accessed or copied" means whenever an assignment statement is executed.
-That statement has a type (LHS and RHS must have the same type), and the data being assigned must be valid at that type.
-Moreover, arguments passed to a function must be valid at the type given in the callee signature, and the return value of a function must be valid at the type given in the caller signature.
-OPEN QUESTION: Are there more cases where data must be valid?
-
-In terms of code, some data computed by `TERM` is valid at type `T` if and only if the following program does not have UB:
-```rust,ignore
-fn main() { unsafe {
-  let t: T = std::mem::transmute(TERM);
-} }
-```
 
 ### TODO
 
