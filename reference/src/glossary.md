@@ -1,5 +1,42 @@
 ## Glossary
 
+#### Aliasing
+
+(Please note: a full aliasing model for Rust has not yet been constructed, but
+at the moment we can give the following guidelines.)
+
+*Aliasing* is any time two pointers and/or references point to the same "span"
+of memory. A span of memory is similar to how a slice works: there's a base byte
+address as well as a length in bytes.
+
+Consider the following example:
+
+```rust
+fn main() {
+    let u: u64 = 7_u64;
+    let r: &u64 = &u;
+    let s: &[u8] = unsafe {
+        core::slice::from_raw_parts(&u as *const u64 as *const u8, 8)
+    };
+    let (head, tail) = s.split_first().unwrap();
+}
+```
+
+In this case, both `r` and `s` alias each other, since they both point to the
+memory of `u`.
+
+However, `head` and `tail` do not alias each other: `head` points to the first
+byte of `u` and `tail` points to the other seven bytes of `u` after it.
+
+* The span length of `&T`, `&mut T`, `*const T`, or `*mut T` when `T` is
+  [`Sized`](https://doc.rust-lang.org/core/marker/trait.Sized.html) is
+  `size_of<T>()`.
+* When `T` is not `Sized` the span length is `size_of_val(t)`.
+
+One interesting side effect of these rules is that references and pointers to
+Zero Sized Types _never_ alias each other, because their span length is always 0
+bytes.
+
 #### Interior mutability
 
 *Interior Mutation* means mutating memory where there also exists a live shared reference pointing to the same memory; or mutating memory through a pointer derived from a shared reference.
