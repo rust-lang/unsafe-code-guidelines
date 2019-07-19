@@ -5,9 +5,10 @@
 (Please note: a full aliasing model for Rust has not yet been constructed, but
 at the moment we can give the following guidelines.)
 
-*Aliasing* is any time two pointers and/or references point to the same "span"
-of memory. A span of memory is similar to how a slice works: there's a base byte
-address as well as a length in bytes.
+*Aliasing* is any time one pointer or reference points to a "span" of memory
+that overlaps with the span of another pointer or reference. A span of memory is
+similar to how a slice works: there's a base byte address as well as a length in
+bytes.
 
 Consider the following example:
 
