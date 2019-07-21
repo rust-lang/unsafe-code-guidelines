@@ -97,9 +97,9 @@ pub extern "C" fn cons(node: Option<Box<Cons>>, data: c_int) -> Box<Cons> {
 }
 
 #[no_mangle]
-pub extern "C" fn iterate(
+pub unsafe extern "C" fn iterate(
   node: Option<&Cons>, 
-  func: extern fn(i32, *mut c_void), // note - non-nullable
+  func: unsafe extern "C" fn(i32, *mut c_void), // note - non-nullable
   thunk: *mut c_void, // note - this is a thunk, so it's just passed raw
 ) {
   let mut it = node;
@@ -110,9 +110,9 @@ pub extern "C" fn iterate(
 }
 
 #[no_mangle]
-pub extern "C" fn for_all(
+pub unsafe extern "C" fn for_all(
   node: Option<&Cons>, 
-  func: extern fn(i32, *mut c_void) -> bool,
+  func: unsafe extern "C" fn(i32, *mut c_void) -> bool,
   thunk: *mut c_void,
 ) -> bool {
   let mut it = node;
