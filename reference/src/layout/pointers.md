@@ -28,15 +28,18 @@ and are at least one word.
 
 ### Notes
 
-The layouts of `&T`, `&mut T`, `*const T` and `*mut T` are the same.
+The size, alignment, and call ABI of `&T`, `&mut T`, `*const T` and `*mut T` are
+the same.
 
-If `T` is sized, references and pointers to `T` have a size and alignment of one
-word and have therefore the same layout as C pointers.
+If `T` is sized, the size, alignment, and call ABI of references and pointers to
+`T` is the same as that of C pointers.
 
-> **warning**: while the layout of references and pointers is compatible with
-> the layout of C pointers, references come with a _validity_ invariant that
-> does not allow them to be used when they could be `NULL`, unaligned, dangling,
-> or, in the case of `&mut T`, aliasing.
+> **warning**: while the size, alignment, and call ABI of references and
+> pointers is compatible with the layout of C pointers, references come with a
+> _validity_ invariant that does not allow them to be used when they could be
+> `NULL`, unaligned, dangling, or, in the case of `&mut T`, aliasing. Since the
+> niches of references and pointers are not the same, these types are not
+> layout-compatible with each other.
 
 We do not make any guarantees about the layout of
 multi-trait objects `&(dyn Trait1 + Trait2)` or references to other dynamically sized types,
@@ -53,7 +56,7 @@ struct DynObject {
 
 > **note**: In the layout of `&dyn mut Trait` the field `data` is of the type `*mut u8`.
 
-The layout of `&[T]` is the same as that of:
+The size, alignment, and call ABI of `&[T]` and `&mut [T]` are the same as that of:
 ```rust
 #[repr(C)]
 struct Slice<T> {
@@ -62,7 +65,11 @@ struct Slice<T> {
 }
 ```
 
-> **note**: In the layout of `&mut [T]` the field `ptr` is of the type `*mut T`.
+> **note**: the field `ptr` is of the type `*mut T` for `&mut [T]`.
 
-The layout of `&str` is the same as that of `&[u8]`, and the layout of `&mut str` is
-the same as that of `&mut [u8]`.
+The size, alignment, and call ABI of `&str` is the same as that of `&[u8]`, and
+the layout of `&mut str` is the same as that of `&mut [u8]`.
+
+#### Unresolved question
+
+* Does `&str` have the same niches as `&[u8]` ?
