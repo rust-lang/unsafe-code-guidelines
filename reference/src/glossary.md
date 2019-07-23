@@ -58,8 +58,8 @@ The *layout* of a type defines:
 * its size,
 * its alignment,
 * its field offsets (e.g. fields of structs, union, enums, arrays, ...)
-* its [niches][Niche],
-* its call abi.
+* its [niches](glossary.html#niche),
+* its [call abi](glossary.html#call-abi).
 
 Note: due to discriminant-elision optimizations, niches are required to compute
 the layout of, e.g., `Option<T>`, from the layout of `T`.
