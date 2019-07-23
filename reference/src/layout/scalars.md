@@ -10,9 +10,9 @@ layout `#[repr()]` flags.
 
 ## `bool`
 
-Rust's `bool` has the same layout as C17's` _Bool`, that is, its size and
-alignment are implementation-defined. Any `bool` can be cast into an integer,
-taking on the values 1 (`true`) or 0 (`false`).
+Rust's `bool` has the same layout as C17's` _Bool` which is
+implementation-defined. Any `bool` can be cast into an integer, taking on the
+values 1 (`true`) or 0 (`false`).
 
 > **Note**: on all platforms that Rust's currently supports, its size and
 > alignment are 1, and its ABI class is `INTEGER` - see [Rust Layout and ABIs].
