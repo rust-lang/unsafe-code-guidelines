@@ -10,8 +10,9 @@ The _offset_ of the first array element is `0`, that is, a pointer to the array
 and a pointer to its first element both point to the same memory address.
 
 The _alignment_ of array types is greater or equal to the alignment of its
-element type. If the element type is `repr(C)` the layout of the array is
-guaranteed to be the same as the layout of a C array with the same element type.
+element type. If the element type is `repr(C)` the size and alignment of the
+array is guaranteed to be the same as the size and alignment of a C array with
+the same element type.
 
 > **Note**: the type of array arguments in C function signatures, e.g., `void
 > foo(T x[N])`, decays to a pointer. That is, these functions do not take arrays
