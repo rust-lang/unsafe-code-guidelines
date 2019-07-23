@@ -25,7 +25,7 @@ or the address of a function.
 
 ### Representation
 
-The ABI and layout of `(unsafe)? (extern "ABI")? fn(Args...) -> Ret`
+The size, alignment, and call ABI of `(unsafe)? (extern "ABI")? fn(Args...) -> Ret`
 is exactly that of the corresponding C type --
 the lack of a null value does not change this. 
 On common platforms, this means that `*const ()` and `fn(Args...) -> Ret` have
