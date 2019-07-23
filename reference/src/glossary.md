@@ -61,10 +61,12 @@ The *layout* of a type defines:
 * its [niches][Niche],
 * its call abi.
 
+Note: due to discriminant-elision optimizations, niches are required to compute
+the layout of, e.g., `Option<T>`, from the layout of `T`.
+
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
 In this document, *layout* and *representation* are not synonyms.
 
-<<<<<<< HEAD
 #### Niche
 
 The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
@@ -78,16 +80,12 @@ While all niches are invalid bit-patterns, not all invalid bit-patterns are
 niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
 `&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
-=======
-Note: due to discriminant-elision optimizations, niches are required to compute
-the layout of, e.g., `Option<T>`, from the layout of `T`.
->>>>>>> Add note about why niches need to be part of the layout
 
 #### Call ABI
 
 The *call ABI* determines how a type is passed *by value* across a function boundary.
 
-Note: The call ABI is not stable. Currently, it is one of:
+Note: The set of possible call ABIs is not stable. Currently, it consists of:
 
 ```rust,ignore
 enum Abi {
