@@ -27,7 +27,8 @@ In this case, both `r` and `s` alias each other, since they both point to all of
 the bytes of `u`.
 
 However, `head` and `tail` do not alias each other: `head` points to the first
-byte of `u` and `tail` points to the other seven bytes of `u` after it.
+byte of `u` and `tail` points to the other seven bytes of `u` after it. Also,
+both `head` and `tail` alias `s`.
 
 * The span length of `&T`, `&mut T`, `*const T`, or `*mut T` when `T` is
   [`Sized`](https://doc.rust-lang.org/core/marker/trait.Sized.html) is
