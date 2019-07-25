@@ -57,7 +57,7 @@ Abstract Rust Machine is intended to operate according to the definition here.
 
 #### (Pointer) Provenance
 
-The *provenance* of a pointer can be used to distinguish pointers that point to the same memory location.
+The *provenance* of a pointer can be used to distinguish pointers that point to the same memory address.
 For example, doing pointer arithmetic "remembers" the original allocation to which the pointer pointed, so it is impossible to cross allocation boundaries using pointer arithmetic:
 
 ```rust
