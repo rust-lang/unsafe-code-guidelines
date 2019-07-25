@@ -25,6 +25,11 @@ The _stride_ of the array is constant for all element pairs and it is computed
 as the _size_ of the element type rounded up to the next multiple of the
 _alignment_ of the element type.
 
+### Arrays of zero-size
+
+Arrays `[T; N]` have zero size if and only if their count `N` is zero or their
+element type `T` is zero-sized.
+
 ### Special case `stride == size`
 
 When the element _size_ is a multiple of the element's _alignment_, then `stride
@@ -41,6 +46,7 @@ pointer to the first element of the array by `i`[^1].
     _stride_ instead of by the element _size_.
 
 [layout of structs and tuples]: ./structs-and-tuples.md
+
 
 ### Layout compatibility with packed SIMD vectors
 
