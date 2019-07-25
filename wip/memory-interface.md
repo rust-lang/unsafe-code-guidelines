@@ -9,9 +9,9 @@ This interface is a key part of the Rust Abstract Machine: it lets us separate c
 
 The interface shown below is also opinionated in several ways.
 It is not intended to be able to support *any imaginable* memory model, but rather start the process of reducing the design space of what we consider a "reasonable" memory model for Rust.
-For example, it explicitly acknowledges that pointers are not just integers and that uninitialized memory is special (both are true for C and C++ as well but you have to read the standard very careful, and consult [non-normative defect report responses](http://www.open-std.org/jtc1/sc22/wg14/www/docs/dr_260.htm), to see this).
+For example, it explicitly acknowledges that pointers are not just integers and that uninitialized memory is special (both are true for C and C++ as well but you have to read the standard very careful, and consult [defect report responses](http://www.open-std.org/jtc1/sc22/wg14/www/docs/dr_260.htm), to see this).
 Another key property of the interface presented below is that it is *untyped*.
-This implies that in Rust, *operations are typed, but memory is not*---a key difference to C and C++ with their type-based strict aliasing rules.
+This implies that in Rust, *operations are typed, but memory is not* - a key difference to C and C++ with their type-based strict aliasing rules.
 At the same time, the memory model provides a *side-effect free* way to turn pointers into "raw bytes", which is *not* [the direction C++ is moving towards](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf), and we might have to revisit this choice later if it turns out to not be workable.
 
 ## Pointers
@@ -19,7 +19,7 @@ At the same time, the memory model provides a *side-effect free* way to turn poi
 One key question a memory model has to answer is *what is a pointer*.
 It might seem like the answer is just "an integer of appropriate size", but [that is not the case][pointers-complicated].
 This becomes even more prominent with aliasing models such as [Stacked Borrows].
-So the interface will leave it up to the concrete instance to answer this question, and carry `Pointer` as an associated type.
+So we leave it up to the memory model to answer this question, and make `Pointer` an associated type.
 Practically speaking, `Pointer` will be some representation of an "address", plus [provenance] information.
 
 [provenance]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/reference/src/glossary.md#pointer-provenance
@@ -27,7 +27,7 @@ Practically speaking, `Pointer` will be some representation of an "address", plu
 ## Bytes
 
 The unit of communication between the memory model and the rest of the program is a *byte*.
-Again the question of "what is a byte" is not as trivial as it might seem; beyond `u8` values we have to represent `Pointer`s and [uninitialized memory][uninit].
+Again, the question of "what is a byte" is not as trivial as it might seem; beyond `u8` values we have to represent `Pointer`s and [uninitialized memory][uninit].
 We define the `Byte` type (in terms of an arbitrary `Pointer` type) as follows:
 
 ```rust
@@ -39,6 +39,7 @@ enum Byte<Pointer> {
     /// One byte of a pointer.
     PtrFragment {
         /// The pointer of which this is a byte.
+        /// That is, the byte is a fragment of this pointer.
         ptr: Pointer,
         /// Which byte of the pointer this is.
         /// `idx` will always be in `0..PTR_SIZE`.
@@ -47,10 +48,15 @@ enum Byte<Pointer> {
 }
 ```
 
-The purpose of `PtrFragment` is to be able to have a byte-wise representation of a `Pointer`.
+The purpose of `PtrFragment` is to enable a byte-wise representation of a `Pointer`.
 On a 32-bit system, the sequence of 4 bytes representing `ptr: Pointer` is:
 ```
-[PtrFragment { ptr, idx: 0 }, PtrFragment { ptr, idx: 1 }, PtrFragment { ptr, idx: 2 }, PtrFragment { ptr, idx: 3 }]
+[
+    PtrFragment { ptr, idx: 0 },
+    PtrFragment { ptr, idx: 1 },
+    PtrFragment { ptr, idx: 2 },
+    PtrFragment { ptr, idx: 3 },
+]
 ```
 
 Based on the `PtrToInt` trait (see below), we can turn every initialized `Byte` into an integer in `0..256`:
@@ -73,13 +79,18 @@ impl<Pointer: PtrToInt> Byte<Pointer> {
 The Rust memory interface is described by the following (not-yet-complete) trait definition:
 
 ```rust
+/// All operations are fallible, so they return `Result`.  If they fail, that
+/// means the program caused UB. What exactly the `UndefinedBehavior` type is
+/// does not matter here.
+type Result<T=()> = std::result::Result<T, UndefinedBehavior>;
+
 /// *Note*: All memory operations can be non-deterministic, which means that
 /// executing the same operation on the same memory can have different results.
 /// We also let all operations potentially mutate memory. For example, reads
 /// actually do change the current state when considering concurrency or
 /// Stacked Borrows.
-/// And finally, all operations are fallible (they return `Result`); if they
-/// fail, that means the program caused UB.
+/// This is pseudo-Rust, so we just use fully owned types everywhere for
+/// symmetry and simplicity.
 trait Memory {
     /// The type of pointer values.
     type Pointer: Copy + PtrToInt;
@@ -88,23 +99,23 @@ trait Memory {
     const PTR_SIZE: u64;
 
     /// Create a new allocation.
-    fn allocate(&mut self, size: u64, align: u64) -> Result<Self::Pointer, Error>;
+    fn allocate(&mut self, size: u64, align: u64) -> Result<Self::Pointer>;
 
     /// Remove an allocation.
-    fn deallocate(&mut self, ptr: Self::Pointer, size: u64, align: u64) -> Result<(), Error>;
+    fn deallocate(&mut self, ptr: Self::Pointer, size: u64, align: u64) -> Result;
 
     /// Write some bytes to memory.
-    fn write(&mut self, ptr: Self::Pointer, bytes: Vec<Byte<Self::Pointer>>) -> Result<(), Error>;
+    fn write(&mut self, ptr: Self::Pointer, bytes: Vec<Byte<Self::Pointer>>) -> Result;
 
     /// Read some bytes from memory.
-    fn read(&mut self, ptr: Self::Pointer, len: u64) -> Result<Vec<Byte<Self::Pointer>>, Error>;
+    fn read(&mut self, ptr: Self::Pointer, len: u64) -> Result<Vec<Byte<Self::Pointer>>>;
 
     /// Offset the given pointer.
     fn offset(&mut self, ptr: Self::Pointer, offset: u64, mode: OffsetMode)
-        -> Result<Self::Pointer, Error>;
+        -> Result<Self::Pointer>;
 
     /// Cast the given integer to a pointer.  (The other direction is handled by `PtrToInt` below.)
-    fn int_to_ptr(&mut self, int: u64) -> Result<Self::Pointer, Error>;
+    fn int_to_ptr(&mut self, int: u64) -> Result<Self::Pointer>;
 }
 
 /// The `Pointer` type must know how to extract its bytes, *without any access to the `Memory`*.
