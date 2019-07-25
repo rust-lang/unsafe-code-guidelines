@@ -11,6 +11,7 @@ The interface is also opinionated in several ways; this is not intended to be ab
 For example, it explicitly acknowledges that pointers are not just integers and that uninitialized memory is special (both are true for C and C++ as well but you have to read the standard very careful, and consult non-normative defect report responses, to see this).
 Another key property of the interface presented below is that it is *untyped*.
 This encodes the fact that in Rust, *operations are typed, but memory is not*---a key difference to C and C++ with their type-based strict aliasing rules.
+At the same time, the memory model provides a *side-effect free* way to turn pointers into "raw bytes", which is *not* [the direction C++ is moving towards](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf), so we might have to revisit this choice later.
 
 ## Pointers
 
@@ -36,7 +37,7 @@ enum Byte<Pointer> {
         /// The pointer of which this is a byte.
         ptr: Pointer,
         /// Which byte of the pointer this is.
-        /// `idx` will always be in `0..size_of::<usize>()`.
+        /// `idx` will always be in `0..PTR_SIZE`.
         idx: u8,
     }
 }
@@ -48,6 +49,21 @@ On a 32-bit system, the sequence of 4 bytes representing `ptr: Pointer` is:
 [PtrFragment { ptr, idx: 0 }, PtrFragment { ptr, idx: 1 }, PtrFragment { ptr, idx: 2 }, PtrFragment { ptr, idx: 3 }]
 ```
 
+Based on the `PtrToInt` trait (see below), we can turn every initialized `Byte` into an integer in `0..256`:
+
+```rust
+impl<Pointer: PtrToInt> Byte<Pointer> {
+    fn as_int(self) -> Option<u8> {
+        match self {
+            Byte::Raw(int) => Some(int),
+            Byte::Uninit => None,
+            Byte::PtrFragment { ptr, idx } =>
+                ptr.get_byte(idx),
+        }
+    }
+}
+```
+
 ## Memory interface
 
 The Rust memory interface is described by the following (not-yet-complete) trait definition:
@@ -55,14 +71,17 @@ The Rust memory interface is described by the following (not-yet-complete) trait
 ```rust
 /// *Note*: All memory operations can be non-deterministic, which means that
 /// executing the same operation on the same memory can have different results.
-/// We also let all operations potentially mutated memory. For example, reads
+/// We also let all operations potentially mutate memory. For example, reads
 /// actually do change the current state when considering concurrency or
 /// Stacked Borrows.
 /// And finally, all operations are fallible (they return `Result`); if they
 /// fail, that means the program caused UB.
 trait Memory {
     /// The type of pointer values.
-    type Pointer;
+    type Pointer: Copy + PtrToInt;
+
+    /// The size of pointer values.
+    const PTR_SIZE: u64;
 
     /// Create a new allocation.
     fn allocate(&mut self, size: u64, align: u64) -> Result<Self::Pointer, Error>;
@@ -79,11 +98,14 @@ trait Memory {
     /// Offset the given pointer.
     fn offset(&mut self, ptr: Self::Pointer, offset: u64, mode: OffsetMode) -> Result<Self::Pointer, Error>;
 
-    /// Cast the given pointer to an integer.
-    fn ptr_to_int(&mut self, ptr: Self::Pointer) -> Result<u64, Error>;
-
     /// Cast the given integer to a pointer.
     fn int_to_ptr(&mut self, int: u64) -> Result<Self::Pointer, Error>;
+}
+
+/// The `Pointer` type must know how to extract its bytes, *without any access to the `Memory`*.
+trait PtrToInt {
+    /// Get the `idx`-th byte of the pointer.  `idx` must be in `0..PTR_SIZE`.
+    fn get_byte(self, idx: u8) -> u8;
 }
 
 /// The rules applying to this pointer offset operation.

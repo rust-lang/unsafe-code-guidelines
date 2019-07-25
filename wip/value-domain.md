@@ -4,7 +4,8 @@
 
 The purpose of this document is to describe what the set of *all possible values* is in Rust.
 This is an important definition: one key element of a Rust specification will be to define the [representation relation][representation] of every type.
-This relation relates values with lists of bytes, so before we can even start specifying the relation we have to specify the involved domains.
+This relation relates values with lists of bytes: it says, for a given value and list of bytes, if that value is represented by that list.
+However, before we can even start specifying the relation, we have to specify the involved domains.
 `Byte` is defined as part of [the memory interface][memory-interface]; this document is about defining `Value`.
 
 [representation]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/reference/src/glossary.md#representation
@@ -45,7 +46,7 @@ We show some examples for how one might want to use this `Value` domain to defin
 
 ### `bool`
 
-The value relation for `bool` relates `Bool(true)` with `[Raw(0)]` and `Bool(false)` with [`Raw(1)`], and that's it.
+The value relation for `bool` relates `Bool(b)` with `[bb]` if and only if `bb.as_int() == Some(if b { 1 } else { 0 })`.
 
 ### `()`
 
@@ -72,12 +73,12 @@ It also shows that the actual content of the padding bytes is entirely irrelevan
 
 Reference types are tricky.
 But a possible value relation for sized `T` is:
-A value `Ptr(ptr)` is related to `[PtrFragment { ptr, idx: 0 }, ..., PtrFragment { ptr, idx: N-1 }]` where `N == size_of::<usize>()` if `ptr` is non-NULL and aligned to `align_of::<T>()`.
+A value `Ptr(ptr)` is related to `[PtrFragment { ptr, idx: 0 }, ..., PtrFragment { ptr, idx: PTR_SIZE-1 }]` if `ptr` is non-NULL and appropriately aligned (defining alignment is left open for now).
 
 ### `u8`
 
 For the value representation of integer types, there are two different reasonable choices.
-Certainly, a value `Int(i)` where `i` in `0..256` is related to `[Raw(i as u8)]`.
+Certainly, a value `Int(i)` where `i` in `0..256` is related to `[b]` if `b.as_int() == Some(i)`.
 
 And then, maybe, we also want to additionally say that value `Uninit` is related to `[Uninit]`.
 This essentially corresponds to saying that uninitialized memory is a valid representation of a `u8` value (namely, the uninitialized value).
