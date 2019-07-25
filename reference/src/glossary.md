@@ -45,7 +45,7 @@ Depending on the type, you can determine the size as follows:
     you can use `size_of_val`. There is not currently a safe way to determine the
     span of a pointer to an unsized type.
 
-The Data Layout chapter also has more information on the sizes of different types.
+The [Data layout](./layout.md) chapter also has more information on the sizes of different types.
 
 One interesting side effect of these rules is that references and pointers to
 Zero Sized Types _never_ alias each other, because their span length is always 0
