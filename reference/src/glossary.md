@@ -10,8 +10,7 @@ bytes.
 **Note**: a full aliasing model for Rust, defining when aliasing is allowed
 and when not, has not yet been defined. The purpose of this definition is to
 define when aliasing *happens*, not when it is *allowed*. The most developed
-potential aliasing model so far is known as "Stacked Borrows", and can be found
-[here](https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md).
+potential aliasing model so far is [Stacked Borrows][stacked-borrows].
 
 Consider the following example:
 
@@ -55,6 +54,24 @@ It is also important to know that LLVM IR has a `noalias` attribute that works
 somewhat differently from this definition. However, that's considered a low
 level detail of a particular Rust implementation. When programming Rust, the
 Abstract Rust Machine is intended to operate according to the definition here.
+
+#### (Pointer) Provenance
+
+The *provenance* of a pointer can be used to distinguish pointers that point to the same memory location.
+For example, doing pointer arithmetic "remembers" the original allocation to which the pointer pointed, so it is impossible to cross allocation boundaries using pointer arithmetic:
+
+```rust
+let raw1 = Box::into_raw(Box::new(13u8));
+let raw2 = Box::into_raw(Box::new(42u8));
+let raw2_wrong = raw1.wrapping_add(raw2.wrapping_sub(raw1 as usize) as usize);
+// Now raw2 and raw2_wrong have same *address*...
+assert_eq!(raw2 as usize, raw2_wrong as usize);
+// ...but it would be UB to use raw2_wrong, as it was obtained by
+// cross-allocation arithmetic. raw2_wrong has the wrong *provenance*.
+```
+
+Another example of pointer provenance is the "tag" from [Stacked Borrows][stacked-borrows].
+For some more information, see [this blog post](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html) and [this document proposing a more precise definition of provenance for C](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf).
 
 #### Interior mutability
 
@@ -140,7 +157,8 @@ requirement of 2.
 
 ### TODO
 
-* *tag*
 * *rvalue*
 * *lvalue*
 * *representation*
+
+[stacked-borrows]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md
