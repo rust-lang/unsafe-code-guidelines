@@ -4,8 +4,10 @@
 
 The purpose of this document is to describe the interface between a Rust program and memory.
 This interface is a key part of the Rust Abstract Machine: it lets us separate concerns by splitting the Machine (i.e., its specification) into two pieces, connected by this well-defined interface:
-* The *expression/statement semantics* of Rust boils down to explaining which "memory events" (calls to the memory interface) happen in which order - expressed as calls to the methods of this interface, and reactions to its return values. This part of the specification is *pure* in the sense that it has no "state": everything that needs to be remembered from one expression evaluation to the next is communicated through memory.
-* The Rust *memory model* explains which interactions with the memory are legal (the others are UB), and which values can be returned by reads. A memory model is defined by implementing the memory interface.
+* The *expression/statement semantics* of Rust boils down to explaining which "memory events" (calls to the memory interface) happen in which order - expressed as calls to the methods of this interface, and reactions to its return values.
+  This part of the specification is *pure* in the sense that it has no "state": everything that needs to be remembered from one expression evaluation to the next is communicated through memory.
+* The Rust *memory model* explains which interactions with the memory are legal (the others are UB), and which values can be returned by reads.
+  A memory model is defined by implementing the memory interface.
 
 The interface shown below is also opinionated in several ways.
 It is not intended to be able to support *any imaginable* memory model, but rather start the process of reducing the design space of what we consider a "reasonable" memory model for Rust.
