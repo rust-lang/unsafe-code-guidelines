@@ -28,7 +28,7 @@ Practically speaking, `Pointer` will be some representation of an "address", plu
 
 The unit of communication between the memory model and the rest of the program is a *byte*.
 Again, the question of "what is a byte" is not as trivial as it might seem; beyond `u8` values we have to represent `Pointer`s and [uninitialized memory][uninit].
-We define the `Byte` type (in terms of an arbitrary `Pointer` type) as follows:
+We define the `Byte` type as follows, where `Pointer` will later be instantiated with the `Memory::Pointer` associated type.
 
 ```rust
 enum Byte<Pointer> {
@@ -136,6 +136,9 @@ enum OffsetMode {
     Inbounds,
 }
 ```
+
+We will generally assume we have a particular memory model in scope, and freely refer to its `PTR_SIZE` and `Pointer` items.
+We will also write `Byte` for `Byte<Pointer>`.
 
 This is a very basic memory interface that is incomplete in at least the following ways:
 

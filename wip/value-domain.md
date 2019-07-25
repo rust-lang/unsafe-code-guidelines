@@ -13,10 +13,10 @@ However, before we can even start specifying the relation, we have to specify th
 
 ## Values
 
-The Rust value domain is described by the following (incomplete) type definition (in terms of an arbitrary `Pointer` type instantiated by [the memory interface][memory-interface]):
+The Rust value domain is described by the following (incomplete) type definition (using the `Pointer` type defined by [the memory interface][memory-interface]):
 
 ```rust
-enum Value<Pointer> {
+enum Value {
     /// A mathematical integer, used for `i*`/`u*` types.
     Int(BigInt),
     /// A Boolean value, used for `bool`.
@@ -33,7 +33,7 @@ enum Value<Pointer> {
         data: Box<Self>,
     },
     /// A "bag of raw bytes", used for unions.
-    RawBag(Vec<Byte<Pointer>>),
+    RawBag(Vec<Byte>),
     /* ... */
 }
 ```
