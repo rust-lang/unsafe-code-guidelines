@@ -33,7 +33,7 @@ byte of `u` and `tail` points to the other seven bytes of `u` after it. Both `he
 and `tail` alias `s`, any overlap is sufficient to count as an alias.
 
 * The span of a pointer or reference is the size of the value being pointed to or referenced.
-* For some type `T` that is [`Sized`](https://doc.rust-lang.org/core/marker/trait.Sized.html)
+* For a type `T` that is [`Sized`](https://doc.rust-lang.org/core/marker/trait.Sized.html)
   The span length of a pointer or reference to `T` is found with `size_of::<T>()`.
 * When `T` is not `Sized` the story is a little tricker:
   * If you have a reference `r` you can use `size_of_val(r)` to determine the
