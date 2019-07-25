@@ -3,7 +3,9 @@
 #### Aliasing
 
 (Please note: a full aliasing model for Rust has not yet been constructed, but
-at the moment we can give the following definition.)
+at the moment we can give the following definition. The most developed potential
+aliasing model so far is known as "Stacked Borrows", and can be found
+[here](https://github.com/Lokathor/unsafe-code-guidelines/blob/lokathor/wip/stacked-borrows.md).)
 
 *Aliasing* is any time one pointer or reference points to a "span" of memory
 that overlaps with the span of another pointer or reference. A span of memory is
