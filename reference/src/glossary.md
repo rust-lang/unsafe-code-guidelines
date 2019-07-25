@@ -2,15 +2,16 @@
 
 #### Aliasing
 
-(Please note: a full aliasing model for Rust has not yet been constructed, but
-at the moment we can give the following definition. The most developed potential
-aliasing model so far is known as "Stacked Borrows", and can be found
-[here](https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md).)
-
-*Aliasing* is any time one pointer or reference points to a "span" of memory
+*Aliasing* occurs when one pointer or reference points to a "span" of memory
 that overlaps with the span of another pointer or reference. A span of memory is
 similar to how a slice works: there's a base byte address as well as a length in
 bytes.
+
+**Note**: a full aliasing model for Rust, defining when aliasing is allowed
+and when not, has not yet been defined. The purpose of this definition is to
+define when aliasing *happens*, not when it is *allowed*. The most developed
+potential aliasing model so far is known as "Stacked Borrows", and can be found
+[here](https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md).
 
 Consider the following example:
 
@@ -33,7 +34,6 @@ byte of `u` and `tail` points to the other seven bytes of `u` after it. Both `he
 and `tail` alias `s`, any overlap is sufficient to count as an alias.
 
 The span of a pointer or reference is the size of the value being pointed to or referenced.
-
 Depending on the type, you can determine the size as follows:
 
 * For a type `T` that is [`Sized`](https://doc.rust-lang.org/core/marker/trait.Sized.html)
