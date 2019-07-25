@@ -32,7 +32,10 @@ However, `head` and `tail` do not alias each other: `head` points to the first
 byte of `u` and `tail` points to the other seven bytes of `u` after it. Both `head`
 and `tail` alias `s`, any overlap is sufficient to count as an alias.
 
-* The span of a pointer or reference is the size of the value being pointed to or referenced.
+The span of a pointer or reference is the size of the value being pointed to or referenced.
+
+Depending on the type, you can determine the size as follows:
+
 * For a type `T` that is [`Sized`](https://doc.rust-lang.org/core/marker/trait.Sized.html)
   The span length of a pointer or reference to `T` is found with `size_of::<T>()`.
 * When `T` is not `Sized` the story is a little tricker:
@@ -41,7 +44,8 @@ and `tail` alias `s`, any overlap is sufficient to count as an alias.
   * If you have a pointer `p` you must unsafely convert that to a reference before
     you can use `size_of_val`. There is not currently a safe way to determine the
     span of a pointer to an unsized type.
-* The Data Layout chapter also has more information on the sizes of different types.
+
+The Data Layout chapter also has more information on the sizes of different types.
 
 One interesting side effect of these rules is that references and pointers to
 Zero Sized Types _never_ alias each other, because their span length is always 0
