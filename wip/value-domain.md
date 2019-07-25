@@ -23,8 +23,6 @@ enum Value<Pointer> {
     Bool(bool),
     /// A pointer.
     Ptr(Pointer),
-    /// A zero-sized "unit".
-    Unit,
     /// An uninitialized value.
     Uninit,
     /// An n-tuple.
@@ -34,6 +32,8 @@ enum Value<Pointer> {
         idx: u64,
         data: Box<Self>,
     },
+    /// A "bag of raw bytes".
+    RawBag(Vec<Byte<Pointer>>),
     /* ... */
 }
 ```
@@ -46,11 +46,12 @@ We show some examples for how one might want to use this `Value` domain to defin
 
 ### `bool`
 
-The value relation for `bool` relates `Bool(b)` with `[bb]` if and only if `bb.as_int() == Some(if b { 1 } else { 0 })`.
+The value relation for `bool` relates `Bool(b)` with `[r]` if and only if `r.as_int() == Some(if b { 1 } else { 0 })`.
+(`as_int` is defined in [the memory interface][memory-interface].)
 
 ### `()`
 
-The value relation for the `()` type relates `Unit` with the empty list `[]`, and that's it.
+The value relation for the `()` type relates the empty tuple `Tuple([])` (assuming we can use array notation to "match" on `Vec`) with the empty byte list `[]`, and that's it.
 
 ### `!`
 
@@ -58,16 +59,17 @@ The value relation for the `!` type is empty: nothing is related to anything at 
 
 ### `#[repr(C)] struct Pair<T, U>(T, U)`
 
-The value relation for `Pair` us based on the value relations for `T` and `U`.
-A value `Tuple([t, u])` (assuming we can use array notation to "match" on `Vec`) is represented by a list of bytes `rt ++ pad1 ++ ru ++ pad2` (using `++` for list concatenation) if:
+The value relation for `Pair` is based on the value relations for `T` and `U`.
+A value `Tuple([t, u])` is represented by a list of bytes `rt ++ pad1 ++ ru ++ pad2` (using `++` for list concatenation) if:
 
 * `t` is represented by `rt` at type `T`.
 * `u` is represented by `ru` at type `U`.
 * The length of `rt ++ pad1` is equal to the offset of the `U` field.
 * The length of the entire list `rt ++ pad1 ++ ru ++ pad2` is equal to the size of `Pair<T, U>`.
 
-This relation demonstrates that value of type `Pair` are always 2-tuples (aka, pairs).
-It also shows that the actual content of the padding bytes is entirely irrelevant, we only care to have the right number of them to "pad" `ru` to the right place and to "pad" the entire list to have the right length.
+This relation specifies that values of type `Pair` are always 2-tuples (aka, pairs).
+It also says that the actual content of the padding bytes is entirely irrelevant, we only care to have the right number of them to "pad" `ru` to the right place and to "pad" the entire list to have the right length.
+So, for example when considering `Pair<u8, u16>`, the value `Tuple[42, 119]` is represented on a little-endian target by `[Raw(42), byte, Raw(119), Raw(0)]` for *any* `byte: Byte`.
 
 ### `&T`/`&mut T`
 
@@ -80,8 +82,13 @@ A value `Ptr(ptr)` is related to `[PtrFragment { ptr, idx: 0 }, ..., PtrFragment
 For the value representation of integer types, there are two different reasonable choices.
 Certainly, a value `Int(i)` where `i` in `0..256` is related to `[b]` if `b.as_int() == Some(i)`.
 
-And then, maybe, we also want to additionally say that value `Uninit` is related to `[Uninit]`.
+And then, maybe, we also want to additionally say that value `Uninit` is related to byte list `[Uninit]`.
 This essentially corresponds to saying that uninitialized memory is a valid representation of a `u8` value (namely, the uninitialized value).
+
+### `union`
+
+The `union` type does not even try to interpret memory, so for a `union` of size `n`, the value relation says that for any byte list `bytes` of that length, `RawBag(bytes)` is related to `bytes`.
+(Note however that [this definition might not be implementable](https://github.com/rust-lang/unsafe-code-guidelines/issues/156).)
 
 ## The role of the value representation in the operational semantics
 
@@ -97,7 +104,7 @@ trait TypedMemory: Memory {
 }
 ```
 
-here, `Type` is some representation of the Rust type system (akin to [`Ty`](https://doc.rust-lang.org/nightly/nightly-rustc/rustc/ty/type.Ty.html) in the compiler).
+Here, `Type` is some representation of the Rust type system (akin to [`Ty`](https://doc.rust-lang.org/nightly/nightly-rustc/rustc/ty/type.Ty.html) in the compiler).
 We can implement `TypedMemory` for any `Memory` as follows:
 * For `typed_write`, pick any representation of `val` for `ty`, and call `Memory::write`. If no representation exists, we have UB.
 * For `typed_read`, read `ty.size()` many bytes from memory, and then determine which value this list of bytes represents. If it does not represent any value, we have UB.
@@ -109,13 +116,13 @@ This also means that for types that have padding, the "typed copy" does not pres
 
 ## Relation to validity invariant
 
-One way we *could* also use the value representation (and the author things this is exceedingly elegant) is to define the validity invariant.
+One way we *could* also use the value representation (and the author thinks this is exceedingly elegant) is to define the validity invariant.
 Certainly, it is the case that if a list of bytes is not related to any value for a given type `T`, then that list of bytes is *invalid* for `T` and it should be UB to produce such a list of bytes at type `T`.
 We could decide that this is an "if and only if", i.e., that the validity invariant for a type is exactly "must be in the value representation".
 For many types this is likely what we will do anyway (e.g., for `bool` and `!` and `()` and integers), but for references, this choice would mean that *validity of the reference cannot depend on what memory looks like*---so "dereferencable" and "points to valid data" cannot be part of the validity invariant for references.
 The reason this is so elegant is that, as we have seen above, a "typed copy" already very naturally is UB when the memory that is copied is not a valid representation of `T`.
 This means we do not even need a special clause in our specification for the validity invariant---in fact, the term does not even have to appear in the specification---as everything juts falls out of how a "typed copy" applies the value representation twice.
 
-Justifying the `dereferencable` LLVM attribute is, in this case, left to the aliasing model (e.g. [Stacked Borrows]), just like that is needed to justify the `noalias` attribute.
+Justifying the `dereferencable` LLVM attribute is, in this case, left to the aliasing model (e.g. [Stacked Borrows]), just like the `noalias` attribute.
 
 [Stacked Borrows]: stacked-borrows.md

@@ -4,21 +4,22 @@
 
 The purpose of this document is to describe the interface between a Rust program and memory.
 This interface is a key part of the Rust Abstract Machine: it lets us separate concerns by splitting the Machine (i.e., its specification) into two pieces, connected by this well-defined interface:
-* The *expression/statement semantics* of Rust boils down to explaining which "memroy events" (calls to the memory interface) happen in which order.
+* The *expression/statement semantics* of Rust boils down to explaining which "memroy events" (calls to the memory interface) happen in which order. This part of the specification is *pure* in the sense that it has no "state": everything that needs to be remembered from one expression evaluation to the next is communicated through memory.
 * The Rust *memory model* explains which interactions with the memory are legal (the others are UB), and which values can be returned by reads.
 
-The interface is also opinionated in several ways; this is not intended to be able to support *any imaginable* memory model, but rather start the process of reducing the design space of what we consider a "reasonable" memory model for Rust.
-For example, it explicitly acknowledges that pointers are not just integers and that uninitialized memory is special (both are true for C and C++ as well but you have to read the standard very careful, and consult non-normative defect report responses, to see this).
+The interface shown below is also opinionated in several ways.
+It is not intended to be able to support *any imaginable* memory model, but rather start the process of reducing the design space of what we consider a "reasonable" memory model for Rust.
+For example, it explicitly acknowledges that pointers are not just integers and that uninitialized memory is special (both are true for C and C++ as well but you have to read the standard very careful, and consult [non-normative defect report responses](http://www.open-std.org/jtc1/sc22/wg14/www/docs/dr_260.htm), to see this).
 Another key property of the interface presented below is that it is *untyped*.
-This encodes the fact that in Rust, *operations are typed, but memory is not*---a key difference to C and C++ with their type-based strict aliasing rules.
-At the same time, the memory model provides a *side-effect free* way to turn pointers into "raw bytes", which is *not* [the direction C++ is moving towards](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf), so we might have to revisit this choice later.
+This implies that in Rust, *operations are typed, but memory is not*---a key difference to C and C++ with their type-based strict aliasing rules.
+At the same time, the memory model provides a *side-effect free* way to turn pointers into "raw bytes", which is *not* [the direction C++ is moving towards](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf), and we might have to revisit this choice later if it turns out to not be workable.
 
 ## Pointers
 
 One key question a memory model has to answer is *what is a pointer*.
 It might seem like the answer is just "an integer of appropriate size", but [that is not the case][pointers-complicated].
 This becomes even more prominent with aliasing models such as [Stacked Borrows].
-So we will leave this question open, and treat `Pointer` as an "associated type" of the memory interface
+So the interface will leave it up to the concrete instance to answer this question, and carry `Pointer` as an associated type.
 
 ## Bytes
 
@@ -58,7 +59,7 @@ impl<Pointer: PtrToInt> Byte<Pointer> {
             Byte::Raw(int) => Some(int),
             Byte::Uninit => None,
             Byte::PtrFragment { ptr, idx } =>
-                ptr.get_byte(idx),
+                Some(ptr.get_byte(idx)),
         }
     }
 }
@@ -96,9 +97,10 @@ trait Memory {
     fn read(&mut self, ptr: Self::Pointer, len: u64) -> Result<Vec<Byte<Self::Pointer>>, Error>;
 
     /// Offset the given pointer.
-    fn offset(&mut self, ptr: Self::Pointer, offset: u64, mode: OffsetMode) -> Result<Self::Pointer, Error>;
+    fn offset(&mut self, ptr: Self::Pointer, offset: u64, mode: OffsetMode)
+        -> Result<Self::Pointer, Error>;
 
-    /// Cast the given integer to a pointer.
+    /// Cast the given integer to a pointer.  (The other direction is handled by `PtrToInt` below.)
     fn int_to_ptr(&mut self, int: u64) -> Result<Self::Pointer, Error>;
 }
 
@@ -128,8 +130,6 @@ This is a very basic memory interface that is incomplete in at least the followi
 * To represent concurrency, many operations need to take a "thread ID" and `read` and `write` need to take an [`Ordering`].
 * To represent [Stacked Borrows], there needs to be a "retag" operation, and that one will in fact be "lightly typed" (it cares about `UnsafeCell`).
 * Maybe we want operations that can compare pointers without casting them to integers.
-
-But I think it can still be useful to provide some basic terminology and grounds for further discussion.
 
 [pointers-complicated]: https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html
 [uninit]: https://www.ralfj.de/blog/2019/07/14/uninit.html
