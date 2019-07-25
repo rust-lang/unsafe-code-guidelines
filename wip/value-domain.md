@@ -87,6 +87,11 @@ Certainly, a value `Int(i)` where `i` in `0..256` is related to `[b]` if `b.as_i
 And then, maybe, we also want to additionally say that value `Uninit` is related to byte list `[Uninit]`.
 This essentially corresponds to saying that uninitialized memory is a valid representation of a `u8` value (namely, the uninitialized value).
 
+### `NonNullU8`
+
+`NonNullU8` is basically the same as `u8` except that we remove the 0, and certainly do not consider `Uninit` a valid value.
+A value `Int(i)` where `i` in `1..256` is related to `[b]` if `b.as_int() == Some(i)`, and that's it.
+
 ### `union`
 
 The `union` type does not even try to interpret memory, so for a `union` of size `n`, the value relation says that for any byte list `bytes` of that length, `RawBag(bytes)` is related to `bytes`.
