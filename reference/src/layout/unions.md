@@ -39,11 +39,56 @@ to obtain a pointer to any field, and vice versa.
 [6.5.8.5]: http://port70.net/~nsz/c/c11/n1570.html#6.5.8p5
 [6.7.2.1.16]: http://port70.net/~nsz/c/c11/n1570.html#6.7.2.1p16
 
-Since all fields are at offset 0, this implies that `repr(C)` unions do not have
-padding before or in-between their fields. They can, however, have trailing
-padding (see next example).
+#### Padding
 
-Union fields of zero-size participate in the layout computation of the union. For example:
+Since all fields are at offset 0, `repr(C)` unions do not have padding before
+their fields. They can, however, have trailing padding, to make sure the size is
+a multiple of the alignment:
+
+```rust
+# use std::mem::{size_of, align_of};
+#[repr(C, align(2))]
+union U { x: u8 }
+# fn main() {
+// The repr(align) attribute raises the alignment requirement of U to 2
+assert_eq!(align_of::<U>(), 2);
+// This introduces trailing padding, raising the union size to 2
+assert_eq!(size_of::<U>(), 2);
+# }
+``**
+
+**Note**: there is no room between fields for padding, so `repr(C)` unions can
+only have trailing padding.
+
+The bit `i` of a `repr(C)` union is a padding bit if the bit `i` of each of its
+fields is a padding bit or trailing padding. That is:
+
+```rust
+#[repr(C)]
+union U { x: (u8, u16) }
+```
+
+The byte at offset 1 of `U` is a padding byte.
+
+#### Zero-sized fields
+
+If a `#[repr(C)]` union contains a field of zero-size, that field does not
+occupy space in the union. For example:
+
+```rust
+# use std::mem::{size_of, align_of};
+#[repr(C)] 
+union U {
+  x: u8,
+  y: (),
+}
+# fn main() {
+assert_eq!(size_of::<U>(), 1);
+# }
+```
+
+The field does, however, participate in the layout computation of the union. For
+example:
 
 ```rust
 # use std::mem::{size_of, align_of};
@@ -60,12 +105,6 @@ assert_eq!(size_of::<U>(), 2);
 # }
 ```
 
-> **NOTE**: U is larger than its largest field, and has therefore 1 byte of
-> trailing padding.
-
 This handling of zero-sized types is equivalent to the handling of zero-sized
 types in struct fields, and matches the behavior of GCC and Clang for unions in
 C when zero-sized types are allowed via their language extensions.
-
-The bit `i` of a `repr(C)` union is a padding bit if the bit `i` of each of its
-fields is a padding bit or trailing padding.
