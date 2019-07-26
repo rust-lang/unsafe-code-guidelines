@@ -124,10 +124,8 @@ x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
 #### Zero-sized structs
 
-Structs with default layout (`repr(Rust)`), layout with increased alignment
-(`repr(align(N))`), packed layout (`repr(packed(N))`), or C-compatible layout
-(`repr(C)`) are zero-sized, if they contain no fields of non-zero size. That is,
-either the type has no fields, or all of its fields have zero size.
+For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
+structs: if all fields of a struct have size 0, then the struct has size 0.
 
 For example, all these types are zero-sized:
 
