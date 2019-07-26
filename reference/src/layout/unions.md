@@ -87,7 +87,9 @@ assert_eq!(size_of::<U>(), 1);
 # }
 ```
 
-The field does, however, participate in the layout computation of the union, and can raise its alignment requirement, which in turn can introduce trailing padding. For example:
+The field does, however, participate in the layout computation of the union, and
+can raise its alignment requirement, which in turn can introduce trailing
+padding. For example:
 
 ```rust
 # use std::mem::{size_of, align_of};
@@ -102,7 +104,7 @@ assert_eq!(align_of::<U>(), 2);
 // This introduces trailing padding, raising the union size to 2
 assert_eq!(size_of::<U>(), 2);
 # }
-``**
+```
 
 This handling of zero-sized types is equivalent to the handling of zero-sized
 types in struct fields, and matches the behavior of GCC and Clang for unions in
