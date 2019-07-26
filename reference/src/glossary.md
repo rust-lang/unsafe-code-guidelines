@@ -76,10 +76,9 @@ niche.
 #### Zero-sized type / ZST
 
 Types with zero size are called zero-sized types, which is abbreviated as "ZST".
-When the alignment of the type is relevant, the schema "N-ZST" which stands for
-"N-aligned zero-sized type" is used. For example: "1-ZST" stands for
-"one-aligned zero-sized type", that is, a type with a size of zero and an
-alignment requirement of one.
+This document also uses the "1-ZST" abbreviation, which stands for "one-aligned
+zero-sized type", to refer to zero-sized types with an alignment requirement of
+1.
 
 ### TODO
 
