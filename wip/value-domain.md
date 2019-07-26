@@ -112,6 +112,8 @@ trait TypedMemory: Memory {
 ```
 
 Here, `Type` is some representation of the Rust type system (akin to [`Ty`](https://doc.rust-lang.org/nightly/nightly-rustc/rustc/ty/type.Ty.html) in the compiler).
+This interface is inspired by [Cerberus](https://www.cl.cam.ac.uk/~pes20/cerberus/).
+
 We can implement `TypedMemory` for any `Memory` as follows:
 * For `typed_write`, pick any representation of `val` for `ty`, and call `Memory::write`. If no representation exists, we have UB.
 * For `typed_read`, read `ty.size()` many bytes from memory, and then determine which value this list of bytes represents. If it does not represent any value, we have UB.
