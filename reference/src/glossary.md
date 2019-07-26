@@ -80,7 +80,7 @@ This document also uses the "1-ZST" abbreviation, which stands for "one-aligned
 zero-sized type", to refer to zero-sized types with an alignment requirement of 1. 
 
 For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
-requirement of two.
+requirement of 2.
 
 ### TODO
 
