@@ -129,6 +129,14 @@ niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
 `&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
 
+#### Zero-sized type / ZST
+
+Types with zero size are called zero-sized types, which is abbreviated as "ZST".
+This document also uses the "1-ZST" abbreviation, which stands for "one-aligned
+zero-sized type", to refer to zero-sized types with an alignment requirement of 1. 
+
+For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
+requirement of 2.
 
 ### TODO
 
