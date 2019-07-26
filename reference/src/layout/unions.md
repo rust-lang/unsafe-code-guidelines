@@ -87,8 +87,7 @@ assert_eq!(size_of::<U>(), 1);
 # }
 ```
 
-The field does, however, participate in the layout computation of the union. For
-example:
+The field does, however, participate in the layout computation of the union, and can raise its alignment requirement, which in turn can introduce trailing padding. For example:
 
 ```rust
 # use std::mem::{size_of, align_of};
@@ -103,8 +102,12 @@ assert_eq!(align_of::<U>(), 2);
 // This introduces trailing padding, raising the union size to 2
 assert_eq!(size_of::<U>(), 2);
 # }
-```
+``**
 
 This handling of zero-sized types is equivalent to the handling of zero-sized
 types in struct fields, and matches the behavior of GCC and Clang for unions in
 C when zero-sized types are allowed via their language extensions.
+
+**C++ compatibility hazard**: C++ does, in general, give a size of 1 to empty
+structs. If an empty struct in C++ is used as an union field, a "naive"
+translation of that code into Rust will not produce a compatible result.
