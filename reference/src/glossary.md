@@ -181,12 +181,12 @@ requirement of 2.
 
 A *place* (called "lvalue" in C and "glvalue" in C++) is the result of computing a [*place expression*][place-value-expr].
 A place is basically a pointer (pointing to some location in memory, potentially carrying [provenance](#pointer-provenance)), but might contain more information such as size or alignment (the details will have to be determined as the Rust Abstract Machine gets specified more precisely).
-A place has a type.
-Places cannot be "stored" in memory, only [values](#value) can.
+A place has a type, indicating the type of [values](#value) that it stores.
+Places cannot be "stored" in memory, only values can.
 
 The key operations on a place are:
 * storing a [value](#value) of the same type in it (when it is used on the left-hand side of an assignment),
-* turning it into a [pointer value](#value) (when it is used inside `&expr`),
+* turning it into a [pointer value](#value) (when it is used inside `&expr`), which is also the only way to "store" a place,
 * and loading a [value](#value) of the same type from it (through the place-to-value coercion).
 
 
@@ -194,6 +194,7 @@ The key operations on a place are:
 
 A *value* (called "value of the expression" or "rvalue" in C and "prvalue" in C++) is what gets stored in a [place](#place), and also the result of computing a [*value expression*][place-value-expr].
 A value has a type, and it denotes the abstract mathematical concept that is represented by data in our programs.
+
 For example, a value of type `u8` is a mathematical integer in the range `0..256`.
 Values can be (according to their type) turned into a list of bytes, which is called a [representation](#representation) of the value.
 Values are ephemeral; they arise during the computation of an instruction but are only ever persisted in memory through their representation.
