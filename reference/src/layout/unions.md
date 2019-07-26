@@ -61,16 +61,6 @@ assert_eq!(size_of::<U>(), 2);
 > unlike structs there is no "between the fields" that could be filled 
 > with padding.
 
-The bit `i` of a `repr(C)` union is a padding bit if the bit `i` of each of its
-fields is a padding bit or trailing padding. That is:
-
-```rust
-#[repr(C)]
-union U { x: (u8, u16) }
-```
-
-The byte at offset 1 of `U` is a padding byte.
-
 #### Zero-sized fields
 
 If a `#[repr(C)]` union contains a field of zero-size, that field does not
