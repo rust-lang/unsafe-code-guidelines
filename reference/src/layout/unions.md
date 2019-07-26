@@ -57,7 +57,7 @@ assert_eq!(size_of::<U>(), 2);
 # }
 ``**
 
-**Note**: there is no room between fields for padding, so `repr(C)` unions can
+**Note**: Fields are overlapped instead of laid out sequentially, so unlike structs there is no "between the fields" that could be filled with padding.
 only have trailing padding.
 
 The bit `i` of a `repr(C)` union is a padding bit if the bit `i` of each of its
