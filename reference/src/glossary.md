@@ -60,7 +60,7 @@ Abstract Rust Machine is intended to operate according to the definition here.
 The *provenance* of a pointer is used, in the Rust Abstract Machine, to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
 
 For example, we have to distinguish pointers to the same location if they originated from different allocations.
-After all, cross-allocation pointer arithmetic does not lead to usable pointers, so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
+Cross-allocation pointer arithmetic [does not lead to usable pointers](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset), so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
 It uses provenance to achieve this:
 
 ```rust
