@@ -83,6 +83,8 @@ assert_eq!(raw2 as usize, raw2_wrong as usize);
 // has provenance @1.
 ```
 
+This provenance also exists in C/C++, but Rust is more permissive by (a) providing a [way to do pointer arithmetic across allocation boundaries without causing immediate UB](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset) (though, as we have seen, the resulting pointer still cannot be used for locations outside the allocation it originates), and (b) by allowing pointers to always be compared safely, even if their provenance differs.
+
 Another example of pointer provenance is the "tag" from [Stacked Borrows][stacked-borrows].
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html) and [this document proposing a more precise definition of provenance for C](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf).
 
