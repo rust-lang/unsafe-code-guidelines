@@ -58,7 +58,10 @@ Abstract Rust Machine is intended to operate according to the definition here.
 #### (Pointer) Provenance
 
 The *provenance* of a pointer can be used to distinguish pointers that point to the same memory address.
-For example, doing pointer arithmetic "remembers" the original allocation to which the pointer pointed, so it is impossible to cross allocation boundaries using pointer arithmetic:
+
+For example, we have to distinguish pointers to the same location if they originated from different allocations.
+A pointer "remembers" the original allocation to which it pointed.
+This is necessary to make it impossible for pointer arithmetic to cross allocation boundaries:
 
 ```rust
 let raw1 = Box::into_raw(Box::new(13u8));
