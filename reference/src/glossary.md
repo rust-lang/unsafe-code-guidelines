@@ -57,17 +57,24 @@ Abstract Rust Machine is intended to operate according to the definition here.
 
 #### (Pointer) Provenance
 
-The *provenance* of a pointer can be used, in the Rust Abstract Machine, to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
+The *provenance* of a pointer is used, in the Rust Abstract Machine, to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
 
 For example, we have to distinguish pointers to the same location if they originated from different allocations.
-A pointer "remembers" the original allocation to which it pointed.
-This is necessary to make it impossible for pointer arithmetic to cross allocation boundaries:
+After all, cross-allocation pointer arithmetic does not lead to usable pointers, so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
+It uses provenance to achieve this:
 
 ```rust
+// Let's assume the two allocations here have base addresses 0x100 and 0x200.
+// We write pointer provenance as `@N` where `N` is some kind of ID uniquely
+// identifying the allocation.
 let raw1 = Box::into_raw(Box::new(13u8));
 let raw2 = Box::into_raw(Box::new(42u8));
 let raw2_wrong = raw1.wrapping_add(raw2.wrapping_sub(raw1 as usize) as usize);
-// Now raw2 and raw2_wrong have same *address*...
+// These pointers now have the following values:
+// raw1 points to address 0x100 and has provenance @1.
+// raw2 points to address 0x200 and has provenance @2.
+// raw2_wrong points to address 0x200 and has provenance @1.
+// In other words, raw2 and raw2_wrong have same *address*...
 assert_eq!(raw2 as usize, raw2_wrong as usize);
 // ...but it would be UB to use raw2_wrong, as it was obtained by
 // cross-allocation arithmetic. raw2_wrong has the wrong *provenance*.
