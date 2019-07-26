@@ -55,7 +55,7 @@ assert_eq!(align_of::<U>(), 2);
 // This introduces trailing padding, raising the union size to 2
 assert_eq!(size_of::<U>(), 2);
 # }
-``**
+```
 
 > **Note**: Fields are overlapped instead of laid out sequentially, so 
 > unlike structs there is no "between the fields" that could be filled 
