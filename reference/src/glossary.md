@@ -77,8 +77,7 @@ let raw2_wrong = raw1.wrapping_add(raw2.wrapping_sub(raw1 as usize) as usize);
 // raw2_wrong points to address 0x200 and has provenance @1.
 // In other words, raw2 and raw2_wrong have same *address*...
 assert_eq!(raw2 as usize, raw2_wrong as usize);
-// ...but it would be UB to use raw2_wrong, as it was obtained by
-// cross-allocation arithmetic. raw2_wrong has the wrong *provenance*:
+// ...but it would be UB to use raw2_wrong, as it has the wrong *provenance*:
 // it points to address 0x200 in allocation @2, but the pointer
 // has provenance @1.
 ```
