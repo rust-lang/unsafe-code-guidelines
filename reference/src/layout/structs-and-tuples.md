@@ -122,6 +122,25 @@ compiler will not reorder it, to allow for the possibility of
 unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
+#### Zero-sized structs
+
+For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
+structs: if all fields of a struct have size 0, then the struct has size 0.
+
+For example, all these types are zero-sized:
+
+```rust
+# use std::mem::size_of;
+#[repr(align(32))] struct Zst0;
+#[repr(C)] struct Zst1(Zst0);
+struct Zst2(Zst1, Zst0);
+# fn main() {
+# assert_eq!(size_of::<Zst0>(), 0);
+# assert_eq!(size_of::<Zst1>(), 0);
+# assert_eq!(size_of::<Zst2>(), 0);
+# }
+```
+
 #### Unresolved questions
 
 During the course of the discussion in [#11] and [#12], various
@@ -130,15 +149,6 @@ are currently considering **unresolved** and -- for each of them -- an
 issue has been opened for further discussion on the repository. This
 section documents the questions and gives a few light details, but the
 reader is referred to the issues for further discussion.
-
-**Zero-sized structs ([#37]).** If you have a struct which --
-transitively -- contains no data of non-zero size, then the size of
-that struct will be zero as well. These zero-sized structs appear
-frequently as exceptions in other layout considerations (e.g.,
-single-field structs). An example of such a struct is
-`std::marker::PhantomData`.
-
-[#37]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/37
 
 **Single-field structs ([#34]).** If you have a struct with single field
 (`struct Foo { x: T }`), should we guarantee that the memory layout of
