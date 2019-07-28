@@ -10,8 +10,7 @@ bytes.
 **Note**: a full aliasing model for Rust, defining when aliasing is allowed
 and when not, has not yet been defined. The purpose of this definition is to
 define when aliasing *happens*, not when it is *allowed*. The most developed
-potential aliasing model so far is known as "Stacked Borrows", and can be found
-[here](https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md).
+potential aliasing model so far is [Stacked Borrows][stacked-borrows].
 
 Consider the following example:
 
@@ -55,6 +54,46 @@ It is also important to know that LLVM IR has a `noalias` attribute that works
 somewhat differently from this definition. However, that's considered a low
 level detail of a particular Rust implementation. When programming Rust, the
 Abstract Rust Machine is intended to operate according to the definition here.
+
+#### (Pointer) Provenance
+
+The *provenance* of a pointer is used to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
+Provenance is extra state that only exists in the Rust Abstract Machine; it is needed to specify program behavior but not present any more when the program runs on real hardware.
+In other words, pointers that only differ in their provenance can *not* be distinguished any more in the final binary (but provenance can influence how the compiler translates the program).
+
+The exact form of provenance in Rust is unclear.
+It is also unclear whether provenance applies to more than just pointers, i.e., one could imagine integers having provenance as well (so that pointer provenance can be preserved when pointers are cast to an integer and back).
+In the following, we give some examples if what provenance *could* look like.
+
+**Using provenance to track originating allocation.**
+For example, we have to distinguish pointers to the same location if they originated from different allocations.
+Cross-allocation pointer arithmetic [does not lead to usable pointers](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset), so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
+It uses provenance to achieve this:
+
+```rust
+// Let's assume the two allocations here have base addresses 0x100 and 0x200.
+// We write pointer provenance as `@N` where `N` is some kind of ID uniquely
+// identifying the allocation.
+let raw1 = Box::into_raw(Box::new(13u8));
+let raw2 = Box::into_raw(Box::new(42u8));
+let raw2_wrong = raw1.wrapping_add(raw2.wrapping_sub(raw1 as usize) as usize);
+// These pointers now have the following values:
+// raw1 points to address 0x100 and has provenance @1.
+// raw2 points to address 0x200 and has provenance @2.
+// raw2_wrong points to address 0x200 and has provenance @1.
+// In other words, raw2 and raw2_wrong have same *address*...
+assert_eq!(raw2 as usize, raw2_wrong as usize);
+// ...but it would be UB to dereference raw2_wrong, as it has the wrong *provenance*:
+// it points to address 0x200, which is in allocation @2, but the pointer
+// has provenance @1.
+```
+
+This kind of provenance also exists in C/C++, but Rust is more permissive by (a) providing a [way to do pointer arithmetic across allocation boundaries without causing immediate UB](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset) (though, as we have seen, the resulting pointer still cannot be used for locations outside the allocation it originates), and (b) by allowing pointers to always be compared safely, even if their provenance differs.
+For some more information, see [this document proposing a more precise definition of provenance for C](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf).
+
+**Using provenance for Rust's aliasing rules.**
+Another example of pointer provenance is the "tag" from [Stacked Borrows][stacked-borrows].
+For some more information, see [this blog post](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html).
 
 #### Interior mutability
 
@@ -140,7 +179,8 @@ requirement of 2.
 
 ### TODO
 
-* *tag*
 * *rvalue*
 * *lvalue*
 * *representation*
+
+[stacked-borrows]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md
