@@ -68,7 +68,7 @@ In the following, we give some examples if what provenance *could* look like.
 **Using provenance to track originating allocation.**
 For example, we have to distinguish pointers to the same location if they originated from different allocations.
 Cross-allocation pointer arithmetic [does not lead to usable pointers](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset), so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
-It uses provenance to achieve this:
+It could use provenance to achieve this:
 
 ```rust
 // Let's assume the two allocations here have base addresses 0x100 and 0x200.
