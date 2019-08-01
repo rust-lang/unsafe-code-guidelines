@@ -177,10 +177,41 @@ zero-sized type", to refer to zero-sized types with an alignment requirement of 
 For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
 requirement of 2.
 
-### TODO
+#### Place
 
-* *rvalue*
-* *lvalue*
-* *representation*
+A *place* (called "lvalue" in C and "glvalue" in C++) is the result of computing a [*place expression*][place-value-expr].
+A place is basically a pointer (pointing to some location in memory, potentially carrying [provenance](#pointer-provenance)), but might contain more information such as size or alignment (the details will have to be determined as the Rust Abstract Machine gets specified more precisely).
+A place has a type, indicating the type of [values](#value) that it stores.
+
+The key operations on a place are:
+* Storing a [value](#value) of the same type in it (when it is used on the left-hand side of an assignment).
+* Loading a [value](#value) of the same type from it (through the place-to-value coercion).
+* Converting between a place (of type `T`) and a pointer value (of type `&T`, `&mut T`, `*const T` or `*mut T`) using the `&` and `*` operators.
+  This is also the only way a place can be "stored": by converting it to a value first.
+
+#### Value
+
+A *value* (called "value of the expression" or "rvalue" in C and "prvalue" in C++) is what gets stored in a [place](#place), and also the result of computing a [*value expression*][place-value-expr].
+A value has a type, and it denotes the abstract mathematical concept that is represented by data in our programs.
+
+For example, a value of type `u8` is a mathematical integer in the range `0..256`.
+Values can be (according to their type) turned into a list of bytes, which is called a [representation](#representation) of the value.
+Values are ephemeral; they arise during the computation of an instruction but are only ever persisted in memory through their representation.
+(This is comparable to how run-time data in a program is ephemeral and is only ever persisted in serialized form.)
+
+#### Representation (relation)
+
+A *representation* of a [value](#value) is a list of bytes that is used to store or "represent" that value in memory.
+
+We also sometimes speak of the *representation of a type*; this should more correctly be called the *representation relation* as it relates values of this type to lists of bytes that represent this value.
+The term "relation" here is used in the mathematical sense: the representation relation is a predicate that, given a value and a list of bytes, says whether this value is represented by that list of bytes (`val -> list byte -> Prop`).
+
+The relation should be functional for a fixed list of bytes (i.e., every list of bytes has at most one associated representation).
+It is partial in both directions: not all values have a representation (e.g. the mathematical integer `300` has no representation at type `u8`), and not all lists of bytes correspond to a value of a specific type (e.g. lists of the wrong size correspond to no value, and the list consisting of the single byte `0x10` corresponds to no value of type `bool`).
+For a fixed value, there can be many representations (e.g., when considering type `#[repr(C)] Pair(u8, u16)`, the second byte is a padding byte so changing it does not affect the value represented by a list of bytes).
+
+See the [value domain][value-domain] for an example how values and representation relations can be made more precise.
 
 [stacked-borrows]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md
+[value-domain]: https://github.com/rust-lang/unsafe-code-guidelines/tree/master/wip/value-domain.md
+[place-value-expr]: https://doc.rust-lang.org/reference/expressions.html#place-expressions-and-value-expressions
