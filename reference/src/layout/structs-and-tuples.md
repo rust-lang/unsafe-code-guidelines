@@ -72,7 +72,18 @@ struct Foo {
 (In fact, one may use such field names in patterns or in accessor
 expressions like `foo.0`.)
 
-Structs can have various `#[repr]` flags that influence their layout:
+When layout out a struct, the compiler in particular has to decide how the
+fields of the struct are arranged, which can be visualized as follows:
+```
+[ <--> [field 1] <-----> [field 2] <-> [  field 3  ] <--> ]
+```
+The individual fields are blocks of fixed size (determined by the field's
+layout).  The compiler freely picks an order for the fields to be in (this does
+not have to be the order of declaration in the source), and it picks the gaps
+between the fields (under some constraints, such as alignment).
+
+What exactly the compiler does, as well as other aspects of layout beyond size
+and field offset, can be controlled by a `#[repr]` attribute:
 
 - `#[repr(Rust)]` -- the default.
 - `#[repr(C)]` -- request C compatibility
