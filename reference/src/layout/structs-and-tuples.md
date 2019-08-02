@@ -74,7 +74,7 @@ expressions like `foo.0`.)
 
 When layout out a struct, the compiler in particular has to decide how the
 fields of the struct are arranged, which can be visualized as follows:
-```
+```text
 [ <--> [field 1] <-----> [field 2] <-> [  field 3  ] <--> ]
 ```
 The individual fields are blocks of fixed size (determined by the field's
