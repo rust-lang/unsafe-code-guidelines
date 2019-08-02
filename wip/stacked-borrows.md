@@ -13,6 +13,10 @@ For more background, see the following blog-posts:
 * [Stacked Borrows 2.0](https://www.ralfj.de/blog/2019/04/30/stacked-borrows-2.html) is a re-design of Stacked Borrows 1 that maintains the original core ideas, but changes the mechanism to support more precise tracking of shared references.
 * [Stacked Borrows 2.1](https://www.ralfj.de/blog/2019/05/21/stacked-borrows-2.1.html) slightly tweaks the rules for read and write accesses and describes a high-level way of thinking about the new shape of the "stack" in Stacked Borrows 2.
 
+Changes compared to the latest post (2.1):
+
+* Retags are "shallow" instead of recursively looking for references inside compound types.
+
 [Miri]: https://github.com/solson/miri/
 [all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
 
@@ -109,7 +113,7 @@ pub enum RetagKind {
 
 `Retag` is inserted into the MIR for the following situations:
 
-* A retag happens after every assignment MIR statement where the assigned type may contain a reference type (checking recursively below compound types but not below references).
+* A retag happens after every assignment MIR statement where the assigned type may by of reference or box type.
   This is usually a `Default` retag.  However, if the RHS of this assignment is a `Ref` which allows two-phase borrows, then this is a `TwoPhase` retag.
 
     Currently, if the LHS of the assignment involves a `Deref`, no `Retag` is inserted.
@@ -311,13 +315,15 @@ location.stack.grant(
 
 ### Retagging
 
-When executing `Retag(kind, place)`, we recursively visit all fields of this place, descending into compound types (`struct`, `enum`, arrays and so on) but not below any pointers.
-For each reference (`&[mut] _`) and box (`Box<_>`) we encounter, and if `kind == Raw` also for each raw pointer (`*[const,mut] _`), we perform the following steps:
+When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[mut] _`) or box (`Box<_>`), and if `kind == Raw` we also check each raws pointer (`*[const,mut] _`).
+For those we perform the following steps:
 
 1. We compute a fresh tag: `Untagged` for raw pointers, `Tag(Tracking::new_ptr_id())` for everything else.
 2. We determine if we will want to protect the items we are going to generate:
    This is the case only if `kind == FnEntry` and the type of this pointer is a reference (not a box).
 3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique { two_phase: false }`.
+
+We do not recurse into fields of structs or other compound types, only "bare" references/... get retagged.
 
 ### Deallocating memory
 
