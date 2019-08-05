@@ -148,8 +148,8 @@ For some more information, see [this blog post](https://www.ralfj.de/blog/2018/0
 
 #### Soundness (of code / of a library)
 
-We say that a library (can be an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
-Conversely, the library is *unsound* if safe code *can* cause Undefined Behavior.
+We say that a library (or an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
+Conversely, the library/function is *unsound* if safe code *can* cause Undefined Behavior.
 
 #### Layout
 
