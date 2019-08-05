@@ -146,6 +146,11 @@ Moreover, such unsafe code must not return a non-UTF-8 string to the "outside" o
 To summarize: *Data must always be valid, but it only must be safe in safe code.*
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
 
+#### Soundness (of code / of a library)
+
+We say that a library (can be an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
+Conversely, the library is *unsound* if safe code *can* cause Undefined Behavior.
+
 #### Layout
 
 The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
