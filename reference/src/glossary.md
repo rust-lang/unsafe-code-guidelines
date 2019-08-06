@@ -146,10 +146,28 @@ Moreover, such unsafe code must not return a non-UTF-8 string to the "outside" o
 To summarize: *Data must always be valid, but it only must be safe in safe code.*
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
 
+#### Undefined Behavior
+[ub]: #undefined-behavior
+
+*Undefined Behavior* is a concept of the contract between the Rust programmer and the compiler:
+The programmer promises that the code exhibits no undefined behavior.
+In return, the compiler promises to compile the code in a way that the final program does on the real hardware what the source program does according to the Rust Abstract Machine.
+If it turns out the program *does* have undefined behavior, the contract is void, and the program produced by the compiler is essentially garbage (in particular, it is not bound by any specification; the program does not even have to be well-formed executable code).
+
+In Rust, the [Nomicon](https://doc.rust-lang.org/nomicon/what-unsafe-does.html) and the [Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) both have a list of behavior that the language considers undefined.
+Rust promises that safe code cannot cause Undefined Behavior---it takes the burden of this contract on itself.
+For unsafe code, however, the burden is still on the programmer.
+
+Also see: [Soundness][soundness].
+
 #### Soundness (of code / of a library)
 [soundness]: #soundness-of-code--of-a-library
 
-We say that a library (or an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
+*Soundness* is a type system concept (actually originating from the study of logics) and means that the type system is "correct" in the sense that well-typed programs actually have the desired properties.
+For Rust, this means well-typed programs cannot cause [Undefined Behavior][ub].
+This promise only extends to safe code however; for `unsafe` code, it is up to the programmer to uphold this contract.
+
+Accordingly, we say that a library (or an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
 Conversely, the library/function is *unsound* if safe code *can* cause Undefined Behavior.
 
 #### Layout
