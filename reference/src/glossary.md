@@ -129,7 +129,7 @@ fn main() { unsafe {
 The *safety* invariant is an invariant that safe code may assume all data to uphold.
 This invariant is used to justify which operations safe code can perform.
 The safety invariant can be temporarily violated by unsafe code, but must always be upheld when interfacing with unknown safe code.
-It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- IOW, it is relevant when arguing whether some *library* is [sound][soundness]
+It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- IOW, it is relevant when arguing whether some *library* is [sound][soundness].
 
 In terms of code, some data computed by `TERM` (possibly constructed from some `arguments` that can be *assumed* to satisfy the safety invariant) is valid at type `T` if and only if the following library function can be safely exposed to arbitrary (safe) code as part of the public library interface:
 ```rust,ignore
