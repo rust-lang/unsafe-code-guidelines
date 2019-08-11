@@ -51,6 +51,15 @@ We show some examples for how one might want to use this `Value` domain to defin
 The value relation for `bool` relates `Bool(b)` with `[r]` if and only if `r.as_int() == Some(if b { 1 } else { 0 })`.
 (`as_int` is defined in [the memory interface][memory-interface].)
 
+**Note:** Here and in the following, we implicitly perform a ptr-to-int cast when loading a `PtrFragment` at a non-pointer type.
+This basically means that non-pointer types carry no [provenance], and "superflous" provenance is implicitly stripped on loads.
+There are [quite a few problems](https://github.com/rust-lang/unsafe-code-guidelines/issues/181#issuecomment-519860562) with this approach,
+but there is also no known alternative that has no problems.
+For this document (in accordance with what Miri does), we chose the option that has least UB, to avoid false positives.
+But this means there are likely many false negatives, and the final Rust spec will likely have more UB than this WIP document!
+
+[provenance]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/reference/src/glossary.md#pointer-provenance
+
 ### `()`
 
 The value relation for the `()` type relates the empty tuple `Tuple([])` (assuming we can use array notation to "match" on `Vec`) with the empty byte list `[]`, and that's it.
