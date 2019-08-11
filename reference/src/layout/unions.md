@@ -29,7 +29,7 @@ Even if the offsets happen to be all 0, there might still be differences in the
 function call ABI.  If you need to pass unions by-value across an FFI boundary,
 you have to use `#[repr(C)]`.
 
-### Layout of "repr C" unions
+### C-compatible layout ("repr C")
 
 The layout of `repr(C)` unions follows the C layout scheme. Per sections
 [6.5.8.5] and [6.7.2.1.16] of the C11 specification, this means that the offset
