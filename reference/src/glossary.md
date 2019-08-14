@@ -179,11 +179,17 @@ requirement of 2.
 
 #### Padding
 
-*Padding* refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
+*Padding* (of a type `T`) refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
 
 Padding can be though of as `[Pad; N]` for some hypothetical type `Pad` (of size 1) with the following properties:
 * `Pad` is valid for any byte, i.e., it has the same validity invariant as `MaybeUninit<u8>`.
 * Copying `Pad` ignores the source byte, and writes *any* value to the target byte. Or, equivalently (in terms of Abstract Machine behavior), copying `Pad` marks the target byte as uninitialized.
+
+We can also define padding in terms of the [representation relation]:
+A byte at index `i` is a padding byte for type `T` if,
+for all values `v` and lists of bytes `b` such that `v` and `b` are related at `T` (let's write this `Vrel_T(v, b)`),
+changing `b` at index `i` to any other byte yields a `b'` such `v` and `b'` are related (`Vrel_T(v, b')`).
+In other words, the byte at index `i` is entirely ignored by `Vrel_T` (the value relation for `T`), and two lists of bytes that only differ in padding bytes relate to the same value(s), if any.
 
 #### Place
 
@@ -208,6 +214,7 @@ Values are ephemeral; they arise during the computation of an instruction but ar
 (This is comparable to how run-time data in a program is ephemeral and is only ever persisted in serialized form.)
 
 #### Representation (relation)
+[representation relation]: #representation-relation
 
 A *representation* of a [value](#value) is a list of bytes that is used to store or "represent" that value in memory.
 
