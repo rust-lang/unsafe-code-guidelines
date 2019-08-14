@@ -178,6 +178,7 @@ For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
 requirement of 2.
 
 #### Padding
+[padding]: #padding
 
 *Padding* (of a type `T`) refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
 
@@ -223,7 +224,7 @@ The term "relation" here is used in the mathematical sense: the representation r
 
 The relation should be functional for a fixed list of bytes (i.e., every list of bytes has at most one associated representation).
 It is partial in both directions: not all values have a representation (e.g. the mathematical integer `300` has no representation at type `u8`), and not all lists of bytes correspond to a value of a specific type (e.g. lists of the wrong size correspond to no value, and the list consisting of the single byte `0x10` corresponds to no value of type `bool`).
-For a fixed value, there can be many representations (e.g., when considering type `#[repr(C)] Pair(u8, u16)`, the second byte is a padding byte so changing it does not affect the value represented by a list of bytes).
+For a fixed value, there can be many representations (e.g., when considering type `#[repr(C)] Pair(u8, u16)`, the second byte is a [padding byte][padding] so changing it does not affect the value represented by a list of bytes).
 
 See the [value domain][value-domain] for an example how values and representation relations can be made more precise.
 
