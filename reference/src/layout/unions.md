@@ -63,24 +63,12 @@ assert_eq!(size_of::<U>(), 2);
 
 #### Zero-sized fields
 
-If a `#[repr(C)]` union contains a field of zero-size, that field does not
-occupy space in Rust unions. For example:
+`repr(C)` union fields of zero-size are handled in the same way as in struct
+fields, matching the behavior of GCC and Clang for unions in C when zero-sized
+types are allowed via their language extensions.
 
-```rust
-# use std::mem::{size_of, align_of};
-#[repr(C)] 
-union U {
-  x: u8,
-  y: (),
-}
-# fn main() {
-assert_eq!(size_of::<U>(), 1);
-# }
-```
-
-The field does, however, participate in the layout computation of the union, and
-can raise its alignment requirement, which in turn can introduce trailing
-padding. For example:
+That is, these fields occupy zero-size and participate in the layout computation
+of the union as usual:
 
 ```rust
 # use std::mem::{size_of, align_of};
@@ -96,10 +84,6 @@ assert_eq!(align_of::<U>(), 2);
 assert_eq!(size_of::<U>(), 2);
 # }
 ```
-
-This handling of zero-sized types is equivalent to the handling of zero-sized
-types in struct fields, and matches the behavior of GCC and Clang for unions in
-C when zero-sized types are allowed via their language extensions.
 
 **C++ compatibility hazard**: C++ does, in general, give a size of 1 to empty
 structs. If an empty struct in C++ is used as an union field, a "naive"
