@@ -64,7 +64,8 @@ assert_eq!(size_of::<U>(), 2);
 #### Zero-sized fields
 
 If a `#[repr(C)]` union contains a field of zero-size, that field does not
-occupy space in Rust unions (as opposed to, e.g., in C++). For example:
+occupy space in Rust unions, e.g., as opposed to _empty_ types in C++ unions,
+which might occupy space depending on how they are used. For example:
 
 ```rust
 # use std::mem::{size_of, align_of};
