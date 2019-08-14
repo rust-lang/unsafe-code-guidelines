@@ -177,6 +177,14 @@ zero-sized type", to refer to zero-sized types with an alignment requirement of 
 For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
 requirement of 2.
 
+#### Padding
+
+*Padding* refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
+
+Padding can be though of as `[Pad; N]` for some hypothetical type `Pad` (of size 1) with the following properties:
+* `Pad` is valid for any byte, i.e., it has the same validity invariant as `MaybeUninit<u8>`.
+* Copying `Pad` ignores the source byte, and writes *any* value to the target byte. Or, equivalently (in terms of Abstract Machine behavior), copying `Pad` marks the target byte as uninitialized.
+
 #### Place
 
 A *place* (called "lvalue" in C and "glvalue" in C++) is the result of computing a [*place expression*][place-value-expr].

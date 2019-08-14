@@ -55,6 +55,12 @@ The value relation for `bool` relates `Bool(b)` with `[r]` if and only if `r.as_
 
 The value relation for the `()` type relates the empty tuple `Tuple([])` (assuming we can use array notation to "match" on `Vec`) with the empty byte list `[]`, and that's it.
 
+### `Pad`
+
+The [hypothetical `Pad` type][pad] relates the empty tuple `Tuple([])` with any byte list of length 1.
+
+[pad]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/reference/src/glossary.md#padding
+
 ### `!`
 
 The value relation for the `!` type is empty: nothing is related to anything at this type.
@@ -121,7 +127,7 @@ We can implement `TypedMemory` for any `Memory` as follows:
 In particular, this defines the semantics of a "typed copy": when an assignment is executed in Rust (at some type `T`), or when an argument of type `T` is passed to a function or a return value of type `T` returned from a function, this is called a "typed copy".
 Its semantics is basically to do a `typed_read` at `T` followed by a `typed_write` at `T`.
 In particular, this means doing a "typed copy" at `T` of some memory that has no valid representation at `T` is undefined behavior!
-This also means that for types that have padding, the "typed copy" does not preserve the padding bytes.
+This also means that for `Pad` and more generally for types that have padding, the "typed copy" does not preserve the padding bytes.
 
 ## Relation to validity invariant
 
