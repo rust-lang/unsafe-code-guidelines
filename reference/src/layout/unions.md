@@ -8,27 +8,36 @@ not to change until an RFC ratifies them.
 
 ### Layout of individual union fields
 
-The layout of each union field is determined by its type. 
+When laying out an `union`, the compiler has to decide how the fields of the
+union are arranged. Union fields are laid out by the compiler "on top" of each
+other, that is, the bytes of one field might overlap with the bytes of another
+field - as opposed to, e.g., `struct`s, where the fields are laid out "next to"
+each other, such that the bytes of one field never overlap with the bytes of
+another field. This can be visualized as follows:
 
-<details><summary><b>Rationale</b></summary>
-
-This is required to allow creating references to union fields:
-
-```rust
-# fn main() { unsafe {
-# #[derive(Copy, Clone)]
-struct T1;
-union U { f1: T1 }
-let u = U { f1: T1 };
-let t1: &T1 = &u.f1;
-// &T1 works for all references
-# }}
+```rust,ignore
+[ P P [field0_ty] P P P P ]
+[ P P P P [field1_ty] P P ]
+[ P P P [field2_ty] P P P ]
 ```
-</details>
+
+> **Figure: union field layout**: Each row in the picture shows the layout of
+> the union for each of its fields, where the square brackets `[]` depict an
+> array of bytes. Here, `P` is a byte of type `Pad` and `[field{i}_ty]` is the
+> bytes of the type of the `i`-th union field.
+
+The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
+the field's layout. The compiler picks the offset of the fields with respect to
+the union and the `union` size according to certain constraints like, for
+example, the alignment requirements of the fields, the `#[repr]` attribute of
+the `union`, etc.
 
 ### Unions with default layout ("`repr(Rust)`")
 
-**The default layout of unions is**, in general, **not specified.** 
+The default layout of Rust unions is **unspecified**. 
+
+That is, there are no guarantees about the offset of the fields, whether all
+fields have the same offset, etc.
 
 <details><summary><b>Rationale</b></summary>
 
