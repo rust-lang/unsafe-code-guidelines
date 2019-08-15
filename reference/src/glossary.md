@@ -192,7 +192,7 @@ for all values `v` and lists of bytes `b` such that `v` and `b` are related at `
 changing `b` at index `i` to any other byte yields a `b'` such `v` and `b'` are related (`Vrel_T(v, b')`).
 In other words, the byte at index `i` is entirely ignored by `Vrel_T` (the value relation for `T`), and two lists of bytes that only differ in padding bytes relate to the same value(s), if any.
 
-This definition works fine for structs.
+This definition works fine for product types (structs, tuples, arrays, ...).
 The desired notion of "padding byte" for enums and unions is still unclear.
 
 #### Place
