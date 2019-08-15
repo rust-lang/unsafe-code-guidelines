@@ -73,10 +73,11 @@ struct Foo {
 expressions like `foo.0`.)
 
 The degrees of freedom the compiler has when computing the layout of a struct or
-tuple is to determine the order of the fields, and the "gaps" before, between,
-and after the fields. The layout of these fields themselves is already entirely
-determined by their types, and since we intend to allow creating references to
-fields (`&s.f1`), structs do not have any wiggle-room there.
+tuple is to determine the order of the fields, and the "gaps" (often called
+*padding*) before, between, and after the fields. The layout of these fields
+themselves is already entirely determined by their types, and since we intend to
+allow creating references to fields (`&s.f1`), structs do not have any
+wiggle-room there.
 
 This can be visualized as follows:
 ```text
