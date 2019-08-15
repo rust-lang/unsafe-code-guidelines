@@ -65,7 +65,7 @@ The exact form of provenance in Rust is unclear.
 It is also unclear whether provenance applies to more than just pointers, i.e., one could imagine integers having provenance as well (so that pointer provenance can be preserved when pointers are cast to an integer and back).
 In the following, we give some examples if what provenance *could* look like.
 
-**Using provenance to track originating allocation.**
+*Using provenance to track originating allocation.*
 For example, we have to distinguish pointers to the same location if they originated from different allocations.
 Cross-allocation pointer arithmetic [does not lead to usable pointers](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset), so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
 It could use provenance to achieve this:
@@ -91,7 +91,7 @@ assert_eq!(raw2 as usize, raw2_wrong as usize);
 This kind of provenance also exists in C/C++, but Rust is more permissive by (a) providing a [way to do pointer arithmetic across allocation boundaries without causing immediate UB](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset) (though, as we have seen, the resulting pointer still cannot be used for locations outside the allocation it originates), and (b) by allowing pointers to always be compared safely, even if their provenance differs.
 For some more information, see [this document proposing a more precise definition of provenance for C](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2364.pdf).
 
-**Using provenance for Rust's aliasing rules.**
+*Using provenance for Rust's aliasing rules.*
 Another example of pointer provenance is the "tag" from [Stacked Borrows][stacked-borrows].
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html).
 
