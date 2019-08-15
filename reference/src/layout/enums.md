@@ -401,34 +401,8 @@ enum DataCarryingSingleVariant {
 * `FieldSingleVariant` has the same layout as `UnitStruct`,
 * `DataCarryingSingleVariant` has the same layout as `SomeStruct`.
 
-### Layout of multi-variant enums with one inhabited variant
+## Unresolved questions
 
-> **NOTE**: the guarantees in this section have not been approved by an RFC process.
-
-The layout of **multi-variant** enums with **one inhabited variant** is the same
-as that of the single-variant enum containing that same inhabited variant.
-
-Here:
-
-```rust
-# use std::mem::{size_of, align_of};
-struct SomeStruct { x: u32 }
-enum SingleVariantDataCarrying {
-    DataCarryingVariant(SomeStruct),
-}
-enum Void0 {}
-enum Void1 {}
-enum MultiVariantSingleHabited {
-  DataCarryingVariant(SomeStruct),
-  Uninhabited0(Void0),
-  Uninhabited1(Void1),
-}
-# fn main() {
-# use std::mem;
-# assert_eq!(size_of::<SingleVariantDataCarrying>(), size_of::<MultiVariantSingleHabited>());
-# assert_eq!(align_of::<SingleVariantDataCarrying>(), align_of::<MultiVariantSingleHabited>());
-# }
-```
-
-the `MultiVariantSingleHabited` enum has the same layout as
-`SingleVariantDataCarrying`.
+See [Issue #79.](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/79):
+  
+* Layout of multi-variant enums with one inhabited variant.
