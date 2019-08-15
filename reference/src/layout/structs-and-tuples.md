@@ -122,7 +122,6 @@ compiler will not reorder it, to allow for the possibility of
 unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
-<<<<<<< HEAD
 #### Zero-sized structs
 
 For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
@@ -142,11 +141,10 @@ struct Zst2(Zst1, Zst0);
 # }
 ```
 
-=======
 #### Default layout of structs with a single non-zero-sized field
 
 The default layout of structs with a single non-zero-sized field is the same as
-the layout of that field if the alignment requirement of all other fields is 1.
+the layout of that field if all other fields are [1-ZST]
 
 For example, the layout of:
 
@@ -160,9 +158,7 @@ is the same as the layout of `i32`, but the layout of:
 #[repr(align(16))] struct Zst;
 struct SomeOtherStruct(i32, Zst);
 ```
-
-is **unspecified**, since there is a zero-sized field in `SomeOtherStruct` with
-alignment greater than 1.
+is **unspecified**, since `Zst` is not a [1-ZST].
 
 #### Unresolved questions
 
@@ -423,3 +419,5 @@ proposal (and -- further -- it does not match our existing behavior):
   thread](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/31#discussion_r224955817)).
 - Many people would prefer the name ordering to be chosen for
   "readability" and not optimal layout.
+
+[1-ZST]: ../glossary.md#zero-sized-type--zst
