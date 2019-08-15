@@ -8,12 +8,16 @@ not to change until an RFC ratifies them.
 
 ### Layout of individual union fields
 
-The main degree of freedom the compiler has when computing the layout of a union
-is to determine the offset of the fields. Union fields are laid out by the
-compiler "on top" of each other, that is, the bytes of one field might overlap
-with the bytes of another field - as opposed to, e.g., `struct`s, where the
-fields are laid out "next to" each other, such that the bytes of one field never
-overlap with the bytes of another field. This can be visualized as follows:
+A union consists of several variants, one for each field. These variants are
+laid out "on top" of each other, so they must all have the same size. That is,
+the byte of each variant overlaps with the byte located at the same offset in
+all other variants, and the bytes of one field might overlap with the bytes of
+another field - as opposed to, e.g., `struct`s, where the fields are laid out
+"next to" each other, such that the bytes of one field never overlap with the
+bytes of another field. The main degree of freedom the compiler has when
+computing the layout of a union is to pick where in its variant each field is
+situated, i.e., the compiler picks the gap (often called padding) before and
+after each field. This can be visualized as follows:
 
 ```rust,ignore
 [ P P [field0_ty] P P P P ]
