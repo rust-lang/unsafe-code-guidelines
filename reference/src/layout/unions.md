@@ -13,7 +13,7 @@ like
 union U { f1: T1, f2: T2 }
 ```
 
-is to determine the offset of the fields.  The layout of these fields themselves
+is to determine the offset of the fields. The layout of these fields themselves
 is already entirely determined by their types, and since we intend to allow
 creating references to fields (`&u.f1`), unions do not have any wiggle-room
 there.
@@ -42,8 +42,11 @@ to obtain a pointer to any field, and vice versa.
 #### Padding
 
 Since all fields are at offset 0, `repr(C)` unions do not have padding before
-their fields. They can, however, have trailing padding, to make sure the size is
-a multiple of the alignment:
+their fields. They can, however, have padding in each union variant *after* the
+field, to make all variants have the same size.
+
+Moreover, the entire union can have trailing padding, to make sure the size is a
+multiple of the alignment:
 
 ```rust
 # use std::mem::{size_of, align_of};
