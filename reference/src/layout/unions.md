@@ -13,20 +13,10 @@ like
 union U { f1: T1, f2: T2 }
 ```
 
-is to determine the offset of the fields.  The layout of these fields themselves
+is to determine the offset of the fields. The layout of these fields themselves
 is already entirely determined by their types, and since we intend to allow
 creating references to fields (`&u.f1`), unions do not have any wiggle-room
 there.
-
-### C-compatible layout ("repr C")
-
-For unions tagged `#[repr(C)]`, the compiler will apply the C layout scheme.  Per
-sections [6.5.8.5] and [6.7.2.1.16] of the C11 specification, this means that
-the offset of every field is 0.  Unsafe code can cast a pointer to the union to
-a field type to obtain a pointer to any field, and vice versa.
-
-[6.5.8.5]: http://port70.net/~nsz/c/c11/n1570.html#6.5.8p5
-[6.7.2.1.16]: http://port70.net/~nsz/c/c11/n1570.html#6.7.2.1p16
 
 ### Default layout ("repr rust")
 
@@ -38,3 +28,68 @@ contents are.
 Even if the offsets happen to be all 0, there might still be differences in the
 function call ABI.  If you need to pass unions by-value across an FFI boundary,
 you have to use `#[repr(C)]`.
+
+### C-compatible layout ("repr C")
+
+The layout of `repr(C)` unions follows the C layout scheme. Per sections
+[6.5.8.5] and [6.7.2.1.16] of the C11 specification, this means that the offset
+of every field is 0. Unsafe code can cast a pointer to the union to a field type
+to obtain a pointer to any field, and vice versa. 
+
+[6.5.8.5]: http://port70.net/~nsz/c/c11/n1570.html#6.5.8p5
+[6.7.2.1.16]: http://port70.net/~nsz/c/c11/n1570.html#6.7.2.1p16
+
+#### Padding
+
+Since all fields are at offset 0, `repr(C)` unions do not have padding before
+their fields. They can, however, have padding in each union variant *after* the
+field, to make all variants have the same size.
+
+Moreover, the entire union can have trailing padding, to make sure the size is a
+multiple of the alignment:
+
+```rust
+# use std::mem::{size_of, align_of};
+#[repr(C, align(2))]
+union U { x: u8 }
+# fn main() {
+// The repr(align) attribute raises the alignment requirement of U to 2
+assert_eq!(align_of::<U>(), 2);
+// This introduces trailing padding, raising the union size to 2
+assert_eq!(size_of::<U>(), 2);
+# }
+```
+
+> **Note**: Fields are overlapped instead of laid out sequentially, so 
+> unlike structs there is no "between the fields" that could be filled 
+> with padding.
+
+#### Zero-sized fields
+
+`repr(C)` union fields of zero-size are handled in the same way as in struct
+fields, matching the behavior of GCC and Clang for unions in C when zero-sized
+types are allowed via their language extensions.
+
+That is, these fields occupy zero-size and participate in the layout computation
+of the union as usual:
+
+```rust
+# use std::mem::{size_of, align_of};
+#[repr(C)] 
+union U {
+  x: u8,
+  y: [u16; 0],
+}
+# fn main() {
+// The zero-sized type [u16; 0] raises the alignment requirement to 2
+assert_eq!(align_of::<U>(), 2);
+// This in turn introduces trailing padding, raising the union size to 2
+assert_eq!(size_of::<U>(), 2);
+# }
+```
+
+**C++ compatibility hazard**: C++ does, in general, give a size of 1 to types
+with no fields. When such types are used as an union field in C++, a "naive"
+translation of that code into Rust will not produce a compatible result. Refer
+to the [struct chapter](structs-and-tuples.md#c-compatible-layout-repr-c) for
+further details.
