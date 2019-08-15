@@ -80,7 +80,7 @@ union U {
 # fn main() {
 // The zero-sized type [u16; 0] raises the alignment requirement to 2
 assert_eq!(align_of::<U>(), 2);
-// This introduces trailing padding, raising the union size to 2
+// This in turn introduces trailing padding, raising the union size to 2
 assert_eq!(size_of::<U>(), 2);
 # }
 ```
