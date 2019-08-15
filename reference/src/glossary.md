@@ -129,7 +129,7 @@ fn main() { unsafe {
 The *safety* invariant is an invariant that safe code may assume all data to uphold.
 This invariant is used to justify which operations safe code can perform.
 The safety invariant can be temporarily violated by unsafe code, but must always be upheld when interfacing with unknown safe code.
-It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- IOW, it is relevant when arguing whether some *library* is [sound][soundness].
+It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- in other words, it is relevant when arguing whether some *library* is [sound][soundness].
 
 In terms of code, some data computed by `TERM` (possibly constructed from some `arguments` that can be *assumed* to satisfy the safety invariant) is valid at type `T` if and only if the following library function can be safely exposed to arbitrary (safe) code as part of the public library interface:
 ```rust,ignore
@@ -155,7 +155,7 @@ In return, the compiler promises to compile the code in a way that the final pro
 If it turns out the program *does* have undefined behavior, the contract is void, and the program produced by the compiler is essentially garbage (in particular, it is not bound by any specification; the program does not even have to be well-formed executable code).
 
 In Rust, the [Nomicon](https://doc.rust-lang.org/nomicon/what-unsafe-does.html) and the [Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) both have a list of behavior that the language considers undefined.
-Rust promises that safe code cannot cause Undefined Behavior---it takes the burden of this contract on itself.
+Rust promises that safe code cannot cause Undefined Behavior---the compiler and authors of unsafe code takes the burden of this contract on themselves.
 For unsafe code, however, the burden is still on the programmer.
 
 Also see: [Soundness][soundness].
