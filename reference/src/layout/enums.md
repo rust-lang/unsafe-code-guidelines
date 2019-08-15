@@ -378,47 +378,28 @@ enum Enum2<T> {
 
 [niche]: ../glossary.html#niche
 
-### Layout of single variant enums
+### Layout of enums with a single variant
 
 > **NOTE**: the guarantees in this section have not been approved by an RFC process.
 
-**Single variant data-carrying*** enums without a `repr()` annotation have the
-same layout as the variant field. **Single variant fieldless** enums have the
-same layout as a unit struct.
+**Data-carrying** enums with a single variant without a `repr()` annotation have
+the same layout as the variant field. **Fieldless** enums with a single variant
+have the same layout as a unit struct. 
 
-Here:
+For example, here:
 
 ```rust
-# use std::mem::{size_of, align_of};
 struct UnitStruct;
-enum SingleVariantFieldless { FieldlessVariant }
-# fn main() {
-assert_eq!(size_of::<SingleVariantFieldless>(), size_of::<UnitStruct>());
-assert_eq!(align_of::<SingleVariantFieldless>(), align_of::<UnitStruct>());
-// assert_eq!(call_abi_of::<SingleVariantFieldless>(), call_abi_of::<UnitStruct>());
-// assert_eq!(niches_of::<SingleVariantFieldless>(), niches_of::<UnitStruct>());
-# }
-```
+enum FieldlessSingleVariant { FieldlessVariant }
 
-the single-variant fieldless enum `SingleVariantFieldless` has the same layout
-as `UnitStruct`.
-
-Here: 
-
-```rust
-# use std::mem::{size_of, align_of};
 struct SomeStruct { x: u32 }
-enum SingleVariantDataCarrying {
+enum DataCarryingSingleVariant {
   DataCarryingVariant(SomeStruct),
 }
-# fn main() {
-# assert_eq!(size_of::<SingleVariantDataCarrying>(), size_of::<SomeStruct>());
-# assert_eq!(align_of::<SingleVariantDataCarrying>(), align_of::<SomeStruct>());
-# }
 ```
 
-the single-variant data-carrying enum `SingleVariantDataCarrying` has the same
-layout as `SomeStruct`.
+* `FieldSingleVariant` has the same layout as `UnitStruct`,
+* `DataCarryingSingleVariant` has the same layout as `SomeStruct`.
 
 ### Layout of multi-variant enums with one inhabited variant
 
