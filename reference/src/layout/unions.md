@@ -34,10 +34,11 @@ the `union`, etc.
 
 ### Unions with default layout ("`repr(Rust)`")
 
-The default layout of Rust unions is **unspecified**. 
+Except for the guarantees provided below for some specific cases, the default
+layout of Rust unions is, _in general_, **unspecified**.
 
-That is, there are no guarantees about the offset of the fields, whether all
-fields have the same offset, etc.
+That is, there are no _general_ guarantees about the offset of the fields,
+whether all fields have the same offset, etc.
 
 <details><summary><b>Rationale</b></summary>
 
@@ -59,8 +60,8 @@ you have to use `#[repr(C)]`.
 The layout of unions with a single non-zero-sized field is the same as the
 layout of that field if:
 
-* that field has no padding bits, and
-* the alignment requirement of all zero-sized fields is 1.
+* all zero-sized fields are [1-ZST], and
+* the non-zero sized field has no padding bits.
 
 For example, here:
 
@@ -83,7 +84,7 @@ union U0 {
 
 the union `U0` has the same layout as `SomeStruct`, because `SomeStruct` has no
 padding bits - it is equivalent to an `i32` due to `repr(transparent)` - and
-because the alignment of `Zst` is 1.
+because `Zst` is a [1-ZST].
 
 On the other hand, here:
 
@@ -104,9 +105,10 @@ assert_eq!(align_of::<Zst2>(), 16);
 # }
 ```
 
-the alignment requirement of `Zst2` is not 1, and `SomeOtherStruct` has an
-unspecified layout and could contain padding bits. Therefore, the layout of `U1`
-is **unspecified**.
+the layout of `U1` is **unspecified** because:
+
+* `Zst2` is not a [1-ZST], and
+* `SomeOtherStruct` has an unspecified layout and could contain padding bits.
 
 ### C-compatible layout ("repr C")
 
@@ -172,3 +174,5 @@ with no fields. When such types are used as an union field in C++, a "naive"
 translation of that code into Rust will not produce a compatible result. Refer
 to the [struct chapter](structs-and-tuples.md#c-compatible-layout-repr-c) for
 further details.
+
+[1-ZST]: ../glossary.md#zero-sized-type--zst
