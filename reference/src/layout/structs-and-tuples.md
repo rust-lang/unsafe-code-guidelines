@@ -84,15 +84,17 @@ Structs can have various `#[repr]` flags that influence their layout:
 
 ### Default layout ("repr rust")
 
-**The default layout of structs is not specified.** As of this
-writing, we have not reached a full consensus on what limitations
-should exist on possible field struct layouts, so effectively one must
-assume that the compiler can select any layout it likes for each
-struct on each compilation, and it is not required to select the same
-layout across two compilations. This implies that (among other things)
-two structs with the same field types may not be laid out in the same
-way (for example, the hypothetical struct representing tuples may be
-laid out differently from user-declared structs).
+With the exception of the guarantees provided below, **the default layout of
+structs is not specified.** 
+
+As of this writing, we have not reached a full consensus on what limitations
+should exist on possible field struct layouts, so effectively one must assume
+that the compiler can select any layout it likes for each struct on each
+compilation, and it is not required to select the same layout across two
+compilations. This implies that (among other things) two structs with the same
+field types may not be laid out in the same way (for example, the hypothetical
+struct representing tuples may be laid out differently from user-declared
+structs).
 
 Known things that can influence layout (non-exhaustive):
 
@@ -122,6 +124,26 @@ compiler will not reorder it, to allow for the possibility of
 unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
+#### Structs with no fields
+
+Structs with default layout and no fields are [1-ZST].
+
+#### Structs with 1-ZST fields
+
+For the purposes of struct layout [1-ZST] fields are ignored.
+
+For example:
+
+```rust
+type Zst1 = ();
+struct S1(i32, Zst1); // same layout as i32
+
+type Zst2 = [u16; 0];
+struct S2(Zst2, Zst1); // same layout as Zst2
+
+struct S3(Zst1); // same layout as Zst1
+```
+
 #### Zero-sized structs
 
 For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
@@ -140,22 +162,6 @@ struct Zst2(Zst1, Zst0);
 # assert_eq!(size_of::<Zst2>(), 0);
 # }
 ```
-
-#### Structs with 1-ZST fields
-
-For the purposes of struct layout [1-ZST] fields are ignored.
-
-For example, 
-
-```rust
-type Zst1 = ();
-struct S1(i32, Zst1);
-
-type Zst2 = [u16; 0];
-struct S2(Zst2, Zst1);
-```
-
-the layout of `S1` is the same as that of `i32` and the layout of `S2` as that of `Zst2`. 
 
 #### Unresolved questions
 
