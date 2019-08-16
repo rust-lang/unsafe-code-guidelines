@@ -405,4 +405,4 @@ enum DataCarryingSingleVariant {
 
 See [Issue #79.](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/79):
   
-* Layout of multi-variant enums with one inhabited variant.
+* Layout of multi-variant enums where only one variant is inhabited.
