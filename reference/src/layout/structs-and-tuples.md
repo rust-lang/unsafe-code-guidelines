@@ -141,10 +141,10 @@ struct Zst2(Zst1, Zst0);
 # }
 ```
 
-#### Default layout of structs with a single non-zero-sized field
+#### Default layout of structs where only a single field is not a 1-ZST
 
-The default layout of structs with a single non-zero-sized field is the same as
-the layout of that field if all other fields are [1-ZST]
+The default layout of structs where only a single field is not a 1-ZST is the
+same as the layout of that non-1-ZST field.
 
 For example, the layout of:
 
