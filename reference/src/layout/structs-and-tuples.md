@@ -141,24 +141,21 @@ struct Zst2(Zst1, Zst0);
 # }
 ```
 
-#### Default layout of structs where only a single field is not a 1-ZST
+#### Structs with 1-ZST fields
 
-The default layout of structs where only a single field is not a 1-ZST is the
-same as the layout of that non-1-ZST field.
+For the purposes of struct layout [1-ZST] fields are ignored.
 
-For example, the layout of:
-
-```rust
-struct SomeStruct(i32, ());
-```
-
-is the same as the layout of `i32`, but the layout of:
+For example, 
 
 ```rust
-#[repr(align(16))] struct Zst;
-struct SomeOtherStruct(i32, Zst);
+type Zst1 = ();
+struct S1(i32, Zst1);
+
+type Zst2 = [u16; 0];
+struct S2(Zst2, Zst1);
 ```
-is **unspecified**, since `Zst` is not a [1-ZST].
+
+the layout of `S1` is the same as that of `i32` and the layout of `S2` as that of `Zst2`. 
 
 #### Unresolved questions
 
@@ -168,15 +165,6 @@ are currently considering **unresolved** and -- for each of them -- an
 issue has been opened for further discussion on the repository. This
 section documents the questions and gives a few light details, but the
 reader is referred to the issues for further discussion.
-
-**Zero-sized structs ([#37]).** If you have a struct which --
-transitively -- contains no data of non-zero size, then the size of
-that struct will be zero as well. These zero-sized structs appear
-frequently as exceptions in other layout considerations (e.g.,
-single-field structs). An example of such a struct is
-`std::marker::PhantomData`.
-
-[#37]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/37
 
 **Homogeneous structs ([#36]).** If you have homogeneous structs, where all
 the `N` fields are of a single type `T`, can we guarantee a mapping to
