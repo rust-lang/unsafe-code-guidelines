@@ -124,10 +124,6 @@ compiler will not reorder it, to allow for the possibility of
 unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
-#### Structs with no fields
-
-Structs with default layout and no fields are [1-ZST].
-
 #### Structs with 1-ZST fields
 
 For the purposes of struct layout [1-ZST] fields are ignored.
