@@ -146,8 +146,10 @@ struct S3(Zst1); // same layout as Zst1
 
 #### Zero-sized structs
 
-For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
-structs: if all fields of a struct have size 0, then the struct has size 0.
+For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)` structs: if
+all fields of a struct have size 0, then the struct has size 0. In particular, a
+struct with no fields is a ZST, and if it has no repr attribute it is moreover a
+1-ZST as it also has no alignment requirements.
 
 For example, all these types are zero-sized:
 
