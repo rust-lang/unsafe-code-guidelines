@@ -124,28 +124,11 @@ compiler will not reorder it, to allow for the possibility of
 unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
-#### Structs with 1-ZST fields
-
-For the purposes of struct layout [1-ZST] fields are ignored.
-
-For example:
-
-```rust
-type Zst1 = ();
-struct S1(i32, Zst1); // same layout as i32
-
-type Zst2 = [u16; 0];
-struct S2(Zst2, Zst1); // same layout as Zst2
-
-struct S3(Zst1); // same layout as Zst1
-```
-
 #### Zero-sized structs
+[zero-sized structs]: #zero-sized-structs
 
 For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)` structs: if
-all fields of a struct have size 0, then the struct has size 0. In particular, a
-struct with no fields is a ZST, and if it has no repr attribute it is moreover a
-1-ZST as it also has no alignment requirements.
+all fields of a struct have size 0, then the struct has size 0.
 
 For example, all these types are zero-sized:
 
@@ -159,6 +142,37 @@ struct Zst2(Zst1, Zst0);
 # assert_eq!(size_of::<Zst1>(), 0);
 # assert_eq!(size_of::<Zst2>(), 0);
 # }
+```
+
+In particular, a struct with no fields is a ZST, and if it has no repr attribute
+it is moreover a 1-ZST as it also has no alignment requirements.
+
+#### Single-field structs
+[single-field structs]: #single-field-structs
+
+A struct with only one field has the same layout as that field.
+
+#### Structs with 1-ZST fields
+
+For the purposes of struct layout [1-ZST] fields are ignored.
+
+In particular, if all but one field are 1-ZST, then the struct is equivalent to
+a [single-field struct][single-field structs].  In other words, if all but one
+field is a 1-ZST, then the entire struct has the same layout as that one field.
+
+Similarly, if all fields are 1-ZST, then the struct has the same layout as a
+[struct with no fields][zero-sized structs], and is itself a 1-ZST.
+
+For example:
+
+```rust
+type Zst1 = ();
+struct S1(i32, Zst1); // same layout as i32
+
+type Zst2 = [u16; 0];
+struct S2(Zst2, Zst1); // same layout as Zst2
+
+struct S3(Zst1); // same layout as Zst1
 ```
 
 #### Unresolved questions
