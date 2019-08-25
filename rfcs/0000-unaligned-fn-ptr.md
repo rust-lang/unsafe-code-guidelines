@@ -50,7 +50,7 @@ Transmuting any non-null value to a function pointer is defined behavior.
 
 ```rust
 fn good() {
-    let x: fn() = unsafe { mem::transmute(1usize) } // This not UB.
+    let x: fn() = unsafe { mem::transmute(1usize) } // This is not UB.
 }
 ```
 
