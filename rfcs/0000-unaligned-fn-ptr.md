@@ -26,7 +26,7 @@ Saying anything about their alignment requirements is actually non-trivial: we w
 Preferably, there would be way for code to actually query this alignment requirement (similar to `mem::align_of`).
 To avoid having to create all that infrastructure, I propose we instead declare that function pointers do not have to be aligned.
 
-On most current platforms, we could not make any alignment requirement anyway: on x86, there is no alignment for code, and while ARM does have 2-byte alignment, it uses the least significant bit to encode the instruction set (thumb or not) of the pointee, so function pointers themselves are not guaranteed to be aligned.
+On most current platforms, we could not make any alignment requirement anyway: on x86, there is no alignment for code, and while ARM has 2- or 4-byte alignment (depending on platform details), it uses the least significant bit to encode the instruction set (thumb or not) of the pointee, so function pointers themselves are not guaranteed to be aligned.
 
 Beyond alignment, while we could require the function pointer to point to a "valid sequence of instructions", it is unclear what the benefit of that would be.
 
