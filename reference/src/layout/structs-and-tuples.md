@@ -84,15 +84,17 @@ Structs can have various `#[repr]` flags that influence their layout:
 
 ### Default layout ("repr rust")
 
-**The default layout of structs is not specified.** As of this
-writing, we have not reached a full consensus on what limitations
-should exist on possible field struct layouts, so effectively one must
-assume that the compiler can select any layout it likes for each
-struct on each compilation, and it is not required to select the same
-layout across two compilations. This implies that (among other things)
-two structs with the same field types may not be laid out in the same
-way (for example, the hypothetical struct representing tuples may be
-laid out differently from user-declared structs).
+With the exception of the guarantees provided below, **the default layout of
+structs is not specified.** 
+
+As of this writing, we have not reached a full consensus on what limitations
+should exist on possible field struct layouts, so effectively one must assume
+that the compiler can select any layout it likes for each struct on each
+compilation, and it is not required to select the same layout across two
+compilations. This implies that (among other things) two structs with the same
+field types may not be laid out in the same way (for example, the hypothetical
+struct representing tuples may be laid out differently from user-declared
+structs).
 
 Known things that can influence layout (non-exhaustive):
 
@@ -123,9 +125,10 @@ unsizing. E.g., `struct Foo { x: u16, y: u32 }` and `struct Foo<T> {
 x: u16, y: T }` where `T = u32` are not guaranteed to be identical.
 
 #### Zero-sized structs
+[zero-sized structs]: #zero-sized-structs
 
-For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)`
-structs: if all fields of a struct have size 0, then the struct has size 0.
+For `repr(Rust)`, `repr(packed(N))`, `repr(align(N))`, and `repr(C)` structs: if
+all fields of a struct have size 0, then the struct has size 0.
 
 For example, all these types are zero-sized:
 
@@ -141,6 +144,37 @@ struct Zst2(Zst1, Zst0);
 # }
 ```
 
+In particular, a struct with no fields is a ZST, and if it has no repr attribute
+it is moreover a 1-ZST as it also has no alignment requirements.
+
+#### Single-field structs
+[single-field structs]: #single-field-structs
+
+A struct with only one field has the same layout as that field.
+
+#### Structs with 1-ZST fields
+
+For the purposes of struct layout [1-ZST] fields are ignored.
+
+In particular, if all but one field are 1-ZST, then the struct is equivalent to
+a [single-field struct][single-field structs].  In other words, if all but one
+field is a 1-ZST, then the entire struct has the same layout as that one field.
+
+Similarly, if all fields are 1-ZST, then the struct has the same layout as a
+[struct with no fields][zero-sized structs], and is itself a 1-ZST.
+
+For example:
+
+```rust
+type Zst1 = ();
+struct S1(i32, Zst1); // same layout as i32
+
+type Zst2 = [u16; 0];
+struct S2(Zst2, Zst1); // same layout as Zst2
+
+struct S3(Zst1); // same layout as Zst1
+```
+
 #### Unresolved questions
 
 During the course of the discussion in [#11] and [#12], various
@@ -149,15 +183,6 @@ are currently considering **unresolved** and -- for each of them -- an
 issue has been opened for further discussion on the repository. This
 section documents the questions and gives a few light details, but the
 reader is referred to the issues for further discussion.
-
-**Single-field structs ([#34]).** If you have a struct with single field
-(`struct Foo { x: T }`), should we guarantee that the memory layout of
-`Foo` is identical to the memory layout of `T` (note that ABI details
-around function calls may still draw a distinction, which is why
-`#[repr(transparent)]` is needed). What about zero-sized types like
-`PhantomData`?
-
-[#34]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/34
 
 **Homogeneous structs ([#36]).** If you have homogeneous structs, where all
 the `N` fields are of a single type `T`, can we guarantee a mapping to
@@ -400,3 +425,5 @@ proposal (and -- further -- it does not match our existing behavior):
   thread](https://github.com/rust-rfcs/unsafe-code-guidelines/pull/31#discussion_r224955817)).
 - Many people would prefer the name ordering to be chosen for
   "readability" and not optimal layout.
+
+[1-ZST]: ../glossary.md#zero-sized-type--zst
