@@ -129,7 +129,7 @@ fn main() { unsafe {
 The *safety* invariant is an invariant that safe code may assume all data to uphold.
 This invariant is used to justify which operations safe code can perform.
 The safety invariant can be temporarily violated by unsafe code, but must always be upheld when interfacing with unknown safe code.
-It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- IOW, it is relevant when arguing whether some *library* can be used by safe code to *cause* UB.
+It is not relevant when arguing whether some *program* has UB, but it is relevant when arguing whether some code safely encapsulates its unsafety -- in other words, it is relevant when arguing whether some *library* is [sound][soundness].
 
 In terms of code, some data computed by `TERM` (possibly constructed from some `arguments` that can be *assumed* to satisfy the safety invariant) is valid at type `T` if and only if the following library function can be safely exposed to arbitrary (safe) code as part of the public library interface:
 ```rust,ignore
@@ -145,6 +145,30 @@ Moreover, such unsafe code must not return a non-UTF-8 string to the "outside" o
 
 To summarize: *Data must always be valid, but it only must be safe in safe code.*
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
+
+#### Undefined Behavior
+[ub]: #undefined-behavior
+
+*Undefined Behavior* is a concept of the contract between the Rust programmer and the compiler:
+The programmer promises that the code exhibits no undefined behavior.
+In return, the compiler promises to compile the code in a way that the final program does on the real hardware what the source program does according to the Rust Abstract Machine.
+If it turns out the program *does* have undefined behavior, the contract is void, and the program produced by the compiler is essentially garbage (in particular, it is not bound by any specification; the program does not even have to be well-formed executable code).
+
+In Rust, the [Nomicon](https://doc.rust-lang.org/nomicon/what-unsafe-does.html) and the [Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) both have a list of behavior that the language considers undefined.
+Rust promises that safe code cannot cause Undefined Behavior---the compiler and authors of unsafe code takes the burden of this contract on themselves.
+For unsafe code, however, the burden is still on the programmer.
+
+Also see: [Soundness][soundness].
+
+#### Soundness (of code / of a library)
+[soundness]: #soundness-of-code--of-a-library
+
+*Soundness* is a type system concept (actually originating from the study of logics) and means that the type system is "correct" in the sense that well-typed programs actually have the desired properties.
+For Rust, this means well-typed programs cannot cause [Undefined Behavior][ub].
+This promise only extends to safe code however; for `unsafe` code, it is up to the programmer to uphold this contract.
+
+Accordingly, we say that a library (or an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
+Conversely, the library/function is *unsound* if safe code *can* cause Undefined Behavior.
 
 #### Layout
 
