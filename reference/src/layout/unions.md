@@ -12,7 +12,7 @@ A union consists of several variants, one for each field. All variants have the
 same size and start at the same memory address, such that in memory the variants
 overlap. This can be visualized as follows:
 
-```rust,ignore
+```text
 [ <--> [field0_ty] <----> ]
 [ <----> [field1_ty] <--> ]
 [ <---> [field2_ty] <---> ]
@@ -20,16 +20,19 @@ overlap. This can be visualized as follows:
 
 > **Figure: union field layout**: Each row in the picture shows the layout of
 > the union for each of its fields, where the square brackets `[]` depict an
-> array of bytes, `<-...->` denotes different amount of padding, and
+> array of bytes, `<-...->` denotes different amount of [padding], and
 > `[field{i}_ty]` is the bytes of the type of the `i`-th union field.
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
-the field's layout. The only degrees of freedom the compiler has when computing
-the layout of a union are the size of the union, which can be larger than the
-size of its largest field, and the offset of each union field within its
-variant. How these are picked depends on certain constraints, lik for example,
-the alignment requirements of the fields, the `#[repr]` attribute of the
-`union`, etc.
+the field's [layout]. The only degrees of freedom the compiler has when
+computing the layout of a union are the size of the union, which can be larger
+than the size of its largest field, and the offset of each union field within
+its variant. How these are picked depends on certain constraints like, for
+example, the alignment requirements of the fields, the `#[repr]` attribute of
+the `union`, etc.
+
+[padding]: ../glossary.md#padding
+[layout]: ../glossary.md#layout
 
 ### Unions with default layout ("`repr(Rust)`")
 

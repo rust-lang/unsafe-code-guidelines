@@ -171,6 +171,7 @@ Accordingly, we say that a library (or an individual function) is *sound* if it 
 Conversely, the library/function is *unsound* if safe code *can* cause Undefined Behavior.
 
 #### Layout
+[layout]: #layout
 
 The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
 Moreover, the layout of a type records its *function call ABI* (or just *ABI* for short): how the type is passed *by value* across a function boundary.
