@@ -20,15 +20,15 @@ situated, i.e., the compiler picks the gap (often called padding) before and
 after each field. This can be visualized as follows:
 
 ```rust,ignore
-[ P P [field0_ty] P P P P ]
-[ P P P P [field1_ty] P P ]
-[ P P P [field2_ty] P P P ]
+[ <--> [field0_ty] <----> ]
+[ <----> [field1_ty] <--> ]
+[ <---> [field2_ty] <---> ]
 ```
 
 > **Figure: union field layout**: Each row in the picture shows the layout of
 > the union for each of its fields, where the square brackets `[]` depict an
-> array of bytes. Here, `P` is a byte of type `Pad` and `[field{i}_ty]` is the
-> bytes of the type of the `i`-th union field.
+> array of bytes, `<-...->` denotes different amount of padding, and
+> `[field{i}_ty]` is the bytes of the type of the `i`-th union field.
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
 the field's layout. The compiler picks the offset of the fields with respect to
