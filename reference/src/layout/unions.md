@@ -8,16 +8,9 @@ not to change until an RFC ratifies them.
 
 ### Layout of individual union fields
 
-A union consists of several variants, one for each field. These variants are
-laid out "on top" of each other, so they must all have the same size. That is,
-the byte of each variant overlaps with the byte located at the same offset in
-all other variants, and the bytes of one field might overlap with the bytes of
-another field - as opposed to, e.g., `struct`s, where the fields are laid out
-"next to" each other, such that the bytes of one field never overlap with the
-bytes of another field. The main degree of freedom the compiler has when
-computing the layout of a union is to pick where in its variant each field is
-situated, i.e., the compiler picks the gap (often called padding) before and
-after each field. This can be visualized as follows:
+A union consists of several variants, one for each field. All variants have the
+same size and start at the same memory address, such that in memory the variants
+overlap. This can be visualized as follows:
 
 ```rust,ignore
 [ <--> [field0_ty] <----> ]
@@ -31,10 +24,11 @@ after each field. This can be visualized as follows:
 > `[field{i}_ty]` is the bytes of the type of the `i`-th union field.
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
-the field's layout. The compiler picks the offset of the fields with respect to
-the union and the `union` size according to certain constraints like, for
-example, the alignment requirements of the fields, the `#[repr]` attribute of
-the `union`, etc.
+the field's layout. The only degrees of freedom the compiler has when computing
+the layout of a union are the size of the union and the offset of each union
+field within its variant. How these are picked depends on certain constraints,
+lik for example, the alignment requirements of the fields, the `#[repr]`
+attribute of the `union`, etc.
 
 ### Unions with default layout ("`repr(Rust)`")
 
