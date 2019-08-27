@@ -177,6 +177,24 @@ zero-sized type", to refer to zero-sized types with an alignment requirement of 
 For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
 requirement of 2.
 
+#### Padding
+[padding]: #padding
+
+*Padding* (of a type `T`) refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
+
+Padding can be though of as `[Pad; N]` for some hypothetical type `Pad` (of size 1) with the following properties:
+* `Pad` is valid for any byte, i.e., it has the same validity invariant as `MaybeUninit<u8>`.
+* Copying `Pad` ignores the source byte, and writes *any* value to the target byte. Or, equivalently (in terms of Abstract Machine behavior), copying `Pad` marks the target byte as uninitialized.
+
+We can also define padding in terms of the [representation relation]:
+A byte at index `i` is a padding byte for type `T` if,
+for all values `v` and lists of bytes `b` such that `v` and `b` are related at `T` (let's write this `Vrel_T(v, b)`),
+changing `b` at index `i` to any other byte yields a `b'` such `v` and `b'` are related (`Vrel_T(v, b')`).
+In other words, the byte at index `i` is entirely ignored by `Vrel_T` (the value relation for `T`), and two lists of bytes that only differ in padding bytes relate to the same value(s), if any.
+
+This definition works fine for product types (structs, tuples, arrays, ...).
+The desired notion of "padding byte" for enums and unions is still unclear.
+
 #### Place
 
 A *place* (called "lvalue" in C and "glvalue" in C++) is the result of computing a [*place expression*][place-value-expr].
@@ -200,6 +218,7 @@ Values are ephemeral; they arise during the computation of an instruction but ar
 (This is comparable to how run-time data in a program is ephemeral and is only ever persisted in serialized form.)
 
 #### Representation (relation)
+[representation relation]: #representation-relation
 
 A *representation* of a [value](#value) is a list of bytes that is used to store or "represent" that value in memory.
 
@@ -208,7 +227,7 @@ The term "relation" here is used in the mathematical sense: the representation r
 
 The relation should be functional for a fixed list of bytes (i.e., every list of bytes has at most one associated representation).
 It is partial in both directions: not all values have a representation (e.g. the mathematical integer `300` has no representation at type `u8`), and not all lists of bytes correspond to a value of a specific type (e.g. lists of the wrong size correspond to no value, and the list consisting of the single byte `0x10` corresponds to no value of type `bool`).
-For a fixed value, there can be many representations (e.g., when considering type `#[repr(C)] Pair(u8, u16)`, the second byte is a padding byte so changing it does not affect the value represented by a list of bytes).
+For a fixed value, there can be many representations (e.g., when considering type `#[repr(C)] Pair(u8, u16)`, the second byte is a [padding byte][padding] so changing it does not affect the value represented by a list of bytes).
 
 See the [value domain][value-domain] for an example how values and representation relations can be made more precise.
 
