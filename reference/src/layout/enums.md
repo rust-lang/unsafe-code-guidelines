@@ -46,10 +46,10 @@ As in C, discriminant values that are not specified are defined as
 either 0 (for the first variant) or as one more than the prior
 variant.
 
-**Data-carrying enums.** Enums whose variants have fields are called
-"data-carrying" enums. Note that for the purposes of this definition,
-it is not relevant whether those fields are zero-sized. Therefore this
-enum is considered "data-carrying":
+**Data-carrying enums.** Enums with at least one variant with fields are called
+"data-carrying" enums. Note that for the purposes of this definition, it is not
+relevant whether the variant fields are zero-sized. Therefore this enum is
+considered "data-carrying":
 
 ```rust
 enum Foo {
@@ -378,90 +378,31 @@ enum Enum2<T> {
 
 [niche]: ../glossary.html#niche
 
+### Layout of enums with a single variant
+
+> **NOTE**: the guarantees in this section have not been approved by an RFC process.
+
+**Data-carrying** enums with a single variant without a `repr()` annotation have
+the same layout as the variant field. **Fieldless** enums with a single variant
+have the same layout as a unit struct. 
+
+For example, here:
+
+```rust
+struct UnitStruct;
+enum FieldlessSingleVariant { FieldlessVariant }
+
+struct SomeStruct { x: u32 }
+enum DataCarryingSingleVariant {
+  DataCarryingVariant(SomeStruct),
+}
+```
+
+* `FieldSingleVariant` has the same layout as `UnitStruct`,
+* `DataCarryingSingleVariant` has the same layout as `SomeStruct`.
+
 ## Unresolved questions
 
-### Layout of single variant enums
-
-[Issue #79.](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/79)
-
-Enums that contain a **single variant** and which do not have an
-explicit `#[repr]` annotation are an important special case. Since
-there is only a single variant, the enum must be instantiated with
-that variant, which means that the enum is in fact equivalent to a
-struct. The question then is to what extent we should **guarantee**
-that the two share an equivalent layout, and also how to define the
-interaction with uninhabited types.
-
-As presently implemented, the compiler will use the same layout for
-structs and for single variant enums (as long as they do not have a
-`#[repr]` annotation that overrides that choice). So, for example, the
-struct `SomeStruct` and the enum `SomeEnum` would have an equivalent
-layout ([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3697ac684c3d021892694956df957653)):
-
-```rust
-struct SomeStruct;
-enum SomeEnum {
-  SomeVariant,
-}
-
-# fn main() {
-# use std::mem;
-let x = SomeStruct;
-let y = SomeEnum::SomeVariant;
-assert_eq!(
-    mem::size_of_val(&x), 
-    mem::size_of_val(&y),
-    "types have different sizes",
-);
-println!("types both have size {}", std::mem::size_of_val(&x));
-# }
-```
-
-Similarly, the struct `SomeStruct` and the enum `SomeVariant` in this
-example would also be equivalent in their layout
-([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=924724764419f846c788a8763da45992)):
-
-```rust
-struct SomeStruct { x: u32 }
-enum SomeEnum {
-  SomeVariant { x: u32 },
-}
-
-# fn main() {
-# use std::mem;
-let x = SomeStruct { x: 22 };
-let y = SomeEnum::SomeVariant { x: 22 };
-assert_eq!(
-    mem::size_of_val(&x), 
-    mem::size_of_val(&y),
-    "types have different sizes",
-);
-println!("types both have size {}", mem::size_of_val(&x));
-}
-```
-
-In fact, the compiler will use this optimized layout even for enums
-that define multiple variants, as long as all but one of the variants
-is uninhabited
-([playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3cc1484c5b91097f3dc2015b7c207a0e)):
-
-```rust
-# enum Void { }
-struct SomeStruct { x: u32 }
-enum SomeEnum {
-  SomeVariant { x: u32 },
-  UninhabitedVariant { y: Void },
-}
-
-# fn main() {
-# use std::mem;
-let x = SomeStruct { x: 22 };
-let y = SomeEnum::SomeVariant { x: 22 };
-assert_eq!(
-    mem::size_of_val(&x), 
-    mem::size_of_val(&y),
-    "types have different sizes",
-);
-println!("types both have size {}", mem::size_of_val(&x));
-# }
-```
+See [Issue #79.](https://github.com/rust-rfcs/unsafe-code-guidelines/issues/79):
+  
+* Layout of multi-variant enums where only one variant is inhabited.
