@@ -25,10 +25,11 @@ overlap. This can be visualized as follows:
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
 the field's layout. The only degrees of freedom the compiler has when computing
-the layout of a union are the size of the union and the offset of each union
-field within its variant. How these are picked depends on certain constraints,
-lik for example, the alignment requirements of the fields, the `#[repr]`
-attribute of the `union`, etc.
+the layout of a union are the size of the union, which can be larger than the
+size of its largest field, and the offset of each union field within its
+variant. How these are picked depends on certain constraints, lik for example,
+the alignment requirements of the fields, the `#[repr]` attribute of the
+`union`, etc.
 
 ### Unions with default layout ("`repr(Rust)`")
 
