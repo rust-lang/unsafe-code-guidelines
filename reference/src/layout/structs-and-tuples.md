@@ -83,6 +83,8 @@ This can be visualized as follows:
 ```text
 [ <--> [field 3] <-----> [field 1] <-> [  field 2  ] <--> ]
 ```
+**Figure 1** (struct-field layout): The `<-...->` and `[ ... ]` denote the differently-sized gaps and fields, respectively.
+
 Here, the individual fields are blocks of fixed size (determined by the field's
 layout).  The compiler freely picks an order for the fields to be in (this does
 not have to be the order of declaration in the source), and it picks the gaps
