@@ -17,7 +17,6 @@ overlap. This can be visualized as follows:
 [ <----> [field1_ty] <--> ]
 [ <---> [field2_ty] <---> ]
 ```
-
 **Figure 1** (union-field layout): Each row in the picture shows the layout of
 the union for each of its variants. The `<-...->` and `[ ... ]` denote the
 differently-sized gaps and fields, respectively.
