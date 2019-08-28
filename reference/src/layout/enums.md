@@ -376,7 +376,7 @@ enum Enum2<T> {
 }
 ```
 
-[niche]: ../glossary.html#niche
+[niche]: ../glossary.md#niche
 
 ## Unresolved questions
 
