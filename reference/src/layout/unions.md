@@ -20,8 +20,7 @@ overlap. This can be visualized as follows:
 
 **Figure 1** (union-field layout): Each row in the picture shows the layout of
 the union for each of its variants. The `<-...->` and `[ ... ]` denote the
-differently-sized gaps and fields, respectively and the `[field{i}_ty]` are the
-bytes of the type of the `i`-th union field.
+differently-sized gaps and fields, respectively.
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
 the field's [layout]. The only degrees of freedom the compiler has when
