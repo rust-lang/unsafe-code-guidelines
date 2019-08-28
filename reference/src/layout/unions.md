@@ -105,7 +105,7 @@ assert_eq!(align_of::<Zst2>(), 16);
 the layout of `U1` is **unspecified** because:
 
 * `Zst2` is not a [1-ZST], and
-* `SomeOtherStruct` has an unspecified layout and could contain padding bits.
+* `SomeOtherStruct` has an unspecified layout and could contain padding bytes.
 
 ### C-compatible layout ("repr C")
 
