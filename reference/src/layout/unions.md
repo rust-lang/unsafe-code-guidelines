@@ -45,7 +45,7 @@ whether all fields have the same offset, etc.
 As of this writing, we want to keep the option of using non-zero offsets open
 for the future; whether this is useful depends on what exactly the
 compiler-assumed invariants about union contents are. This might become clearer
-after the validity of unions [#73] is settled.
+after the [validity of unions][#73] is settled.
 
 Even if the offsets happen to be all 0, there might still be differences in the
 function call ABI.  If you need to pass unions by-value across an FFI boundary,
