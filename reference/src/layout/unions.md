@@ -57,7 +57,7 @@ you have to use `#[repr(C)]`.
 
 #### Layout of unions with a single non-zero-sized field
 
-The layout of unions with a single single non-[1-ZST]-field" is the same as the
+The layout of unions with a single non-[1-ZST]-field" is the same as the
 layout of that field if it has no [padding] bytes.
 
 For example, here:
