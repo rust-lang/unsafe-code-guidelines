@@ -42,7 +42,7 @@ When transmuting data to a function pointer, you must make sure it is non-null:
 
 ```rust
 fn bad() {
-    let x: fn() = unsafe { mem::transmute(0usize) } // This is UB!
+    let x: fn() = unsafe { std::mem::transmute(0usize) }; // This is UB!
 }
 ```
 
@@ -50,7 +50,7 @@ Transmuting any non-null value to a function pointer is defined behavior.
 
 ```rust
 fn good() {
-    let x: fn() = unsafe { mem::transmute(1usize) } // This is not UB.
+    let x: fn() = unsafe { std::mem::transmute(1usize) }; // This is not UB.
 }
 ```
 

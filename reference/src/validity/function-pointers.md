@@ -10,7 +10,7 @@ That makes this code UB:
 
 ```rust
 fn bad() {
-    let x: fn() = unsafe { mem::transmute(0usize) } // This is UB!
+    let x: fn() = unsafe { std::mem::transmute(0usize) }; // This is UB!
 }
 ```
 
@@ -18,7 +18,7 @@ However, any integer value other than NULL is allowed for function pointers:
 
 ```rust
 fn good() {
-    let x: fn() = unsafe { mem::transmute(1usize) } // This is not UB.
+    let x: fn() = unsafe { std::mem::transmute(1usize) }; // This is not UB.
 }
 ```
 
