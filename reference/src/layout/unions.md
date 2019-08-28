@@ -22,12 +22,12 @@ the union for each of its variants. The `<-...->` and `[ ... ]` denote the
 differently-sized gaps and fields, respectively.
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
-the field's [layout]. The only degrees of freedom the compiler has when
-computing the layout of a union are the size of the union, which can be larger
-than the size of its largest field, and the offset of each union field within
-its variant. How these are picked depends on certain constraints like, for
-example, the alignment requirements of the fields, the `#[repr]` attribute of
-the `union`, etc.
+the field's [layout]. Since we allow creating references to union fields
+(`&u.i`), the only degrees of freedom the compiler has when computing the layout
+of a union are the size of the union, which can be larger than the size of its
+largest field, and the offset of each union field within its variant. How these
+are picked depends on certain constraints like, for example, the alignment
+requirements of the fields, the `#[repr]` attribute of the `union`, etc.
 
 [padding]: ../glossary.md#padding
 [layout]: ../glossary.md#layout
@@ -45,13 +45,13 @@ whether all fields have the same offset, etc.
 As of this writing, we want to keep the option of using non-zero offsets open
 for the future; whether this is useful depends on what exactly the
 compiler-assumed invariants about union contents are. This might become clearer
-after the validity of unions
-([unsafe-code-guidelines/73](https://github.com/rust-lang/unsafe-code-guidelines/issues/73))
-is settled.
+after the validity of unions [#73] is settled.
 
 Even if the offsets happen to be all 0, there might still be differences in the
 function call ABI.  If you need to pass unions by-value across an FFI boundary,
 you have to use `#[repr(C)]`.
+
+[#73]: https://github.com/rust-lang/unsafe-code-guidelines/issues/73
 
 </details>
 
