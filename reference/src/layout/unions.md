@@ -18,10 +18,10 @@ overlap. This can be visualized as follows:
 [ <---> [field2_ty] <---> ]
 ```
 
-> **Figure: union field layout**: Each row in the picture shows the layout of
-> the union for each of its fields, where the square brackets `[]` depict an
-> array of bytes, `<-...->` denotes different amount of [padding], and
-> `[field{i}_ty]` is the bytes of the type of the `i`-th union field.
+**Figure 1** (union-field layout): Each row in the picture shows the layout of
+the union for each of its variants. The `<-...->` and `[ ... ]` denote the
+differently-sized gaps and fields, respectively and the `[field{i}_ty]` are the
+bytes of the type of the `i`-th union field.
 
 The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
 the field's [layout]. The only degrees of freedom the compiler has when
@@ -59,11 +59,8 @@ you have to use `#[repr(C)]`.
 
 #### Layout of unions with a single non-zero-sized field
 
-The layout of unions with a single non-zero-sized field is the same as the
-layout of that field if:
-
-* all zero-sized fields are [1-ZST], and
-* the non-zero sized field has no padding bits.
+The layout of unions with a single single non-[1-ZST]-field" is the same as the
+layout of that field if it has no [padding] bytes.
 
 For example, here:
 
