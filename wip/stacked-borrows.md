@@ -16,6 +16,7 @@ For more background, see the following blog-posts:
 Changes compared to the latest post (2.1):
 
 * Retags are "shallow" instead of recursively looking for references inside compound types.
+* Reborrowing of a shared reference, when searching for `UnsafeCell`, no longer reads enum discriminants. It treats enums like unions now.
 
 [Miri]: https://github.com/solson/miri/
 [all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
