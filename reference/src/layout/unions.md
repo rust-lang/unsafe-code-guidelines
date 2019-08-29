@@ -6,28 +6,106 @@ not to change until an RFC ratifies them.
 
 [#13]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/13
 
-The only degree of freedom the compiler has when computing the layout of a union
-like
+### Layout of individual union fields
 
-```rust,ignore
-union U { f1: T1, f2: T2 }
+A union consists of several variants, one for each field. All variants have the
+same size and start at the same memory address, such that in memory the variants
+overlap. This can be visualized as follows:
+
+```text
+[ <--> [field0_ty] <----> ]
+[ <----> [field1_ty] <--> ]
+[ <---> [field2_ty] <---> ]
 ```
+**Figure 1** (union-field layout): Each row in the picture shows the layout of
+the union for each of its variants. The `<-...->` and `[ ... ]` denote the
+differently-sized gaps and fields, respectively.
 
-is to determine the offset of the fields. The layout of these fields themselves
-is already entirely determined by their types, and since we intend to allow
-creating references to fields (`&u.f1`), unions do not have any wiggle-room
-there.
+The individual fields (`[field{i}_ty_]`) are blocks of fixed size determined by
+the field's [layout]. Since we allow creating references to union fields
+(`&u.i`), the only degrees of freedom the compiler has when computing the layout
+of a union are the size of the union, which can be larger than the size of its
+largest field, and the offset of each union field within its variant. How these
+are picked depends on certain constraints like, for example, the alignment
+requirements of the fields, the `#[repr]` attribute of the `union`, etc.
 
-### Default layout ("repr rust")
+[padding]: ../glossary.md#padding
+[layout]: ../glossary.md#layout
 
-**The default layout of unions is not specified.** As of this writing, we want
-to keep the option of using non-zero offsets open for the future; whether this
-is useful depends on what exactly the compiler-assumed invariants about union
-contents are.
+### Unions with default layout ("`repr(Rust)`")
+
+Except for the guarantees provided below for some specific cases, the default
+layout of Rust unions is, _in general_, **unspecified**.
+
+That is, there are no _general_ guarantees about the offset of the fields,
+whether all fields have the same offset, what the call ABI of the union is, etc.
+
+<details><summary><b>Rationale</b></summary>
+
+As of this writing, we want to keep the option of using non-zero offsets open
+for the future; whether this is useful depends on what exactly the
+compiler-assumed invariants about union contents are. This might become clearer
+after the [validity of unions][#73] is settled.
 
 Even if the offsets happen to be all 0, there might still be differences in the
 function call ABI.  If you need to pass unions by-value across an FFI boundary,
 you have to use `#[repr(C)]`.
+
+[#73]: https://github.com/rust-lang/unsafe-code-guidelines/issues/73
+
+</details>
+
+#### Layout of unions with a single non-zero-sized field
+
+The layout of unions with a single non-[1-ZST]-field" is the same as the
+layout of that field if it has no [padding] bytes.
+
+For example, here:
+
+```rust
+# use std::mem::{size_of, align_of};
+# #[derive(Copy, Clone)]
+#[repr(transparent)]
+struct SomeStruct(i32);
+# #[derive(Copy, Clone)]
+struct Zst;
+union U0 {
+   f0: SomeStruct,
+   f1: Zst,
+}
+# fn main() {
+# assert_eq!(size_of::<U0>(), size_of::<SomeStruct>());
+# assert_eq!(align_of::<U0>(), align_of::<SomeStruct>());
+# }
+```
+
+the union `U0` has the same layout as `SomeStruct`, because `SomeStruct` has no
+padding bits - it is equivalent to an `i32` due to `repr(transparent)` - and
+because `Zst` is a [1-ZST].
+
+On the other hand, here:
+
+```rust
+# use std::mem::{size_of, align_of};
+# #[derive(Copy, Clone)]
+struct SomeOtherStruct(i32);
+# #[derive(Copy, Clone)]
+#[repr(align(16))] struct Zst2;
+union U1 {
+   f0: SomeOtherStruct,
+   f1: Zst2,
+}
+# fn main() {
+# assert_eq!(size_of::<U1>(), align_of::<Zst2>());
+# assert_eq!(align_of::<U1>(), align_of::<Zst2>());
+assert_eq!(align_of::<Zst2>(), 16);
+# }
+```
+
+the layout of `U1` is **unspecified** because:
+
+* `Zst2` is not a [1-ZST], and
+* `SomeOtherStruct` has an unspecified layout and could contain padding bytes.
 
 ### C-compatible layout ("repr C")
 
@@ -93,3 +171,5 @@ with no fields. When such types are used as an union field in C++, a "naive"
 translation of that code into Rust will not produce a compatible result. Refer
 to the [struct chapter](structs-and-tuples.md#c-compatible-layout-repr-c) for
 further details.
+
+[1-ZST]: ../glossary.md#zero-sized-type--zst
