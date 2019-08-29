@@ -38,7 +38,7 @@ Except for the guarantees provided below for some specific cases, the default
 layout of Rust unions is, _in general_, **unspecified**.
 
 That is, there are no _general_ guarantees about the offset of the fields,
-whether all fields have the same offset, etc.
+whether all fields have the same offset, what the call ABI of the union is, etc.
 
 <details><summary><b>Rationale</b></summary>
 
