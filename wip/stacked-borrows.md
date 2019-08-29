@@ -286,6 +286,11 @@ The interesting question is which permission to use for the new item:
 - For mutable raw pointers and two-phase `Unique`, the permission is `SharedReadWrite`.
 - For `Shared`, the permission is different for locations inside of and outside of `UnsafeCell`.
   Inside `UnsafeCell`, it is `SharedReadWrite`; outside it is `SharedReadOnly`.
+  - The `UnsafeCell` detection is entirely static: it recurses through structs,
+    tuples and the like, but when hitting an `enum` or `union` or so, it treats
+    the entire field as an `UnsafeCell` unless its type is frozen. This avoids
+    hard-to-analyze recursive behavior caused by Stacked Borrows itself doing
+    memory accesses that are subject to Stacked Borrows rules.
 - For immutable raw pointers, the rules are the same as for `Shared`.
 
 So, basically, for every location, we call `grant` like this:
