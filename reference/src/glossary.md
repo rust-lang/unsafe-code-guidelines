@@ -159,7 +159,7 @@ A list of behavior considered undefined is available in the [Rust Language Refer
 > If the source code does not exhibit UB, the implementation promises to compile it to a program that will do on real hardware what the source code says it should do on the Rust Abstract Machine. 
 > However, if the source code exhibits UB, this contract is void, and the implementation can do *anything*. 
 >
-> When this document says that "the behavior of `X` is undefined" it is saying that "there are no guarantees about what the behavior of `X` is". 
+> When this document says that "the behavior of `X` is undefined" that should be read as "there are no guarantees about what the behavior of `X` is". 
 > It could fail to compile, compile but not produce an executable binary, produce an executable binary that does garbage, or even produce an executable binary that appears to do something reasonable.
 > It can also do something different any time. 
 >
