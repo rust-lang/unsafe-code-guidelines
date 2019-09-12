@@ -149,7 +149,7 @@ For some more information, see [this blog post](https://www.ralfj.de/blog/2018/0
 #### Undefined Behavior
 [ub]: #undefined-behavior
 
-*Undefined Behavior* (UB) is the behavior for which the Rust language imposes no requirements and provides no guarantees. Rust programs that do **not** exhibit *undefined behavior* preserve the semantics of the Rust Abstract Machine.
+*Undefined Behavior* (UB) is the behavior for which the Rust language provides no guarantees. Rust programs that do **not** exhibit *undefined behavior* execute according to the semantics of the Rust Abstract Machine on real hardware.
 
 Rust promises that *safe* Rust is [sound][soundness], that is, that it does not exhibit *undefined behavior*. `unsafe` Rust code that allows *safe* Rust code to exhibit *undefined behavior* is [unsound][soundness].
 
