@@ -161,7 +161,7 @@ A list of behavior considered undefined is available in the [Rust Language Refer
 >
 > When this document says that "the behavior of `X` is undefined" that should be read as "there are no guarantees about what the behavior of `X` is". 
 > It could fail to compile, compile but not produce an executable binary, produce an executable binary that does garbage, or even produce an executable binary that appears to do something reasonable.
-> It can also do something different any time. 
+> It can also do something different every time. 
 >
 > It is backward compatible to change the specification from making no guarantees (UB) to guaranteeing something (not UB). 
 > That is, Rust source code is not allowed to rely on UB being UB forever and therefore something that cannot ever happen, because that can change. 
