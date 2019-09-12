@@ -164,7 +164,7 @@ A list of behavior considered undefined is available in the [Rust Language Refer
 > It can also do something different every time. 
 >
 > It is backward compatible to change the specification from making no guarantees (UB) to guaranteeing something (not UB). 
-> That is, Rust source code is not allowed to rely on UB being UB forever and therefore something that cannot ever happen, because that can change. 
+> That is, Rust source code is not allowed to rely on UB being UB forever. 
 
 #### Soundness (of code / of a library)
 [soundness]: #soundness-of-code--of-a-library
