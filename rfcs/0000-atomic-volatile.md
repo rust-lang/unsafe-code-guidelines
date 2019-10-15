@@ -399,9 +399,10 @@ I expect the RFC process to be an occasion to revisit some points of the
 rationale and alternative sections better than I can do on my own, bring new
 arguments and edge cases on the table, and more generally refine the API.
 
-Implementation should be generally straightforward as most of the groundwork
-has already been done when implementing `ptr::read_volatile()`,
-`ptr::write_volatile()` and `std::sync::atomic` as far as I know.
+If we decide to implement this, implementation should be reasonably
+straightforward and uneventful, as most of the groundwork has already been done
+over the course of implementing `ptr::read_volatile()`, `ptr::write_volatile()`
+and `std::sync::atomic` (as far as I know at least).
 
 This RFC will no fully resolve the "untrusted shared memory" use case, because
 doing so also requires work on clarifying LLVM semantics so that it is
