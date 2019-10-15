@@ -303,6 +303,10 @@ jarring to users, not to mention that potentially having a copy of each atomic
 memory operation with a `_volatile` prefix would get annoying quickly when
 reading through the API docs.
 
+Finally, it is extremely common to want either all operations on a memory
+location to be volatile, or none of them. Providing separate wrapper types
+helps enforce this very common usage pattern at the API level.
+
 ## Self-type or not self-type
 [self-type]: #self-type
 
