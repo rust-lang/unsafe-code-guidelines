@@ -42,9 +42,9 @@ from hardware behavior and therefore bring volatile operations closer to the
 This reduces the odd of mistake in programs operating outside of the regular
 Rust Abstract Machine semantics, which are notoriously hard to get right.
 
-As an attractive side-effect, atomic volatile memory operations also enable
-higher-performance interprocess communication between mutually trusting Rust
-programs through lock-free synchronization of shared memory objects.
+As an unexpected but attractive side-effect, atomic volatile memory operations
+also enable higher-performance interprocess communication between mutually
+trusting Rust programs through lock-free synchronization of shared memory.
 
 
 # Guide-level explanation
@@ -68,8 +68,8 @@ some situations where they are inappropriate, including but not limited to:
 
 - [Memory-mapped I/O](https://en.wikipedia.org/wiki/Memory-mapped_I/O), a common
   low-level communication protocol between CPUs and peripherals, where hardware
-  registers masquerading as memory can be used to program said hardware by
-  accessing the registers in very specific load/store patterns.
+  registers masquerading as memory can be used to program peripherals by
+  accessing said registers in very specific load/store patterns.
 - [Shared memory](https://en.wikipedia.org/wiki/Shared_memory), a form of
   inter-process communication where two programs can communicate via a common
   memory block, and it is therefore not appropriate for Rust to assume that it
@@ -146,8 +146,8 @@ unsafe fn do_volatile_things(target: NonNull<VolatileU8>) -> u8 {
 }
 ```
 
-...or even the following, if it can prove that no other thread has access to
-the underlying `VolatileU8` variable:
+...or even the following, which it could normally do if it could prove that no
+other thread has access to the underlying `VolatileU8` variable:
 
 ```rust
 unsafe fn do_volatile_things(_target: NonNull<VolatileU8>) -> u8 {
@@ -273,9 +273,10 @@ requiring them may make the life of our other compiler backends harder.
 
 As mentioned above, exposing more than loads and stores, and non-`Relaxed`
 atomic memory orderings, also muddies the "a volatile op should compile into one
-hardware memory instruction" that is so convenient for loads and stores.
+hardware memory instruction" narrative that is so convenient for loads and stores.
 Further, compatibility of non-load/store atomics in IPC scenario may require
-some ABI agreement between the interacting programs.
+some ABI agreement on how atomics should be implemented between the interacting
+programs.
 
 
 # Rationale and alternatives
@@ -283,7 +284,7 @@ some ABI agreement between the interacting programs.
 
 I think we want to do this because it simultaneously eliminates two well-known
 and unnecessary volatile footguns (data races and tearing) and opens interesting
-new possibilities.
+new possibilities in interprocess communication.
 
 But although this feature may seem simple, its design space is actually
 remarquably large, and a great many alternatives were considered before reaching
@@ -303,7 +304,7 @@ jarring to users, not to mention that potentially having a copy of each atomic
 memory operation with a `_volatile` prefix would get annoying quickly when
 reading through the API docs.
 
-Finally, it is extremely common to want either all operations on a memory
+Also, it is extremely common to want either all operations on a memory
 location to be volatile, or none of them. Providing separate wrapper types
 helps enforce this very common usage pattern at the API level.
 
@@ -392,7 +393,7 @@ the amount of situations in which a volatile read from memory can be undefined
 behavior.
 
 There are plenty of crates trying to abstract volatile operations. Many are
-believed to be unsound due as they expose an `&self` to the sensitive memory
+believed to be unsound as they expose an `&self` to the sensitive memory
 region, but `voladdress` is believed not to be affected by this problem.
 
 
@@ -417,6 +418,10 @@ writes are non-atomic, non-volatile, etc.
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
+
+As mentioned above, this RFC is a step forward in addressing the untrusted
+shared memory use case that is of interest to many "supervisor" programs, but
+not the end of that story. Finishing it will likely require LLVM assistance.
 
 If we decide to drop advanced atomic orderings and operations from this RFC,
 then they will fall out in this section.
