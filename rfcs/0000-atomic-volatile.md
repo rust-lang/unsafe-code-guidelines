@@ -17,10 +17,10 @@ operations on every platform that has support for them.
 # Motivation
 [motivation]: #motivation
 
-Volatile operations are meant an escape hatch that allows a Rust programmer to
-invoke hardware-level memory access semantics that are not properly accounted
-for by the Rust Abstract Machine. They work by triggering the (mostly)
-unoptimized generation of a matching stream of hardware load and store
+Volatile operations are meant to be an escape hatch that allows a Rust
+programmer to invoke hardware-level memory access semantics that are not
+properly accounted for by the Rust Abstract Machine. They work by triggering the
+(mostly) unoptimized generation of a matching stream of hardware load and store
 instructions in the output machine code.
 
 Unfortunately, the volatile operations that are currently exposed by Rust, which
@@ -67,9 +67,9 @@ Although these optimizations are most of the time correct and useful, there are
 some situations where they are inappropriate, including but not limited to:
 
 - [Memory-mapped I/O](https://en.wikipedia.org/wiki/Memory-mapped_I/O), a common
-  low-level communication pattern between CPUs and peripherals where hardware
-  registers that masquerade as memory can be used to program the target hardware
-  by accessing them in very specific patterns.
+  low-level communication protocol between CPUs and peripherals, where hardware
+  registers masquerading as memory can be used to program said hardware by
+  accessing the registers in very specific load/store patterns.
 - [Shared memory](https://en.wikipedia.org/wiki/Shared_memory), a form of
   inter-process communication where two programs can communicate via a common
   memory block, and it is therefore not appropriate for Rust to assume that it
@@ -157,7 +157,7 @@ unsafe fn do_volatile_things(_target: NonNull<VolatileU8>) -> u8 {
 
 This is the definining characteristic of volatile operations, which makes them
 suitable for sensitive memory manipulations such as cryptographic secret erasure
-or memory-mapped user.
+or memory-mapped I/O.
 
 ---
 
@@ -179,11 +179,11 @@ which is now _deprecated_, by improving upon it in many different ways:
   into multiple hardware-level memory operations. In the same manner as with
   atomics, if a `Volatile` wrapper type is provided by Rust, the underlying
   hardware is guaranteed to support memory operations of that width.
-- The ability to specify stronger-than-`Relaxed` memory orderings on volatile
-  memory operations enables new use cases which were not achievable before
-  without exploiting Undefined Behavior, such as high-performance
-  synchronization of mutually trusting Rust processes communicating via
-  lock-free data structures in shared memory.
+- The ability to specify stronger-than-`Relaxed` memory orderings and to use 
+  memory operations other than loads and stores enables new use cases which were
+  not achievable before without exploiting Undefined Behavior, such as
+  high-performance synchronization of mutually trusting Rust processes
+  via lock-free data structures in shared memory.
 
 
 # Reference-level explanation
@@ -386,6 +386,10 @@ This last case, in particular, could be served through a combination of atomic
 volatile with a clarification of LLVM's volatile semantics which would tune down
 the amount of situations in which a volatile read from memory can be undefined
 behavior.
+
+There are plenty of crates trying to abstract volatile operations. Many are
+believed to be unsound due as they expose an `&self` to the sensitive memory
+region, but `voladdress` is believed not to be affected by this problem.
 
 
 # Unresolved questions
