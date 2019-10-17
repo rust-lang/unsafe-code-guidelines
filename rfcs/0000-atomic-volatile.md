@@ -133,7 +133,7 @@ their non-atomic equivalents.
 
 Unfortunately, however, not all of Rust's compilation targets exhibit global
 cache coherence. GPU hardware, such as the `nvptx` target, may only exhibit
-cache coherence among local "blocks" of threads, and abstract machines like WASM
+cache coherence among local "blocks" of threads. And abstract machines like WASM
 may not guarantee cache coherence at all without specific precautions. On those
 compilation targets, `Relaxed` loads and stores may either be unavailable, or
 lead to the generation of multiple machine instructions, which may not be wanted
