@@ -160,6 +160,15 @@ For unsafe code, however, the burden is still on the programmer.
 
 Also see: [Soundness][soundness].
 
+#### Unspecified behavior
+[unspecified]: #unspecified
+
+*Unspecified behavior* is not an error condition in the abstract machine, but beyond that, the Rust language provides no other guarantees about what behavior these programs have.
+
+For example, the field offsets of `repr(Rust)` types is *unspecified*, and a Rust program that prints the offset of a field exhibits *unspecified behavior*: it prints somethingbut we do not make any guarantees about what it prints. This might change across compiler versions, depending on compiler flags, or even across compiler invocations.
+
+Programs that make assumptions about what a particular source of *unspecified behavior* does often end up exhibiting *undefined behavior* when those assumptions are silently invalidated. For example, making an assumption that a field of a `repr(Rust)` struct is at a particular offse that is invalidated when that offset changes.
+
 #### Soundness (of code / of a library)
 [soundness]: #soundness-of-code--of-a-library
 
