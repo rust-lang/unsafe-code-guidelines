@@ -123,18 +123,26 @@ As their name suggest, these memory operations are not considered to be atomic
 by the compiler, and are therefore not safe to concurrently invoke in multiple
 threads.
 
-On the vast majority of targets supported by Rust, however, use of these
-methods will generate exactly the same code as using the `load()` and `store()`
+On hardware with global cache coherence, a category which encompasses the vast
+majority of Rust's supported compilation targets, use of these methods will
+generate exactly the same code as using the `load()` and `store()` atomic access
 methods with `Relaxed` memory ordering, with the only difference being that
-data races are Undefined Behavior. When that is the case, safer `Relaxed` atomic
-volatile operations should be preferred to their non-atomic equivalents.
+data races are Undefined Behavior from the compiler's point of view. When that
+is the case, safer `Relaxed` atomic volatile operations should be preferred to
+their non-atomic equivalents.
 
-But unfortunately, Rust supports a couple of targets, including the `nvptx`
-assembly used by NVidia GPUs and abstract machines like WASM, where `Relaxed`
-atomic ordering is either unsupported or emulated via a stream of
-instructions that is more complex than plain loads and stores. Supporting
-not-atomic volatile loads and stores is necessary to get minimal `Volatile`
-support on those platforms.
+Unfortunately, however, not all of Rust's compilation targets exhibit global
+cache coherence. GPU hardware, such as the `nvptx` target, may only exhibit
+cache coherence among local "blocks" of threads, and abstract machines like WASM
+may not guarantee cache coherence at all without specific precautions. On those
+compilation targets, `Relaxed` loads and stores may either be unavailable, or
+lead to the generation of multiple machine instructions, which may not be wanted
+where maximal hardware control or performance is desired.
+
+It is only for the sake of providing an alternative to the current
+`ptr::[read|write]_volatile` mechanism on such platforms that the
+`[load|store]_not_atomic()` functions are being proposed, and they should not
+be used where better alternative exists.
 
 Finally, unlike with atomics, the compiler is not allowed to optimize the above
 function into the following...
