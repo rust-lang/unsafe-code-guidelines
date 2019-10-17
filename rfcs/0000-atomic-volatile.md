@@ -292,7 +292,7 @@ impl VolatileBool {
 
     // NOTE: Unlike with `AtomicBool`, `get_mut()` and `into_inner()` operations
     //       are not provided, because it is never safe to assume that no one
-    //       is concurrently accessing the atomic data. Alternatively, these
+    //       is concurrently accessing volatile data. As an alternative, these
     //       operations could be provided in an unsafe way, if someone can find
     //       a use case for them.
 
