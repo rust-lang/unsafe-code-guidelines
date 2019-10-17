@@ -106,25 +106,24 @@ unsafe fn do_volatile_things(target: NonNull<VolatileU8>) -> u8 {
 }
 ```
 
-Several specificities, however, should be apparent from the above usage example.
-
-First of all, volatile types must be manipulated via pointers, instad of Rust
-references. These unusual and unpleasant ergonomics are necessary in order to
-achieve the desired semantics of manually controlling every access to the target
-memory location, because the mere existence of a Rust reference pointing to a
-memory region allows the Rust compiler to generate memory operations targeting
-this region (be they prefetches, register spills...).
+However, notice that volatile types must be manipulated via pointers, instad of
+Rust references. These unusual and unpleasant ergonomics are necessary in order
+to achieve the desired semantics of manually controlling every access to the
+target memory location, because the mere existence of a Rust reference pointing
+to a memory region allows the Rust compiler to generate memory operations
+targeting this region (be they prefetches, register spills...).
 
 Because a Rust pointer is not subjected to borrow checking and has no obligation
 of pointing towards a valid memory location, this means that using a Volatile
 wrapper in any way is unsafe.
 
-Second, in addition to familiar atomic memory operations, volatile types expose
-the `load_not_atomic()` and `store_not_atomic()` methods. As their name suggest,
-these memory operations are not considered to be atomic by the compiler, and
-are therefore not safe to concurrently invoke in multiple threads.
+As a second difference, in addition to familiar atomic memory operations,
+volatile types expose the `load_not_atomic()` and `store_not_atomic()` methods.
+As their name suggest, these memory operations are not considered to be atomic
+by the compiler, and are therefore not safe to concurrently invoke in multiple
+threads.
 
-On the vast majority of hardware platforms supported by Rust, using these
+On the vast majority of targets supported by Rust, however, use of these
 methods will generate exactly the same code as using the `load()` and `store()`
 methods with `Relaxed` memory ordering, with the only difference being that
 data races are Undefined Behavior. When that is the case, safer `Relaxed` atomic
