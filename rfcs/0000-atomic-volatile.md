@@ -496,7 +496,7 @@ the region is determined to be unobservable to other threads). This would be
 incompatible with the stated goal of precisely controlling memory accesses.
 
 Currently, the only alternative to references in Rust is to use raw pointer
-types. Rust has a number of these, here it is proposes to use `NonNull<T>`
+types. Rust has a number of these, here it is proposed to use `NonNull<T>`
 pointer type because it encodes the non-nullness invariant of the API in code.
 Although `NonNull<T>` is often less ergonomic to manipulate than `*mut T`, the
 use of arbitrary self types make its ergonomics comparable in this case.
