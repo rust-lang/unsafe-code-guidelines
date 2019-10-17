@@ -149,23 +149,15 @@ For some more information, see [this blog post](https://www.ralfj.de/blog/2018/0
 #### Undefined Behavior
 [ub]: #undefined-behavior
 
-*Undefined Behavior* (UB) is the behavior for which the Rust language provides no guarantees. Rust programs that do **not** exhibit *undefined behavior* execute according to the semantics of the Rust Abstract Machine on real hardware.
-Rust imposes no requirements on programs that exhibit undefined behavior; these programs are not bound by any specification.
+Undefined Behavior (UB) is an error condition of the Rust Abstract Machine.
+The Rust language provides no guarantees for programs that can reach this error condition.
+As part of the contract between the Rust programmer and the compiler, is thus the obligation of the programmer to ensure that their code, when run according to the rules of the Rust Abstract Machine, does not exhibit undefined behavior.
+In return, the compiler guarantees that programs that do not exhibit undefined behavior execute on real hardware according to the semantics of the Rust Abstract Machine.
+Rust imposes no requirements on the behavior of programs that exhibit undefined behavior; these programs are not bound by any specification (in particular, the program produced by the compiler is essentially garbage, it does not even have to be well-formed executable code).
 
-Rust requires that *safe* Rust is not able to exhibit *undefined behavior* (see [soundness][soundness]). It is up to the implementation and `unsafe` Rust code to ensure that this is the case.
+Rust requires that *safe* Rust is not able to exhibit *undefined behavior* (see [soundness][soundness]). For `unsafe` code, however, the burden is still on the programmer.
 
-A list of behavior considered undefined is available in the [Rust Language Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html).
-
-> **Note:** In practice, UB is a contract between the Rust source code and the implementation. 
-> If the source code does not exhibit UB, the implementation promises to compile it to a program that will do on real hardware what the source code says it should do on the Rust Abstract Machine. 
-> However, if the source code exhibits UB, this contract is void, and the implementation can do *anything*. 
->
-> When this document says that "the behavior of `X` is undefined" that should be read as "there are no guarantees about what the behavior of `X` is". 
-> It could fail to compile, compile but not produce an executable binary, produce an executable binary that does garbage, or even produce an executable binary that appears to do something reasonable.
-> It can also do something different every time. 
->
-> It is backward compatible to change the specification from making no guarantees (UB) to guaranteeing something (not UB). 
-> That is, Rust source code is not allowed to rely on UB being UB forever. 
+A list of behavior considered undefined is available in the [Rust Language Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) and the [Nomicon](https://doc.rust-lang.org/nomicon/what-unsafe-does.html).
 
 #### Soundness (of code / of a library)
 [soundness]: #soundness-of-code--of-a-library
