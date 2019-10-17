@@ -51,10 +51,13 @@ trusting Rust programs, through lock-free synchronization of shared memory.
 [guide-level-explanation]: #guide-level-explanation
 
 The Rust compiler generally assumes that the program that it is building is
-living in a fully isolated memory space. It leverages this knowledge to
-transform said program's memory access patterns for performance optimization
-purposes, under the assumption that said transformations will not have any
-externally observable effect other than the program running faster.
+living in a fully isolated memory space, where the contents of memory can only
+change if some direct action from the program allows it to change.
+
+It leverages this knowledge to transform said program's memory access patterns
+for performance optimization purposes, under the assumption that said
+transformations will not have any externally observable effect other than
+speeding up the program.
 
 Examples of such transformations include:
 
