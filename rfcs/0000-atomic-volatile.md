@@ -106,7 +106,7 @@ unsafe fn do_volatile_things(target: NonNull<VolatileU8>) -> u8 {
 }
 ```
 
-However, notice that volatile types must be manipulated via pointers, instad of
+However, notice that volatile types must be manipulated via pointers, instead of
 Rust references. These unusual and unpleasant ergonomics are necessary in order
 to achieve the desired semantics of manually controlling every access to the
 target memory location, because the mere existence of a Rust reference pointing
