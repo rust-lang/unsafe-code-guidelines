@@ -420,18 +420,18 @@ interprocess communication scenarios.
 However, the fact that these operations do not necessarily compile into a single
 hardware instruction is arguably a footgun for volatile's use cases, and it
 could be argued that initially only stabilizing loads, stores and `Relaxed`
-atomic ordering would be more prudent. I'll go back to this in the alternatives
-section of this RFC.
+atomic ordering would be more prudent. This will be revisited in the
+alternatives section of this RFC.
 
 ---
 
 As currently designed, this RFC uses `arbitrary_safe_types` to give method-like
-semantics to a `NonNull` raw pointer. I believe that this is necessary to get
-reasonable ergonomics with an atomics-like wrapper type approach. However, it
-could also be argued that a `VolatileXyz::store(ptr, data, ordering)` style of
-API could reasonably work, and avoid coupling with unstable features. Similarly,
-the use of `NonNull` itself could be debated. I'll come back to these points in
-the alternatives section as well.
+semantics to a `NonNull` raw pointer. This seems necessary to get reasonable
+ergonomics with an atomics-like wrapper type approach. However, it could also be
+argued that a `VolatileXyz::store(ptr, data, ordering)` style of API would work
+well enough, and avoid coupling with unstable features. Similarly, the use of
+`NonNull` itself could be debated. This will be revisited in the alternatives
+section of the RFC as well.
 
 
 # Drawbacks
@@ -462,13 +462,13 @@ operations as a future extension.
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
-I think we want to do this because it simultaneously eliminates two well-known
+This effprt seems worthwhile because it simultaneously eliminates two well-known
 and unnecessary volatile footguns (data races and tearing) and opens interesting
 new possibilities in interprocess communication.
 
 But although this feature may seem simple, its design space is actually
 remarquably large, and a great many alternatives were considered before reaching
-the current design proposal. Here is a map of some design knobs that I explored:
+the current design proposal. Here are some design knobs that were explored:
 
 ## Extending `AtomicXyz`
 [extending-atomicxyz]: #extending-atomicxyz
@@ -479,12 +479,12 @@ that atomic ops take an `&self` (which is against the spirit of volatile as it
 is tagged with `dereferenceable` at the LLVM layer).
 
 Instead, one would need to add more methods to atomic wrapper types, which take
-a pointer as a self-parameter. I thought that this API inconsistency would be
-jarring to users, not to mention that potentially having a copy of each atomic
-memory operation with a `_volatile` prefix would get annoying quickly when
-reading through the API docs.
+a pointer as a self-parameter. This API inconsistency was felt to be
+unnecessarily jarring to users, not to mention that potentially having a copy of
+each atomic memory operation with a `_volatile` prefix would reduce the
+readability of the `AtomicXyz` types' API documentation.
 
-Also, it is extremely common to want either all operations on a memory
+In addition, it is extremely common to want either all operations on a memory
 location to be volatile, or none of them. Providing separate wrapper types
 helps enforce this very common usage pattern at the API level.
 
@@ -526,12 +526,12 @@ In this way, most of the proposed API could become safe, and the only thing that
 would remain unsafe would be the `_not_atomic()` operations, which more closely
 reflects the reality of the situation.
 
-## Full atomics vocabulary vs hardware semantics
+## Full atomics vocabulary vs sticking with hardware semantics
 [atomics-vs-hardware]: #atomics-vs-hardware
 
 Currently, this RFC basically proposes exposing a volatile version of every
-atomic operation supported by Rust for maximal expressive power, and I could
-definitely find uses for the new possibilities that this opens in IPC scenarios.
+atomic operation supported by Rust for maximal expressive power, which opens
+new possibilities for shared-memory interprocess communication.
 
 But it could also be argued that this distracts us from volatile's main purpose
 of generating a stream of simple hardware instructions without using inline
@@ -543,25 +543,31 @@ assembly:
   code because they come with data validity invariants.
 
 From this perspective, there would be an argument in favor of only supporting
-`Relaxed` load/stores and machine data types, at least initially. And I could
-get behind that. But since the rest can be useful in IPC with trusted Rust code,
-I thought it might be worth at least considering.
+`Relaxed` load/stores and machine data types, at least initially. In this case,
+one could split this feature into three feature gates:
+
+- `Relaxed` volatile atomic loads and stores, which are most urgently needed.
+- Non-`Relaxed` orderings and read-modify-write atomics, which open new
+  possibilities for shared-memory IPC.
+- `_not_atomic()` operations, where it is not yet clear whether the proposed API
+  is even the right solution to the problem being solved, and more research is
+  needed before reaching a definite conclusion.
 
 
 # Prior art
 [prior-art]: #prior-art
 
-As far as I know, LLVM's notion of atomic volatile, which is being exposed here,
-is rather original. The closest thing that it makes me think about is how Java
-uses the `volatile` keyword for what most other languages call atomics. But
-I'm not sure if Java also retains the other semantics of `volatile` in the C
-family (e.g. "cannot be optimized out ever").
+To the RFC author's knowledge, LLVM's notion of atomic volatile, which is being
+exposed here, is rather original. The closest thing that it reminds of is how
+Java uses the `volatile` keyword for what most other languages call atomics. But
+it does Java's `volatile` also retains the other semantics of `volatile` in the
+C family, such as lack of optimizability?
 
 There is a lot more prior art behind C's notion of volatile, which is closer to
 Rust's current notion of volatile. That being said, most discussions of C/++
 volatile semantics end up in complaints about how ill-specified, how easy it is
-to get it wrong, how "contagious" it can get... so I'm not sure if it's
-something we want to emulate. Besides, Rust's notion of volatile differs
+to get it wrong, how "contagious" it can get... so it isn't clear if it is a
+very good role model to follow. Furthermore, Rust's notion of volatile differs
 fundamentally from C's notion of volatile in that it is based on volatile
 _operations_, not volatile _types_.
 
@@ -590,14 +596,14 @@ region, but `voladdress` is believed not to be affected by this problem.
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-I expect the RFC process to be an occasion to revisit some points of the
-rationale and alternative sections better than I can do on my own, bring new
-arguments and edge cases on the table, and more generally refine the API.
+The RFC process will be an occasion to revisit some points of the rationale and
+alternative sections better than the author can do on his own, bring new
+arguments and edge cases on the table, and more generally refining the API.
 
 If we decide to implement this, implementation should be reasonably
 straightforward and uneventful, as most of the groundwork has already been done
 over the course of implementing `ptr::read_volatile()`, `ptr::write_volatile()`
-and `std::sync::atomic` (as far as I know at least).
+and `std::sync::atomic` (to the best of the author's knowledge at least).
 
 This RFC will no fully resolve the "untrusted shared memory" use case, because
 doing so also requires work on clarifying LLVM semantics so that it is
