@@ -196,7 +196,7 @@ without resorting to the full complexity, overhead, and non-portability of
 assembly (inline or otherwise).
 
 Rust's current volatile operations, which defer to LLVM's non-atomic volatile
-operations, do not achieve this goal very well because...
+operations, do not achieve this goal very well because:
 
 1. Their data race semantics do not match the data race semantics of the
    hardware which volatile is supposed to defer to, and as a result are
