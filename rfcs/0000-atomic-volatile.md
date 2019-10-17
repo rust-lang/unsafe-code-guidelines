@@ -560,14 +560,12 @@ one could split this feature into three feature gates:
 # Prior art
 [prior-art]: #prior-art
 
-To the RFC author's knowledge, LLVM's notion of atomic volatile, which is being
-exposed here, is rather original. The closest thing that it reminds of is how
-Java uses the `volatile` keyword for what most other languages call atomics. But
-it does Java's `volatile` also retains the other semantics of `volatile` in the
-C family, such as lack of optimizability?
+Atomic volatile accesses exist in C++11 and C11. They are respectively exposed
+in those languages as [volatile overloads of `std::atomic` operations](https://en.cppreference.com/w/cpp/atomic/atomic/exchange) and [just making all atomic operations operate on
+volatile objects](https://en.cppreference.com/w/c/atomic/atomic_load).
 
-There is a lot more prior art behind C's notion of volatile, which is closer to
-Rust's current notion of volatile. That being said, most discussions of C/++
+There is also a lot of prior art behind C's notion of volatile, which is closer
+to Rust's current notion of volatile. That being said, most discussions of C/++
 volatile semantics end up in complaints about how ill-specified, how easy it is
 to get it wrong, how "contagious" it can get... so it isn't clear if it is a
 very good role model to follow. Furthermore, Rust's notion of volatile differs
