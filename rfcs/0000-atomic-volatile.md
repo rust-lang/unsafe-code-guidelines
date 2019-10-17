@@ -224,10 +224,18 @@ or stronger semantics. The vast majority of hardware which Rust supports today
 and is expected to support in the future exhibits global cache coherence,
 so making volatile feel more at home on such hardware is a sizeable achievement.
 
-However, we obviously must still have something for those exotic platforms whose
-basic memory loads and stores are not cache-coherent, such as `nvptx`. Hence the
-compromise of `load_not_atomic()` and `store_not_atomic()` is still kept around,
-only discouraging its use.
+For exotic platforms whose basic memory loads and stores do not guarantee global
+cache coherence, such as `nvptx`, this RFC adds `load_not_atomic()` and
+`store_not_atomic()` operations. It is unclear at this point in time whether
+these two methods should be stabilized, or an alternative solution such as
+extending Rust's atomic operation model with synchronization guarantees weaker
+than `Relaxed` should be researched.
+
+As this feels like a complex and niche edge case that should not block the most
+generally useful subset of volatile atomic operations, this RFC proposes to
+implement these operations behind a different feature gate, and postpone their
+stabilization until supplementary research has determined whether they are
+truly a necessary evil or not.
 
 ---
 
@@ -596,6 +604,10 @@ doing so also requires work on clarifying LLVM semantics so that it is
 absolutely clear that a malicious process cannot cause UB in another process
 by writing data in memory that's shared between the two, no matter if said
 writes are non-atomic, non-volatile, etc.
+
+The necessity of having `load_not_atomic()` and `store_not_atomic()` methods,
+as opposed to alternatives such as weaker-than-`Relaxed` atomics, should be
+researched before stabilizing that subset of this RFC.
 
 
 # Future possibilities
