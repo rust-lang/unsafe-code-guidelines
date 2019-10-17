@@ -33,7 +33,7 @@ memory access semantics of mainstream hardware in two major ways:
 2. Using an overly wide volatile load or store operation which cannot be carried
    out by a single hardware load and store instruction will not result in a
    compilation error, but in the silent emission of multiple hardware load or
-   store instructions.
+   store instructions which might be a logic error in the users' program.
 
 By implementing support for LLVM's atomic volatile operations, and encouraging
 their use on every hardware that supports them, we eliminate these divergences
