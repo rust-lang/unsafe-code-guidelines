@@ -446,9 +446,6 @@ do the same thing, which is equally bad. It could be argued that the issues with
 the existing volatile operations, while real, do not warrant the full complexity
 of this RFC.
 
-Atomic volatile operations are also a somewhat LLVM-specific concept, and
-requiring them may make the life of our other compiler backends harder.
-
 As mentioned above, exposing more than loads and stores, and non-`Relaxed`
 atomic memory orderings, also muddies the "a volatile op should compile into one
 hardware memory instruction" narrative that is so convenient for loads and stores.
@@ -465,7 +462,7 @@ operations as a future extension.
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
-This effprt seems worthwhile because it simultaneously eliminates two well-known
+This effort seems worthwhile because it simultaneously eliminates two well-known
 and unnecessary volatile footguns (data races and tearing) and opens interesting
 new possibilities in interprocess communication.
 
