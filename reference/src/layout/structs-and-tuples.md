@@ -79,6 +79,11 @@ themselves is already entirely determined by their types, and since we intend to
 allow creating references to fields (`&s.f1`), structs do not have any
 wiggle-room there.
 
+**Note:** This is only true if the struct is inhabited.  For structs like `(i32,
+!)` that do not have a valid inhabitant, the compiler has more freedom.  After
+all, no references to fields can ever be taken.  For example, such structs might
+be zero-sized.
+
 This can be visualized as follows:
 ```text
 [ <--> [field 3] <-----> [field 1] <-> [  field 2  ] <--> ]
