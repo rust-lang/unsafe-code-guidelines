@@ -599,11 +599,41 @@ straightforward and uneventful, as most of the groundwork has already been done
 over the course of implementing `ptr::read_volatile()`, `ptr::write_volatile()`
 and `std::sync::atomic` (to the best of the author's knowledge at least).
 
-This RFC will no fully resolve the "untrusted shared memory" use case, because
-doing so also requires work on clarifying LLVM semantics so that it is
-absolutely clear that a malicious process cannot cause UB in another process
+## Should shared-memory IPC always be volatile?
+
+There is [some ongoing discussion](https://github.com/rust-lang/unsafe-code-guidelines/issues/215)
+in the Unsafe Code Guidelines group concerning whether a Rust implementation
+should assume the existence of unknown threads of execution, even when no
+concrete action has been taken to spawn such threads. This choice is a tradeoff
+between Rust code performance and FFI ergonomics.
+
+Depending on the outcome of this discussion, use cases such as shared-memory
+interprocess communication, which do involve external threads which the Rust
+implementation has no knowledge of, may or may not need to be volatile.
+
+- If we go in the "maximal Rust performance" direction, then every access to
+  shared memory must be marked volatile because the Rust compiler is allowed to
+  optimize it out if it is not subsequently used by Rust code (or used by Rust
+  code in a sufficiently restricted way).
+- If we go in the "maximal FFI ergonomics" direction, then volatile accesses are
+  only needed when they are not coupled with atomics-based synchronization, as
+  the mere presence of atomics acts as a trigger that disables the above
+  optimizations.
+
+## Untrusted shared memory
+
+Although it performs a step in the right direction by strengthening the
+definition of volatile accesses to result the amount of possible avenues for
+undefined behavior, this RFC will no fully resolve the "untrusted shared memory"
+use case, where Rust code is interacting with untrusted arbitrary code via a
+shared memory region.
+
+Doing so would also require work on clarifying LLVM semantics so that it is
+absolutely clear that a malicious process cannot cause UB in another process by
 by writing data in memory that's shared between the two, no matter if said
 writes are non-atomic, non-volatile, etc.
+
+## Necessity of non-atomic operations
 
 The necessity of having `load_not_atomic()` and `store_not_atomic()` methods,
 as opposed to alternatives such as weaker-than-`Relaxed` atomics, should be
