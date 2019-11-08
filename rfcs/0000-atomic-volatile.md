@@ -61,10 +61,10 @@ speeding up the program.
 
 Examples of such transformations include:
 
-- Caching data from RAM into CPU registers.
-- Eliminating unused loads and unobservable stores.
-- Merging neighboring stores with each other.
-- Only updating the part of an over-written struct that has actually changed.
+- caching data from RAM into CPU registers,
+- eliminating unused loads and unobservable stores,
+- merging neighboring stores with each other,
+- only updating the part of an over-written struct that has actually changed.
 
 Although these optimizations are most of the time correct and useful, there are
 some situations where they are inappropriate, including but not limited to:
@@ -109,7 +109,7 @@ unsafe fn do_volatile_things(target: NonNull<VolatileU8>) -> u8 {
 }
 ```
 
-However, notice that volatile types must be manipulated via pointers, instead of
+Notice that volatile types must be manipulated via pointers, instead of
 Rust references. These unusual and unpleasant ergonomics are necessary in order
 to achieve the desired semantics of manually controlling every access to the
 target memory location, because the mere existence of a Rust reference pointing
