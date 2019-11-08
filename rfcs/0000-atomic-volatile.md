@@ -202,7 +202,8 @@ which is now _deprecated_, by improving upon it in several ways:
   Rust code and atomic operations which are meant to synchronize with arbitrary
   FFI edge cases (such as threads spawned by LD_PRELOAD unbeknownst to the Rust
   compiler), which in turn would enable better optimization of atomic operations
-  in the vast majority of Rust programs.
+  in the vast majority of Rust programs, as will be further discussed in the
+  Unresolved Questions section.
 
 
 # Reference-level explanation
