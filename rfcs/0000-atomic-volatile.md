@@ -42,17 +42,14 @@ from hardware behavior and therefore bring volatile operations closer to the
 This reduces the odd of mistake in programs operating outside of the regular
 Rust Abstract Machine semantics, which are notoriously hard to get right.
 
-As an unexpected but attractive side-effect, atomic volatile memory operations
-also enable higher-performance interprocess communication between mutually
-trusting Rust programs, through lock-free synchronization of shared memory.
-
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
 The Rust compiler generally assumes that the program that it is building is
 living in a fully isolated memory space, where the contents of memory can only
-change if some direct action from the program allows it to change.
+change if some direct action from the program (including FFI or atomic memory
+operations) allows it to change.
 
 It leverages this knowledge to transform said program's memory access patterns
 for performance optimization purposes, under the assumption that said
@@ -67,7 +64,7 @@ Examples of such transformations include:
 - only updating the part of an over-written struct that has actually changed.
 
 Although these optimizations are most of the time correct and useful, there are
-some situations where they are inappropriate, including but not limited to:
+some situations where they are inappropriate, in areas such as:
 
 - [Memory-mapped I/O](https://en.wikipedia.org/wiki/Memory-mapped_I/O), a common
   low-level communication protocol between CPUs and peripherals, where hardware
@@ -75,15 +72,23 @@ some situations where they are inappropriate, including but not limited to:
   accessing said registers in very specific load/store patterns.
 - [Shared memory](https://en.wikipedia.org/wiki/Shared_memory), a form of
   inter-process communication where two programs can communicate via a common
-  memory block, and it is therefore not appropriate for Rust to assume that it
-  is aware of all memory accesses occurring inside said memory block.
+  memory block, which means that stores are externally observable and loads are
+  not guaranteed to return consistent results.
+- Advanced uses of [virtual memory](https://en.wikipedia.org/wiki/Virtual_memory)
+  where the mere action of reading from or writing to memory may trigger
+  execution of arbitrary code by the operating system.
 - [Cryptography](https://en.wikipedia.org/wiki/Cryptography), where it is
   extremely important to ensure that sensitive information is erased after use,
   and is not leaked via indirect means such as recognizable scaling patterns in
   the time taken by a system to process attacker-crafted inputs.
 
-In such circumstances, it may be necessary to assert precise manual control on
-the memory accesses that are carried out by a Rust program in a certain memory
+In all those circumstances, though for different reasons, it may be important to
+guarantee that memory loads and stores do occur, because they have externally
+observable side-effects outside of the Rust program being optimized, and may be
+subjected to unpredictable side-effects from the outside world.
+
+And in that cas, it is useful to be able to assert precise manual control on the
+memory accesses that are carried out by a Rust program in a certain memory
 region. This is the purpose of _volatile memory operations_, which allow a Rust
 programmers to generate a carefully controlled stream of hardware memory load
 and store instructions, which is guaranteed to be left untouched by the Rust
@@ -139,8 +144,9 @@ cache coherence. GPU hardware, such as the `nvptx` target, may only exhibit
 cache coherence among local "blocks" of threads. And abstract machines like WASM
 may not guarantee cache coherence at all without specific precautions. On those
 compilation targets, `Relaxed` loads and stores may either be unavailable, or
-lead to the generation of multiple machine instructions, which may not be wanted
-where maximal hardware control or performance is desired.
+lead to the generation of machine instructions more complex than native loads
+and stores, which may not be wanted where maximal hardware control or CPU
+performance is desired.
 
 It is only for the sake of providing an alternative to the current
 `ptr::[read|write]_volatile` mechanism on such platforms that the
@@ -178,7 +184,7 @@ equivalent methods of raw pointer objects, and wonder how the new facilities
 provided by `std::volatile` compare to those methods.
 
 The answer is that this new volatile data access API supersedes its predecessor,
-which is now _deprecated_, by improving upon it in many different ways:
+which is now _deprecated_, by improving upon it in several ways:
 
 - The data race semantics of `Relaxed` volatile data accesses more closely
   matches the data race semantics of most hardware, and therefore eliminates an
@@ -191,10 +197,12 @@ which is now _deprecated_, by improving upon it in many different ways:
   atomics, if a `Volatile` wrapper type is provided by Rust, the underlying
   hardware is guaranteed to support memory operations of that width.
 - The ability to specify stronger-than-`Relaxed` memory orderings and to use 
-  memory operations other than loads and stores enables new use cases which were
-  not achievable before without exploiting Undefined Behavior, such as
-  high-performance synchronization of mutually trusting Rust processes
-  via lock-free data structures in shared memory.
+  memory operations other than loads and stores enables Rust to draw a clear
+  distinction between atomic operations which are meant to synchronize normal
+  Rust code and atomic operations which are meant to synchronize with arbitrary
+  FFI edge cases (such as threads spawned by LD_PRELOAD unbeknownst to the Rust
+  compiler), which in turn would enable better optimization of atomic operations
+  in the vast majority of Rust programs.
 
 
 # Reference-level explanation
@@ -211,11 +219,9 @@ operations, do not achieve this goal very well because:
 
 1. Their data race semantics do not match the data race semantics of the
    hardware which volatile is supposed to defer to, and as a result are
-   unnecessarily surprising and unsafe. They prevent some synchronization
-   patterns which are legal at the hardware level but not at the abstract
-   machine level, such as the "seqlock", to be expressed using volatile
-   operations. No useful optimization opportunities are opened by this undefined
-   behavior, since volatile operations cannot be meaningfully optimized.
+   unnecessarily surprising and unsafe. No useful optimization opportunities are
+   opened by this undefined behavior, since volatile operations cannot be
+   meaningfully optimized.
 2. The absence of a hard guarantee that each volatile load or store will
    translate into exactly one load or store at the hardware level is needlessly
    tracherous in scenarios where memory access patterns must be very precisely
@@ -417,8 +423,10 @@ reduce effort duplication between these two closely related functionalities.
 
 This RFC currently proposes to expose the full power of LLVM's atomic volatile
 operations, including e.g. read-modify-write operations like compare-and-swap,
-because there are legitimately useful use cases for these operations in
-interprocess communication scenarios.
+because it is consistent with the atomics operation API and could have
+legitimate uses in interprocess communication scenarios, as a marker of the
+nuance between well-optimized program-local synchronization and worst-case FFI
+synchronization. See Unresolved Questions section for more details.
 
 However, the fact that these operations do not necessarily compile into a single
 hardware instruction is arguably a footgun for volatile's use cases, and it
@@ -448,10 +456,10 @@ of this RFC.
 
 As mentioned above, exposing more than loads and stores, and non-`Relaxed`
 atomic memory orderings, also muddies the "a volatile op should compile into one
-hardware memory instruction" narrative that is so convenient for loads and stores.
-Further, compatibility of non-load/store atomics in IPC scenario may require
-some ABI agreement on how atomics should be implemented between the interacting
-programs.
+hardware memory instruction" narrative that is so convenient for loads and
+stores. Further, compatibility of non-load/store atomics in IPC scenario may
+require some ABI agreement on how atomics should be implemented between the
+interacting programs.
 
 If this is perceived to be a problem, we could decide to do away with some of
 the complexity by initially focusing on a restricted subset of this proposal
@@ -526,12 +534,17 @@ In this way, most of the proposed API could become safe, and the only thing that
 would remain unsafe would be the `_not_atomic()` operations, which more closely
 reflects the reality of the situation.
 
+One possible way to achieve this result would be to introduce a way to disable
+the licence to insert arbitrary loads from Rust references that the compiler
+normally has. For example, it has been proposed before that `&UnsafeCell<T>`
+should not exhibit this behavior. This could be enough for `VolatileXyz`'s need
+if it were extended to transparent newtypes of `UnsafeCell<Xyz>`.
+
 ## Full atomics vocabulary vs sticking with hardware semantics
 [atomics-vs-hardware]: #atomics-vs-hardware
 
 Currently, this RFC basically proposes exposing a volatile version of every
-atomic operation supported by Rust for maximal expressive power, which opens
-new possibilities for shared-memory interprocess communication.
+atomic operation supported by Rust for maximal expressive power.
 
 But it could also be argued that this distracts us from volatile's main purpose
 of generating a stream of simple hardware instructions without using inline
@@ -609,12 +622,13 @@ between Rust code performance and FFI ergonomics.
 
 Depending on the outcome of this discussion, use cases such as shared-memory
 interprocess communication, which do involve external threads which the Rust
-implementation has no knowledge of, may or may not need to be volatile.
+implementation has no knowledge of, may or may not require systematic use of
+volatile memory accesses.
 
 - If we go in the "maximal Rust performance" direction, then every access to
   shared memory must be marked volatile because the Rust compiler is allowed to
-  optimize it out if it is not subsequently used by Rust code (or used by Rust
-  code in a sufficiently restricted way).
+  optimize it out if it is not subsequently used by Rust code (or if it can
+  transform the Rust code to eliminate that use).
 - If we go in the "maximal FFI ergonomics" direction, then volatile accesses are
   only needed when they are not coupled with atomics-based synchronization, as
   the mere presence of atomics acts as a trigger that disables the above
