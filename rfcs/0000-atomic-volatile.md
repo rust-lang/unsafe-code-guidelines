@@ -594,10 +594,6 @@ region, but `voladdress` is believed not to be affected by this problem.
 # Unresolved questions
 [unresolved-questions]: #unresolved-questions
 
-The RFC process will be an occasion to revisit some points of the rationale and
-alternative sections better than the author can do on his own, bring new
-arguments and edge cases on the table, and more generally refining the API.
-
 If we decide to implement this, implementation should be reasonably
 straightforward and uneventful, as most of the groundwork has already been done
 over the course of implementing `ptr::read_volatile()`, `ptr::write_volatile()`
