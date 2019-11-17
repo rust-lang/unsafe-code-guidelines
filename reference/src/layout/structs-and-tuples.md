@@ -72,12 +72,12 @@ struct Foo {
 (In fact, one may use such field names in patterns or in accessor
 expressions like `foo.0`.)
 
-The degrees of freedom the compiler has when computing the layout of a struct or
-tuple is to determine the order of the fields, and the "gaps" (often called
-*padding*) before, between, and after the fields. The layout of these fields
-themselves is already entirely determined by their types, and since we intend to
-allow creating references to fields (`&s.f1`), structs do not have any
-wiggle-room there.
+The degrees of freedom the compiler has when computing the layout of an
+*inhabited* struct or tuple is to determine the order of the fields, and the
+"gaps" (often called *padding*) before, between, and after the fields. The
+layout of these fields themselves is already entirely determined by their types,
+and since we intend to allow creating references to fields (`&s.f1`), structs do
+not have any wiggle-room there.
 
 This can be visualized as follows:
 ```text
@@ -89,6 +89,10 @@ Here, the individual fields are blocks of fixed size (determined by the field's
 layout).  The compiler freely picks an order for the fields to be in (this does
 not have to be the order of declaration in the source), and it picks the gaps
 between the fields (under some constraints, such as alignment).
+
+For *uninhabited* structs or tuples like `(i32, !)` that do not have a valid
+inhabitant, the compiler has more freedom.  After all, no references to fields
+can ever be taken.  For example, such structs might be zero-sized.
 
 How exactly the compiler picks order and gaps, as well as other aspects of
 layout beyond size and field offset, can be controlled by a `#[repr]` attribute:
