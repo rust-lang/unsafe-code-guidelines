@@ -4,7 +4,9 @@
 
 This is not a guide!
 It is more of a reference.
-For more background, see the following blog-posts:
+For more background, see the [paper on Stacked Borrows](https://plv.mpi-sws.org/rustbelt/stacked-borrows/).
+
+Stacked Borrows is also the subject of the following blog-posts:
 
 * [Stacked Borrows 0.1](https://www.ralfj.de/blog/2018/08/07/stacked-borrows.html) is the initial idea of what Stacked Borrows might look like before anything got implemented. This post is interesting for some of the historical context it gives, but is largely superseded by the next post.
 * [Stacked Borrows 1.0](https://www.ralfj.de/blog/2018/11/16/stacked-borrows-implementation.html) is the first version that got implemented. This post is a self-contained, improved introduction to Stacked Borrows.
