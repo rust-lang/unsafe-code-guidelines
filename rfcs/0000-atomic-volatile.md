@@ -87,7 +87,7 @@ guarantee that memory loads and stores do occur, because they have externally
 observable side-effects outside of the Rust program being optimized, and may be
 subjected to unpredictable side-effects from the outside world.
 
-And in that cas, it is useful to be able to assert precise manual control on the
+And in that case, it is useful to be able to assert precise manual control on the
 memory accesses that are carried out by a Rust program in a certain memory
 region. This is the purpose of _volatile memory operations_, which allow a Rust
 programmers to generate a carefully controlled stream of hardware memory load
