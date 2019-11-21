@@ -437,7 +437,7 @@ alternatives section of this RFC.
 
 ---
 
-As currently designed, this RFC uses `arbitrary_safe_types` to give method-like
+As currently designed, this RFC uses `arbitrary_self_types` to give method-like
 semantics to a `NonNull` raw pointer. This seems necessary to get reasonable
 ergonomics with an atomics-like wrapper type approach. However, it could also be
 argued that a `VolatileXyz::store(ptr, data, ordering)` style of API would work
