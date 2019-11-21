@@ -119,7 +119,7 @@ Rust references. These unusual and unpleasant ergonomics are necessary in order
 to achieve the desired semantics of manually controlling every access to the
 target memory location, because the mere existence of a Rust reference pointing
 to a memory region allows the Rust compiler to generate memory operations
-targeting this region (be they prefetches, register spills...).
+targeting this region (be they prefetches, register spills, ...).
 
 Because a Rust pointer is not subjected to borrow checking and has no obligation
 of pointing towards a valid memory location, this means that using a Volatile
