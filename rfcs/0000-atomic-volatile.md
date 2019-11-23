@@ -20,7 +20,7 @@ operations on every platform that has support for them.
 Volatile operations are meant to be an escape hatch that allows a Rust
 programmer to invoke hardware-level memory access semantics that are not
 properly accounted for by the Rust Abstract Machine. They work by triggering the
-(mostly) unoptimized generation of a matching stream of hardware load and store
+largely unoptimized generation of a matching stream of hardware load and store
 instructions in the output machine code.
 
 Unfortunately, the volatile operations that are currently exposed by Rust, which
@@ -70,10 +70,12 @@ some situations where they are inappropriate, in areas such as:
   low-level communication protocol between CPUs and peripherals, where hardware
   registers masquerading as memory can be used to program peripherals by
   accessing said registers in very specific load/store patterns.
-- [Shared memory](https://en.wikipedia.org/wiki/Shared_memory), a form of
+- [Shared-memory IPC](https://en.wikipedia.org/wiki/Shared_memory), a form of
   inter-process communication where two programs can communicate via a common
   memory block, which means that stores are externally observable and loads are
-  not guaranteed to return consistent results.
+  not guaranteed to return consistent results. This is not to be confused with
+  shared-memory concurrency, which refers to sharing of memory between multiple
+  threads running within the same process.
 - Advanced uses of [virtual memory](https://en.wikipedia.org/wiki/Virtual_memory)
   where the mere action of reading from or writing to memory may trigger
   execution of arbitrary code by the operating system.
@@ -506,10 +508,10 @@ operations as inherent methods, i.e. `VolatileU8::load(a, Ordering::Relaxed)`.
 
 This has the advantage of avoiding coupling this feature to another unstable
 feature. But it has the drawback of being incredibly verbose. Typing the same
-volatile type name over and over again in a complex shared memory transaction
-would certainly get old and turn annoying quickly, and we don't want anger to
-distract low-level developers from the delicate task of implementing the kind
-of subtle algorithm that requires volatile operations.
+volatile type name over and over again in a complex transaction would certainly
+get old and turn annoying quickly, and we don't want anger to distract low-level
+developers from the delicate task of implementing the kind of subtle algorithm
+that requires volatile operations.
 
 ## `NonNull<T>` vs `*mut T` vs `*const T` vs other
 [pointers]: #pointers
@@ -635,7 +637,7 @@ volatile memory accesses.
   the mere presence of atomics acts as a trigger that disables the above
   optimizations.
 
-## Untrusted shared memory
+## Untrusted shared-memory IPC
 
 Although it performs a step in the right direction by strengthening the
 definition of volatile accesses to result the amount of possible avenues for
@@ -659,8 +661,8 @@ researched before stabilizing that subset of this RFC.
 [future-possibilities]: #future-possibilities
 
 As mentioned above, this RFC is a step forward in addressing the untrusted
-shared memory use case that is of interest to many "supervisor" programs, but
-not the end of that story. Finishing it will likely require LLVM assistance.
+shared-memory IPC use case that is of interest to many "supervisor" programs,
+but not the end of that story. Finishing it will likely require LLVM assistance.
 
 If we decide to drop advanced atomic orderings and operations from this RFC,
 then they will fall out in this section.
