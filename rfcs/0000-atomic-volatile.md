@@ -80,7 +80,9 @@ some situations where they are inappropriate, in areas such as:
   threads running within the same process.
 - Advanced uses of [virtual memory](https://en.wikipedia.org/wiki/Virtual_memory)
   where the mere action of reading from or writing to memory may trigger
-  execution of arbitrary code by the operating system.
+  execution of arbitrary code by the operating system. Note that even when using
+  volatile accesses, [some sanity restrictions](https://llvm.org/docs/LangRef.html#volatile-memory-accesses)
+  are imposed by LLVM here to allow optimization of surrouding code.
 - [Cryptography](https://en.wikipedia.org/wiki/Cryptography), where it is
   extremely important to ensure that sensitive information is erased after use,
   and is not leaked via indirect means such as recognizable scaling patterns in
