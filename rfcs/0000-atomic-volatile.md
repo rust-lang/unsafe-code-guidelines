@@ -93,8 +93,8 @@ guarantee that memory loads and stores do occur, because they have externally
 observable side-effects outside of the Rust program being optimized, and may be
 subjected to unpredictable side-effects from the outside world.
 
-And in that case, it is useful to be able to assert precise manual control on the
-memory accesses that are carried out by a Rust program in a certain memory
+And in that case, it is useful to be able to assert precise manual control on
+the memory accesses that are carried out by a Rust program in a certain memory
 region. This is the purpose of _volatile memory operations_, which allow a Rust
 programmers to generate a carefully controlled stream of hardware memory load
 and store instructions, which is guaranteed to be left untouched by the Rust
@@ -178,9 +178,11 @@ unsafe fn do_volatile_things(_target: NonNull<VolatileU8>) -> u8 {
 }
 ```
 
-This is the definining characteristic of volatile operations, which makes them
-suitable for sensitive memory manipulations such as cryptographic secret erasure
-or memory-mapped I/O.
+The fact that hardware loads and stores must be emitted even when the compiler's
+optimizer can predict the results of loads or assert that stores will have no
+effect on program execution is one of the most central characteristics of
+volatile operations, it is what makes these operations suitable for sensitive
+memory manipulations such as cryptographic secret erasure or memory-mapped I/O.
 
 ---
 
@@ -644,7 +646,7 @@ volatile memory accesses.
 ## Untrusted shared-memory IPC
 
 Although it performs a step in the right direction by strengthening the
-definition of volatile accesses to result the amount of possible avenues for
+definition of volatile accesses to reduce the amount of possible avenues for
 undefined behavior, this RFC will no fully resolve the "untrusted shared memory"
 use case, where Rust code is interacting with untrusted arbitrary code via a
 shared memory region.
