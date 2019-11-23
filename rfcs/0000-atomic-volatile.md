@@ -181,7 +181,7 @@ unsafe fn do_volatile_things(_target: NonNull<VolatileU8>) -> u8 {
 The fact that hardware loads and stores must be emitted even when the compiler's
 optimizer can predict the results of loads or assert that stores will have no
 effect on program execution is one of the most central characteristics of
-volatile operations, it is what makes these operations suitable for sensitive
+volatile operations. It is what makes these operations suitable for sensitive
 memory manipulations such as cryptographic secret erasure or memory-mapped I/O.
 
 ---
