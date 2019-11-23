@@ -70,7 +70,8 @@ some situations where they are inappropriate, in areas such as:
 - [Memory-mapped I/O](https://en.wikipedia.org/wiki/Memory-mapped_I/O), a common
   low-level communication protocol between CPUs and peripherals, where hardware
   registers masquerading as memory can be used to program peripherals by
-  accessing said registers in very specific load/store patterns.
+  accessing said registers in very specific load/store patterns (possibly
+  coupled with hardware-specific CPU cache configurations and memory barriers).
 - [Shared-memory IPC](https://en.wikipedia.org/wiki/Shared_memory), a form of
   inter-process communication where two programs can communicate via a common
   memory block, which means that stores are externally observable and loads are
