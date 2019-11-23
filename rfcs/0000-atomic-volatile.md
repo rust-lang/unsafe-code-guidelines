@@ -59,6 +59,7 @@ speeding up the program.
 Examples of such transformations include:
 
 - caching data from RAM into CPU registers,
+- spilling CPU registers into accessible RAM locations,
 - eliminating unused loads and unobservable stores,
 - merging neighboring stores with each other,
 - only updating the part of an over-written struct that has actually changed.
