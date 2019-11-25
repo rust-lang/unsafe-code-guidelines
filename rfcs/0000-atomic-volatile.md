@@ -9,9 +9,9 @@
 Introduce a set of `core::volatile::VolatileXyz` structs, modeled after the
 existing `core::sync::atomic::AtomicXyz` API, which expose volatile loads and
 stores of natively supported width with both atomic and non-atomic semantics.
-Deprecate `ptr::[read|write]_volatile` and the corresponding methods of pointer
-types, and recommend that they be replaced with `Relaxed` atomic volatile
-operations on every platform that has support for them.
+Recommend that `ptr::[read|write]_volatile` and the corresponding methods of
+pointer types be replaced with atomic volatile operations on every platform that
+has support for them.
 
 
 # Motivation
@@ -191,8 +191,8 @@ Experienced Rust users may be familiar with the previously existing
 equivalent methods of raw pointer objects, and wonder how the new facilities
 provided by `std::volatile` compare to those methods.
 
-The answer is that this new volatile data access API supersedes its predecessor,
-which is now _deprecated_, by improving upon it in several ways:
+The answer is that this new volatile data access API should be preferred to its
+predecessor in almost every use case, as it improves upon it in several ways:
 
 - The data race semantics of `Relaxed` volatile data accesses more closely
   matches the data race semantics of most hardware, and therefore eliminates an
@@ -204,6 +204,8 @@ which is now _deprecated_, by improving upon it in several ways:
   into multiple hardware-level memory operations. In the same manner as with
   atomics, if a `Volatile` wrapper type is provided by Rust, the underlying
   hardware is guaranteed to support memory operations of that width.
+- `VolatileXyz` wrappers more strongly encourage developers to refrain from
+  mixing volatile and non-volatile memory accesses, which is usually a mistake.
 - The ability to specify stronger-than-`Relaxed` memory orderings and to use 
   memory operations other than loads and stores enables Rust to draw a clear
   distinction between atomic operations which are meant to synchronize normal
@@ -457,11 +459,11 @@ section of the RFC as well.
 # Drawbacks
 [drawbacks]: #drawbacks
 
-Deprecating the existing volatile operations will cause language churn. Not
-deprecating them will keep around two different and subtly incompatible ways to
-do the same thing, which is equally bad. It could be argued that the issues with
-the existing volatile operations, while real, do not warrant the full complexity
-of this RFC.
+Keeping around two different and subtly incompatible ways to do almost the same
+thing, in the form of these new wrappers and the old volatile read/write methods
+of pointer types, is unsatisfying. It could be argued that the issues with the
+existing volatile operations, while real, do not warrant the full complexity of
+this RFC.
 
 As mentioned above, exposing more than loads and stores, and non-`Relaxed`
 atomic memory orderings, also muddies the "a volatile op should compile into one
@@ -675,3 +677,10 @@ then they will fall out in this section.
 
 This RFC would also benefit from a safer way to interact with volatile memory
 regions than raw pointers.
+
+Finally, one could consider `ptr::[read|write]_volatile` and the corresponding
+methods of pointer types as candidates for future deprecation, as they provide
+less clear semantics than atomic volatile accesses (e.g. no guarantee of being
+exempted from the definition of data races) for no clear benefit. As a more
+backward-compatible alternative, one could also reimplement those methods using
+a loop of atomic volatile operations of unspecified width.
