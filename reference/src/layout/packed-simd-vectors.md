@@ -45,12 +45,12 @@ That is, two distinct `repr(simd)` vector types that have the same `T` and the
 same `N` have the same size and alignment.
 
 Vector elements are laid out in source field order, enabling random access to
-vector elements by reinterpreting the vector as an array:
+vector elements by reinterpreting the vector as an array or as an homogeneous tuple:
 
 ```rust,ignore
 union U {
    vec: Vector<T, N>,
-   arr: [T; N]
+   arr: [T; N],
 }
 
 assert_eq!(size_of::<Vector<T, N>>(), size_of::<[T; N]>());
@@ -66,32 +66,6 @@ unsafe {
 ```
 
 ### Unresolved questions
-
-* **Blocked**: Should the layout of packed SIMD vectors be the same as that of
-  homogeneous tuples ? Such that:
-
-  ```rust,ignore
-  union U {
-    vec: Vector<T, N>,
-    tup: (T_0, ..., T_(N-1)),
-  }
-
-  assert_eq!(size_of::<Vector<T, N>>(), size_of::<(T_0, ..., T_(N-1))>());
-  assert!(align_of::<Vector<T, N>>() >= align_of::<(T_0, ..., T_(N-1))>());
-
-  unsafe {
-    let u = U { vec: Vector(t_0, ..., t_(N - 1)) };
-
-    assert_eq!(u.vec.0, u.tup.0);
-    // ... 
-    assert_eq!(u.vec.(N - 1), u.tup.(N - 1));
-  }
-  ```
-  
-  This is blocked on the resolution of issue [#36] about the layout of
-  homogeneous structs and tuples.
-  
-  [#36]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/36
   
 * `MaybeUninit<T>` does not have the same `repr` as `T`, so
   `MaybeUninit<Vector<T, N>>` are not `repr(simd)`, which has performance

@@ -24,6 +24,10 @@ guaranteed layout from a tuple, you are generally advised to create a
 named struct with a `#[repr(C)]` annotation (see [the section on
 structs for more details](#structs)).
 
+Homogeneous tuples have the same layout as an array `[T; N]` where `N` is the
+number of fields in the tuple and the tuple field `i` is located at the same
+offset as the `i`-th array element.
+
 Note that the final element of a tuple (`Pn`) is marked as `?Sized` to
 permit unsized tuple coercion -- this is implemented on nightly but is
 currently unstable ([tracking issue][#42877]). In the future, we may
@@ -206,13 +210,6 @@ are currently considering **unresolved** and -- for each of them -- an
 issue has been opened for further discussion on the repository. This
 section documents the questions and gives a few light details, but the
 reader is referred to the issues for further discussion.
-
-**Homogeneous structs ([#36]).** If you have homogeneous structs, where all
-the `N` fields are of a single type `T`, can we guarantee a mapping to
-the memory layout of `[T; N]`? How do we map between the field names
-and the indices? What about zero-sized types?
-
-[#36]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/36
 
 **Deterministic layout ([#35]).** Can we say that layout is some deterministic
 function of a certain, fixed set of inputs? This would allow you to be
