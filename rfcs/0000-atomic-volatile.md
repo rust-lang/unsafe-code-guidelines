@@ -6,12 +6,12 @@
 # Summary
 [summary]: #summary
 
-Introduce a set of `core::volatile::VolatileXyz` structs, modeled after the
-existing `core::sync::atomic::AtomicXyz` API, which expose volatile loads and
-stores of natively supported width with both atomic and non-atomic semantics.
-Recommend that `ptr::[read|write]_volatile` and the corresponding methods of
-pointer types be replaced with atomic volatile operations on every platform that
-has support for them.
+Introduce a set of `core::volatile::VolatileXyz` structs, roughly modeled after
+the existing `core::sync::atomic::AtomicXyz` APIs, which expose volatile loads
+and stores of machine-native width with atomic semantics. Recommend that these
+operations be preferred to `ptr::[read|write]_volatile` and the corresponding
+methods of pointer types, as they have stronger semantics that are almost always
+closer to user intent.
 
 
 # Motivation
@@ -33,7 +33,7 @@ memory access semantics of mainstream hardware in two major ways:
 2. Using an overly wide volatile load or store operation which cannot be carried
    out by a single hardware load and store instruction will not result in a
    compilation error, but in the silent emission of multiple hardware load or
-   store instructions, which might be a logic error in the users' program.
+   store instructions, which might be a logic error in some programs.
 
 By implementing support for LLVM's atomic volatile operations, and encouraging
 their use on every hardware that supports them, we eliminate these divergences
@@ -45,6 +45,9 @@ Rust Abstract Machine semantics, which are notoriously hard to get right.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
+
+## Volatile primer
+[volatile-primer]: #volatile-primer
 
 The Rust compiler generally assumes that the program that it is building is
 living in a fully isolated memory space, where the contents of memory can only
@@ -70,8 +73,7 @@ some situations where they are inappropriate, in areas such as:
 - [Memory-mapped I/O](https://en.wikipedia.org/wiki/Memory-mapped_I/O), a common
   low-level communication protocol between CPUs and peripherals, where hardware
   registers masquerading as memory can be used to program peripherals by
-  accessing said registers in very specific load/store patterns (possibly
-  coupled with hardware-specific CPU cache configurations and memory barriers).
+  accessing said registers in very specific load/store patterns.
 - [Shared-memory IPC](https://en.wikipedia.org/wiki/Shared_memory), a form of
   inter-process communication where two programs can communicate via a common
   memory block, which means that stores are externally observable and loads are
@@ -82,18 +84,19 @@ some situations where they are inappropriate, in areas such as:
   where the mere action of reading from or writing to memory may trigger
   execution of arbitrary code by the operating system. Note that even when using
   volatile accesses, [some sanity restrictions](https://llvm.org/docs/LangRef.html#volatile-memory-accesses)
-  are imposed by LLVM here to allow optimization of surrouding code.
+  are imposed by LLVM here to allow optimization of surrounding code.
 - [Cryptography](https://en.wikipedia.org/wiki/Cryptography), where it is
   extremely important to ensure that sensitive information is erased after use,
   and is not leaked via indirect means such as recognizable scaling patterns in
   the time taken by a system to process attacker-crafted inputs.
 
 In all those circumstances, though for different reasons, it may be important to
-guarantee that memory loads and stores do occur, because they have externally
-observable side-effects outside of the Rust program being optimized, and may be
-subjected to unpredictable side-effects from the outside world.
+guarantee that memory loads and stores specified in the program do occur at the
+hardware level, because they have externally observable side-effects outside of
+the Rust program being optimized, and may be subjected to unpredictable
+side-effects from the outside world.
 
-And in that case, it is useful to be able to assert precise manual control on
+When that happens, it is useful to be able to assert precise manual control on
 the memory accesses that are carried out by a Rust program in a certain memory
 region. This is the purpose of _volatile memory operations_, which allow a Rust
 programmers to generate a carefully controlled stream of hardware memory load
@@ -101,7 +104,11 @@ and store instructions, which is guaranteed to be left untouched by the Rust
 compiler's optimizer even though surrounding Rust code will continue to be
 optimized as usual.
 
----
+## API guide
+[api-guide]: #api-guide
+
+### Basic usage
+[basic-usage]: #basic-usage
 
 Volatile memory operations are exposed in the `std::volatile` module of the Rust
 standard library, or alternatively in the `core::volatile` module for the
@@ -110,13 +117,12 @@ fixed-size data wrappers that are somewhat reminiscent of the API used for
 atomic operations in `std::sync::atomic`:
 
 ```rust
-use std::sync::atomic::Ordering;
 use std::ptr::NonNull;
 use std::volatile::VolatileU8;
 
 unsafe fn do_volatile_things(target: NonNull<VolatileU8>) -> u8 {
-    target.store(42, Ordering::Relaxed);
-    target.load_not_atomic()
+    target.store(42);
+    target.load()
 }
 ```
 
@@ -124,53 +130,72 @@ Notice that volatile types must be manipulated via pointers, instead of
 Rust references. These unusual and unpleasant ergonomics are necessary in order
 to achieve the desired semantics of manually controlling every access to the
 target memory location, because the mere existence of a Rust reference pointing
-to a memory region allows the Rust compiler to generate memory operations
+to a memory region allows the Rust compiler to generate extra memory operations
 targeting this region (be they prefetches, register spills, ...).
 
 Because a Rust pointer is not subjected to borrow checking and has no obligation
 of pointing towards a valid memory location, this means that using a Volatile
 wrapper in any way is unsafe.
 
-As a second difference, in addition to familiar atomic memory operations,
-volatile types expose the `load_not_atomic()` and `store_not_atomic()` methods.
-As their name suggest, these memory operations are not considered to be atomic
-by the compiler, and are therefore not safe to concurrently invoke in multiple
-threads.
+### Concurrency and ordering
+[concurrency-and-ordering]: #concurrency-and-ordering
 
-On hardware with global cache coherence, a category which encompasses the vast
-majority of Rust's supported compilation targets, use of these methods will
-generate exactly the same code as using the `load()` and `store()` atomic access
-methods with `Relaxed` memory ordering, with the only difference being that
-data races are Undefined Behavior from the compiler's point of view. When that
-is the case, safer `Relaxed` atomic volatile operations should be preferred to
-their non-atomic equivalents.
+A second difference with familiar atomic operations is that volatile type
+operations do not have an `Ordering` parameter. These operations are atomic in
+the sense that it is safe to perform them concurrently from multiple threads on
+a single target memory location, but their ordering guarantees in multi-threaded
+environments are unlike that of any atomic operation ordering:
 
-Unfortunately, however, not all of Rust's compilation targets exhibit global
-cache coherence. GPU hardware, such as the `nvptx` target, may only exhibit
-cache coherence among local "blocks" of threads. And abstract machines like WASM
-may not guarantee cache coherence at all without specific precautions. On those
-compilation targets, `Relaxed` loads and stores may either be unavailable, or
-lead to the generation of machine instructions more complex than native loads
-and stores, which may not be wanted where maximal hardware control or CPU
-performance is desired.
+- Within a single thread, these operations are guaranteed to be _executed_ by
+  the underlying CPU in program order...
+- ...but the order in which these operations are subsequently _observed_ to
+  occur by another thread performing volatile operations on the same memory
+  location is fully unspecified, and may defy even `Ordering::Relaxed` logic.
 
-It is only for the sake of providing an alternative to the current
-`ptr::[read|write]_volatile` mechanism on such platforms that the
-`[load|store]_not_atomic()` functions are being proposed, and they should not
-be used where better alternative exists.
+For example, assuming that a thread A successively writes the values 24 and 42
+to a memory location using volatile operations, other threads B and C repeatedly
+reading the value of said memory location are allowed to observe these writes
+without any commonly agreed upon coherence ordering:
 
-Finally, unlike with atomics, the compiler is not allowed to optimize the above
-function into the following...
+    Thread B:             Thread C:
+    24                    42
+    42                    24
+
+As a matter of fact, other threads are not even guaranteed to eventually observe
+either of the writes carried out by thread A if no further sychronization action
+is taken to guarantee their visibility.
+
+Individual hardware targets supported by Rust may and often will provide
+stronger ordering and visibility guarantees under the above intra-thread
+execution ordering constraint. But a program relying on these hardware
+guarantees will not be portable to all hardware targets supported by Rust.
+
+Readers who would still feel the perverted temptation to use volatile operations
+for synchronization in spite of the above warning should keep in mind that the
+presence of volatile operations does not affect the optimization of surrounding
+non-volatile operations in any significant ways. Said operations may still be
+added, elided, split, narrowed, extended, or reordered as deemed useful by the
+compiler's optimizer, including by moving them across neighboring volatile
+operations.
+
+### No-elision guarantee
+[no-elision-guarantee]: #no-elision-guarantee
+
+Finally, a third difference with atomic operations is that the Rust compiler is
+not allowed to remove volatile operations as part of the code optimization
+process. For example, a compiler may not leverage knowledge of hardware memory
+load/store semantics to elide the volatile load of the above function...
 
 ```rust
 unsafe fn do_volatile_things(target: NonNull<VolatileU8>) -> u8 {
-    target.store(42, Ordering::Relaxed);
+    target.store(42);
     42
 }
 ```
 
-...or even the following, which it could normally do if it the optimizer managed
-to prove that no other thread has access to the `VolatileU8` variable:
+...nor is it allowed to elide memory accesses to a given location entirely, even
+if the code optimizer somehow managed to prove that no other thread seems to
+have access to the `VolatileU8` variable under consideration:
 
 ```rust
 unsafe fn do_volatile_things(_target: NonNull<VolatileU8>) -> u8 {
@@ -181,10 +206,37 @@ unsafe fn do_volatile_things(_target: NonNull<VolatileU8>) -> u8 {
 The fact that hardware loads and stores must be emitted even when the compiler's
 optimizer can predict the results of loads or assert that stores will have no
 effect on program execution is one of the most central characteristics of
-volatile operations. It is what makes these operations suitable for sensitive
+volatile operations. It is what makes these operations suitable for "sensitive"
 memory manipulations such as cryptographic secret erasure or memory-mapped I/O.
 
----
+### Further guarantees
+[further-guarantees]: #further-guarantees
+
+Volatile operations also provide a few more guarantees that are easier to
+explain, which complete their feature set for the intended purpose of providing
+tight control on memory accesses:
+
+- _As long as a memory location is only accessed via `NonNull<VolatileXyz>`_, it
+  is guaranteed that the compiler will not insert any extra accesses to it
+  beyond the loads and stores that are present in the program.
+- Although their ordering guarantees are weaker than `Ordering::Relaxed`,
+  volatile operations are still atomic, which means that they...
+    * ...cannot be split (e.g. an `u64` load/store cannot be transformed into
+      two consecutive `u32` loads/stores).
+    * ...cannot be narrowed (e.g. an `u64` load/store cannot be transformed into
+      an `u8` load/store, even if the optimizer believes that only a subset of
+      the target data has changed)
+    * ...cannot be extended to store data which would not be stored otherwise.
+- Beyond atomic guarantees, volatile operations also guarantee that they cannot
+  be extended to load data which would not be loaded otherwise.
+
+Combined with the above, these guarantees mean that volatile memory operations
+happen as specified in the program, in the order specified by the program, and
+that with a bit of work it is also possible to guarantee that they are the only
+memory operations affecting the target memory location.
+
+## Comparison with `ptr::[read|write]_volatile()`
+[volatilexyz-vs-ptrvolatile]: #volatilexyz-vs-ptrvolatile
 
 Experienced Rust users may be familiar with the previously existing
 `std::ptr::read_volatile()` and `std::ptr::write_volatile()` functions, or
@@ -194,30 +246,32 @@ provided by `std::volatile` compare to those methods.
 The answer is that this new volatile data access API should be preferred to its
 predecessor in almost every use case, as it improves upon it in several ways:
 
-- The data race semantics of `Relaxed` volatile data accesses more closely
-  matches the data race semantics of most hardware, and therefore eliminates an
-  unnecessary mismatch between volatile semantics and low-level hardware load
-  and store semantics when it comes to concurrency.
-- `VolatileXyz` wrappers are only supported for data types which are supported
-  at the machine level. Therefore, one no longer needs to worry about the
-  possibility of the compiler silently turning a Rust-level volatile data access
-  into multiple hardware-level memory operations. In the same manner as with
-  atomics, if a `Volatile` wrapper type is provided by Rust, the underlying
-  hardware is guaranteed to support memory operations of that width.
-- `VolatileXyz` wrappers more strongly encourage developers to refrain from
-  mixing volatile and non-volatile memory accesses, which is usually a mistake.
-- The ability to specify stronger-than-`Relaxed` memory orderings and to use 
-  memory operations other than loads and stores enables Rust to draw a clear
-  distinction between atomic operations which are meant to synchronize normal
-  Rust code and atomic operations which are meant to synchronize with arbitrary
-  FFI edge cases (such as threads spawned by LD_PRELOAD unbeknownst to the Rust
-  compiler), which in turn would enable better optimization of atomic operations
-  in the vast majority of Rust programs, as will be further discussed in the
-  Unresolved Questions section.
+- Unlike its predecessor, this API does not specify concurrent volatile accesses
+  to a region of memory to be undefined behavior. This undefined behavior made
+  no sense to begin with, because...
+    * The purpose of volatile memory accesses is to go as close to target
+      hardware semantics as possible in a high-level programming language, and
+      all targets supported by Rust have well-defined data race semantics.
+    * No performance optimization potential is gained by having this undefined
+      behavior, since volatile operations cannot be meaningfully optimized under
+      the assumption that target memory is not concurrently read or modified.
+- Unlike its predecessor, this API is only available for data types which have
+  a supported machine load/store operation at the hardware level. Therefore, one
+  no longer needs to worry about the possibility of the compiler silently
+  splitting a Rust-level volatile data access into multiple hardware-level
+  memory operations. In the same manner as with atomics, if a `Volatile` wrapper
+  type is provided by Rust, the underlying hardware is guaranteed to support
+  memory operations of that width.
+- Unlike its predecessor, this API sets a clear strong typing barrier to prevent
+  developers from mixing volatile and non-volatile memory accesses, which is
+  almost always a mistake.
 
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
+
+## Semantics
+[semantics]: #semantics
 
 The fundamental purpose of volatile operations, in a system programming language
 like Rust, is to allow a developer to locally escape the Rust Abstract Machine's
@@ -238,26 +292,36 @@ operations, do not achieve this goal very well because:
    tracherous in scenarios where memory access patterns must be very precisely
    controlled, such as memory-mapped I/O.
 
-Using LLVM's `Relaxed` atomic volatile operations instead resolves both problems
-on globally cache-coherent hardware where native loads and stores have `Relaxed`
-or stronger semantics. The vast majority of hardware which Rust supports today
-and is expected to support in the future exhibits global cache coherence,
-so making volatile feel more at home on such hardware is a sizeable achievement.
+Both of these problems can be resolved by using atomic volatile operations
+instead of non-atomic volatile operations. However, in doing so, we must be very
+careful to stick with the subset of atomic operations that is supported by all
+Rust hardware targets.
 
-For exotic platforms whose basic memory loads and stores do not guarantee global
-cache coherence, such as `nvptx`, this RFC adds `load_not_atomic()` and
-`store_not_atomic()` operations. It is unclear at this point in time whether
-these two methods should be stabilized, or an alternative solution such as
-extending Rust's atomic operation model with synchronization guarantees weaker
-than `Relaxed` should be researched.
+This means that we should not expose anything more than loads or stores in our
+standard subset, as some hardware architectures which are either very old or
+lack multiprocessing support do not support more than that.
 
-As this feels like a complex and niche edge case that should not block the most
-generally useful subset of volatile atomic operations, this RFC proposes to
-implement these operations behind a different feature gate, and postpone their
-stabilization until supplementary research has determined whether they are
-truly a necessary evil or not.
+More surprisingly, maximizing hardware support also means that we cannot rely on
+`Ordering::Relaxed` as a minimal level of atomic sanity, because this ordering
+assumes a global order of operations targeting a single memory location across
+all threads in the program, and this property is not provided by native
+load/store operations on some targets without global cache coherence such as GPU
+architectures (NVPTX, AMD GCN, ...).
 
----
+As a result, we need to go deeper and expose an even weaker form of atomicity,
+which is more akin to LLVM's `unordered` atomic ordering semantics, but better
+specified in the context of atomic volatile operations because we provide very
+strong control on the sequence of emitted hardware memory accesses, and thus
+developers can refer to their hardware's memory model for precise semantics.
+
+One design goal of the proposed semantics is that it should be possible to
+implement `VolatileXyz::[load|store]` by compiling it down to LLVM unordered
+atomic volatile load/store operations of the same width, without specifying it
+in terms of "whatever LLVM unordered does" as that would make the life of
+alternate rustc backends like cranelift harder.
+
+## API design
+[api-design]: #api-design
 
 Switching to LLVM's atomic volatile accesses without also changing the API of
 `ptr::[read|write]_volatile` would unfortunately not resolve the memory access
@@ -266,11 +330,11 @@ not compile anymore, this fact would only be "reported" to the user via an LLVM
 crash. This is not a nice user experience, which is why volatile wrapper types
 are proposed instead.
 
-Their design largely mirrors that of Rust's existing atomic types, which is only
+Their design borrows from that of Rust's existing atomic types, which is only
 appropriate since they do expose atomic operations. The current proposal would
 be to fill the newly built `std::volatile` module with the following entities
 (some of which may not be available on a given platform, we will come back to
-this point in the moment):
+this point in a moment):
 
 - `VolatileBool`
 - `VolatileI8`
@@ -285,14 +349,16 @@ this point in the moment):
 - `VolatileU64`
 - `VolatileUsize`
 
-The API of these volatile types would then be very much like that of existing
-`AtomicXyz` types, except for the fact that it would be based on raw pointers
-instead of references because the existence of a Rust reference to a memory
-location is fundamentally at odds with the precise control of hardware load and
-store generation that is required by volatile use case.
+Unlike `AtomicXyz` types, these volatile types would be restricted to load and
+store operations with sub-`Relaxed` concurrent ordering guarantees (see above),
+and their API would be based on raw pointers instead of references. That is
+because the existence of a Rust reference to a memory location currently implies
+a `dereferenceable` annotation on the LLVM side, which in turn is fundamentally
+at odds with the precise control of hardware load and store generation that is
+required by volatile access use case.
 
 To give a more concrete example, here is what the API of `VolatileBool` would
-look like on a platform with full support for this type.
+look like on a platform with support for this type:
 
 ```rust
 #![feature(arbitrary_self_types)]
@@ -310,154 +376,52 @@ impl VolatileBool {
     ///
     pub const fn new(v: NonNull<bool>) -> NonNull<Self> { /* ... */ }
 
-    // NOTE: Unlike with `AtomicBool`, `get_mut()` and `into_inner()` operations
-    //       are not provided, because it is never safe to assume that no one
-    //       is concurrently accessing volatile data. As an alternative, these
-    //       operations could be provided in an unsafe way, if someone can find
-    //       a use case for them.
-
-    /// Load a value from the bool
-    ///
-    /// `load` takes an `Ordering` argument which describes the memory ordering
-    /// of this operation. Possible values are SeqCst, Acquire and Relaxed.
-    ///
-    /// # Panics
-    ///
-    /// Panics if order is Release or AcqRel.
+    /// Load the target bool value in an atomic and volatile way
     ///
     /// # Safety
     ///
     /// The `self` pointer must be well-aligned and point to a valid memory
     /// location containing a valid `bool` value.
     ///
-    pub unsafe fn load(self: NonNull<Self>, order: Ordering) -> bool { /* ... */ }
+    pub unsafe fn load(self: NonNull<Self>) -> bool { /* ... */ }
 
-    // ... and then a similar transformation is carried out on all other atomic
-    // operation APIs from `AtomicBool`:
-
-    pub unsafe fn store(self: NonNull<Self>, val: bool, order: Ordering) { /* ... */ }
-
-    pub unsafe fn swap(self: NonNull<Self>, val: bool, order: Ordering) -> bool { /* ... */ }
-
-    pub unsafe fn compare_and_swap(
-        self: NonNull<Self>,
-        current: bool,
-        new: bool,
-        order: Ordering
-    ) -> bool { /* ... */ }
-
-    pub unsafe fn compare_exchange(
-        self: NonNull<Self>,
-        current: bool,
-        new: bool,
-        success: Ordering,
-        failure: Ordering
-    ) -> Result<bool, bool> { /* ... */ }
-
-    pub unsafe fn compare_exchange_weak(
-        self: NonNull<Self>,
-        current: bool,
-        new: bool,
-        success: Ordering,
-        failure: Ordering
-    ) -> Result<bool, bool> { /* ... */ }
-
-    pub unsafe fn fetch_and(self: NonNull<Self>, val: bool, order: Ordering) -> bool { /* ... */ }
-
-    pub unsafe fn fetch_nand(self: NonNull<Self>, val: bool, order: Ordering) -> bool { /* ... */ }
-
-    pub unsafe fn fetch_or(self: NonNull<Self>, val: bool, order: Ordering) -> bool { /* ... */ }
-
-    pub unsafe fn fetch_xor(self: NonNull<Self>, val: bool, order: Ordering) -> bool { /* ... */ }
-
-    // Finally, non-atomic load and store operations are provided:
-
-    /// Load a value from the bool in a non-atomic way
-    ///
-    /// This method is provided for the sake of supporting platforms where
-    /// `load(Relaxed)` either is unsupported or compiles down to more than a
-    /// single hardware load instruction. As a counterpart, it is UB to use it
-    /// in a concurrent setting. Use of `load(Relaxed)` should be preferred
-    /// whenever possible.
+    /// Store a bool into the target in an atomic and volatile way
     ///
     /// # Safety
     ///
-    /// The `self` pointer must be well-aligned, and point to a valid memory
+    /// The `self` pointer must be well-aligned and point to a valid memory
     /// location containing a valid `bool` value.
     ///
-    /// Using this operation to access memory which is concurrently written by
-    /// another thread is a data race, and therefore Undefined Behavior.
-    ///
-    pub unsafe fn load_not_atomic(self: NonNull<Self>) -> bool { /* ... */ }
-
-    // ...and we have the same idea for stores:
-    pub unsafe fn store_not_atomic(self: NonNull<Self>, val: bool) { /* ... */ }
+    pub unsafe fn store(self: NonNull<Self>, val: bool) { /* ... */ }
 }
 ```
 
----
+## Availability
+[availability]: #availability
 
 Like `std::sync::atomic::AtomicXyz` APIs, the `std::volatile::VolatileXyz` APIs
-are not guaranteed to be fully supported on every platform. Cases of partial
-platform support which are shared with `AtomicXyz` APIs include:
+are not guaranteed to be supported on every platform. As with atomic APIs, the
+classic reason why a `VolatileXyz` wrapper would be missing is that the target
+platform does not have load and store instructions of the corresponding width.
 
-- Not supporting atomic accesses to certain types like `u64`.
-- Not supporting atomic read-modify-write operations like `swap()`.
+However, the `VolatileXyz` APIs could be made available on some platforms where
+atomic operations cannot be, because they require much weaker concurrent
+ordering semantics from hardware in their quest to be usable in every place
+where native loads and store instructions can be used.
 
-In addition, a concern which is specific to `Volatile` types is the case where
-atomic operations are not supported at all, but non-atomic volatile operations
-are supported. In this case, the `AtomicBool` type above would only expose
-the `load_not_atomic()` and `store_not_atomic()` methods.
-
-Platform support for volatile operations can be queried in much of the
-same way as platform support for atomic operations:
-
-- `#[cfg(target_has_atomic = N)]`, which can be used today to test full support
-  for atomic operations of a certain width N, may now also be used to test
-  full support for volatile atomic operations of the same width.
-- `#[cfg(target_has_atomic_load_store = N)]` may similarly be used to test
-  support for volatile atomic load and store operations.
-- A new cfg directive, `#[cfg(target_has_volatile = N)]`, may be used to test
-  support for non-atomic loads and stores of a certain width (i.e. `_not_atomic`
-  operations).
-
-This latter directive can be initially pessimistically implemented as a synonym
-of `#[cfg(target_has_atomic_load_store = N)]`, then gradually extended to
-support targets which have no or non-native support of `Relaxed` atomics
-but do have native load/store instructions of a certain width, such as `nvptx`.
-
-In this way, the proposed volatile atomic operation API can largely re-use the
-already existing atomic operation support infrastructure, which will greatly
-reduce effort duplication between these two closely related functionalities.
-
----
-
-This RFC currently proposes to expose the full power of LLVM's atomic volatile
-operations, including e.g. read-modify-write operations like compare-and-swap,
-because it is consistent with the atomics operation API and could have
-legitimate uses in interprocess communication scenarios, as a marker of the
-nuance between well-optimized program-local synchronization and worst-case FFI
-synchronization. See Unresolved Questions section for more details.
-
-However, the fact that these operations do not necessarily compile into a single
-hardware instruction is arguably a footgun for volatile's use cases, and it
-could be argued that initially only stabilizing loads, stores and `Relaxed`
-atomic ordering would be more prudent. This will be revisited in the
-alternatives section of this RFC.
-
----
-
-As currently designed, this RFC uses `arbitrary_self_types` to give method-like
-semantics to a `NonNull` raw pointer. This seems necessary to get reasonable
-ergonomics with an atomics-like wrapper type approach. However, it could also be
-argued that a `VolatileXyz::store(ptr, data, ordering)` style of API would work
-well enough, and avoid coupling with unstable features. Similarly, the use of
-`NonNull` itself could be debated. This will be revisited in the alternatives
-section of the RFC as well.
+Therefore, we propose to provide a new platform support query,
+`#[cfg(target_has_volatile = N)]`, which works in essentially the same fashion
+as `#[cfg(target_has_atomic_load_store = N)]` and may initially be implemented
+as a synonym of the latter, but can be eventually extended to provide volatile
+load/store support on platforms where `Relaxed` atomic loads and stores are not
+available or more complex than basic loads and stores.
 
 
 # Drawbacks
 [drawbacks]: #drawbacks
+
+## API duplication
+[api-duplication]: #api-duplication
 
 Keeping around two different and subtly incompatible ways to do almost the same
 thing, in the form of these new wrappers and the old volatile read/write methods
@@ -465,25 +429,53 @@ of pointer types, is unsatisfying. It could be argued that the issues with the
 existing volatile operations, while real, do not warrant the full complexity of
 this RFC.
 
-As mentioned above, exposing more than loads and stores, and non-`Relaxed`
-atomic memory orderings, also muddies the "a volatile op should compile into one
-hardware memory instruction" narrative that is so convenient for loads and
-stores. Further, compatibility of non-load/store atomics in IPC scenario may
-require some ABI agreement on how atomics should be implemented between the
-interacting programs.
+Note that duplication of implementation should not be necessary as
+`ptr::[read|write]_volatile` should be implementable on top of
+`VolatileXyz::[load|store]`, in the spirit of what LLVM's element-wise atomic
+memcpy already does.
 
-If this is perceived to be a problem, we could decide to do away with some of
-the complexity by initially focusing on a restricted subset of this proposal
-which only supports `Relaxed` loads and stores, and saving more complex atomic
-operations as a future extension.
+## Unordered semantics
+[unordered-semantics]: #unordered-semantics
+
+This RFC also introduces new semantics for atomic operations, morally equivalent
+to LLVM's unordered atomic volatile loads and stores. This is risky because
+LLVM's unordered atomic semantics have not been sufficiently vetted for
+soundness by the language memory model community. In the RFC author's opinion,
+the risk is worthwhile because...
+
+- The alternative of non-atomic volatile is worse. It makes data races undefined
+  behavior in violation of any known hardware memory model, and therefore it
+  takes volatile away from its "defer to hardware memory model" intent.
+- The alternative of `Relaxed` atomic volatile is also worse, it makes the new
+  API for volatile operations unusable on hardware without global cache
+  coherence, such as GPUs.
+- Although unordered atomics are a bit of a minefield, unordered volatile is
+  safer to the point of being reasonable, because volatile provides so many
+  guarantees on its own that adding unordered semantics on top of it should have
+  the sole effect of preventing tearing and making data races well-defined.
+
+## Pointer-based API
+[pointer-based-api]: #pointer-based-api
+
+Because rustc treats references as `dereferenceable` at the LLVM layer, which is
+incompatible with the degree of memory access control that volatile access
+users typically demand, this RFC is forced to design an API around raw pointers.
+
+Using raw pointers means bypassing the borrow checker, which increases the risk
+of memory unsafety. It also makes for a less familiar API design that users will
+have a harder time getting to grips with. In this sense, maybe it would just be
+better to resolve the `dereferenceable` issue first (allowing some sort of
+non-`dereferenceable` reference which remains subjected to all other normal
+guarantees of references), and then redesign this API in terms of whatever the
+chosen solution ends up being.
 
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
-This effort seems worthwhile because it simultaneously eliminates two well-known
-and unnecessary volatile footguns (data races and tearing) and opens interesting
-new possibilities in interprocess communication.
+This effort seems worthwhile because it eliminates two well-known and
+unnecessary footguns of non-atomic volatile operations, namely data races being
+undefined behavior and tearing not being a compilation error.
 
 But although this feature may seem simple, its design space is actually
 remarquably large, and a great many alternatives were considered before reaching
@@ -494,32 +486,43 @@ the current design proposal. Here are some design knobs that were explored:
 
 Atomic volatile operations could be made part of the Atomic wrapper types.
 However, they cannot be just another atomic memory ordering, due to the fact
-that atomic ops take an `&self` (which is against the spirit of volatile as it
-is tagged with `dereferenceable` at the LLVM layer).
+that atomic ops take an `&self`, which is against the spirit of volatile as it
+is tagged with `dereferenceable` at the LLVM layer.
 
 Instead, one would need to add more methods to atomic wrapper types, which take
 a pointer as a self-parameter. This API inconsistency was felt to be
-unnecessarily jarring to users, not to mention that potentially having a copy of
-each atomic memory operation with a `_volatile` prefix would reduce the
-readability of the `AtomicXyz` types' API documentation.
+unnecessarily jarring to users.
 
-In addition, it is extremely common to want either all operations on a memory
+In addition, one intent of this API is to be usable in places where even
+`Relaxed` ordering is not usable, while punting on the stabilization of weaker
+atomic orderings in the non-volatile case. This would mean adding one third
+"tier" of hardware atomics support (beyond `target_has_atomic_load_store` and
+`target_has_atomic`), which starts to feel a bit much.
+
+Finally, it is extremely common to want either all operations on a memory
 location to be volatile, or none of them. Providing separate wrapper types
-helps enforce this very common usage pattern at the API level.
+helps enforce this very common usage pattern at the API level. If a need for
+mixed volatile and non-volatile operations on a given memory location ever
+emerges, we could envision providing a new `VolatileXyz` method that casts from
+`NonNull<VolatileXyz>` to `&AtomicXyz`, with a warning to the user that doing so
+voids the warranty of no out-of-thin-air memory operations that normally comes
+attached to `VolatileXyz`.
 
 ## Self-type or not self-type
 [self-type]: #self-type
 
-Instead of using `arbitrary_self_types` to get `a.load(Ordering::Relaxed)`
-method syntax on pointer-like objects, one could instead provide the volatile
-operations as inherent methods, i.e. `VolatileU8::load(a, Ordering::Relaxed)`.
+As currently designed, this RFC uses `arbitrary_self_types` to give method-like
+semantics to a `NonNull` raw pointer. This seems necessary to get reasonable
+ergonomics with an atomics-like wrapper type approach. However, it could also be
+argued that a `VolatileXyz::store(ptr, data)` style of API would work
+well enough, and avoid coupling with unstable features.
 
-This has the advantage of avoiding coupling this feature to another unstable
-feature. But it has the drawback of being incredibly verbose. Typing the same
-volatile type name over and over again in a complex transaction would certainly
-get old and turn annoying quickly, and we don't want anger to distract low-level
-developers from the delicate task of implementing the kind of subtle algorithm
-that requires volatile operations.
+This would have the advantage of avoiding coupling this feature to another
+unstable feature. But it would have the drawback of being very verbose. Typing
+the same volatile type name over and over again in a complex transaction would
+certainly obscure the intent of the code, whereas code that requires use of
+volatile operations is often very subtle and benefits from being as readable as
+it gets.
 
 ## `NonNull<T>` vs `*mut T` vs `*const T` vs other
 [pointers]: #pointers
@@ -551,31 +554,25 @@ normally has. For example, it has been proposed before that `&UnsafeCell<T>`
 should not exhibit this behavior. This could be enough for `VolatileXyz`'s need
 if it were extended to transparent newtypes of `UnsafeCell<Xyz>`.
 
-## Full atomics vocabulary vs sticking with hardware semantics
+## Hardware loads/store vs full atomics vocabulary
 [atomics-vs-hardware]: #atomics-vs-hardware
 
-Currently, this RFC basically proposes exposing a volatile version of every
-atomic operation supported by Rust for maximal expressive power.
+The current version of this RFC proposes to restrict the `VolatileXyz` API to
+atomic loads and stores with no concurrent ordering guarantees. It could
+alternatively expose the full functionality of LLVM's atomic volatile operations
+in the same manner as `AtomicXyz` does for non-volatile atomic operations.
 
-But it could also be argued that this distracts us from volatile's main purpose
-of generating a stream of simple hardware instructions without using inline
-assembly:
+There are three reasons why it was chosen not to do so:
 
-- Non-`Relaxed` atomics will entail memory barriers
-- Compare-and-swap may be implemented as a load-linked/store-conditional loop
-- Some types like `VolatileBool` are dangerous when interacting with untrusted
-  code because they come with data validity invariants.
+- It goes against the typical intent of volatile, which is to exert tight
+  control on the hardware load/store instructions that are generated.
+- It would duplicate the `AtomicXyz` API to a large extent.
+- There is no known use case for nontrivial atomic volatile operations that
+  wouldn't be better served by adding volatile orderings to regular atomic
+  operations, at a reduced API duplication cost.
 
-From this perspective, there would be an argument in favor of only supporting
-`Relaxed` load/stores and machine data types, at least initially. In this case,
-one could split this feature into three feature gates:
-
-- `Relaxed` volatile atomic loads and stores, which are most urgently needed.
-- Non-`Relaxed` orderings and read-modify-write atomics, which open new
-  possibilities for shared-memory IPC.
-- `_not_atomic()` operations, where it is not yet clear whether the proposed API
-  is even the right solution to the problem being solved, and more research is
-  needed before reaching a definite conclusion.
+Full discussion of this question, and of the proposed alternative, has therefore
+been moved the "future possibilities" section.
 
 
 # Prior art
@@ -624,6 +621,7 @@ over the course of implementing `ptr::read_volatile()`, `ptr::write_volatile()`
 and `std::sync::atomic` (to the best of the author's knowledge at least).
 
 ## Should shared-memory IPC always be volatile?
+[should-shared-memory-be-volatile]: #should-shared-memory-be-volatile
 
 There is [some ongoing discussion](https://github.com/rust-lang/unsafe-code-guidelines/issues/215)
 in the Unsafe Code Guidelines group concerning whether a Rust implementation
@@ -645,13 +643,8 @@ volatile memory accesses.
   the mere presence of atomics acts as a trigger that disables the above
   optimizations.
 
-## Necessity of non-atomic operations
-
-The necessity of having `load_not_atomic()` and `store_not_atomic()` methods,
-as opposed to alternatives such as weaker-than-`Relaxed` atomics, should be
-researched before stabilizing that subset of this RFC.
-
 ## Safer self types
+[safer-self-types]: #safer-self-types
 
 This RFC would also benefit from a safer way to interact with volatile memory
 regions than raw pointers, by providing a way to opt out of LLVM's
@@ -663,6 +656,7 @@ memory-safety guarantees provided by the Rust borrow checker.
 [future-possibilities]: #future-possibilities
 
 ## Untrusted shared-memory IPC
+[untrusted-shared-memory]: #untrusted-shared-memory
 
 Although it performs a step in the right direction by strengthening the
 definition of volatile accesses to reduce the amount of possible avenues for
@@ -673,14 +667,48 @@ shared memory region.
 Doing so would also require work on clarifying LLVM semantics so that it is
 absolutely clear that a malicious process cannot cause UB in another process by
 by writing data in memory that's shared between the two, no matter if said
-writes are non-atomic, non-volatile, etc.
+writes are non-atomic, non-volatile, or contains uninitialized data.
 
-## Volatile atomic operations
+## Stronger orderings and RMW operations
+[stronger-ordering-and-rmw]: #stronger-ordering-and-rmw
 
-If we decide to drop advanced atomic orderings and operations from this RFC,
-then they will fall out in this section.
+This RFC proposes to initially stabilize an absolute minimum of atomic volatile
+operations, morally equivalent to LLVM's `unordered` atomic volatile loads and
+stores. But atomic volatile operations can, in principle, support stronger
+semantics, such as `Relaxed` and stronger orderings and read-modify-write
+operations like `compare_and_swap`.
+
+The reason why these operations are not made part of the `VolatileXyz` API is
+that they interfere with one common intent behind volatile operations, which is
+to exert tight control on the stream of hardware instructions that is emitted:
+
+- `Relaxed` and stronger ordering may lead to the emission of different hardware
+  load and store instructions, or to the emission of hardware memory barriers,
+  in a target- and ABI-dependent fashion.
+- `compare_and_swap` will lead to the generation a full loop (and thus break
+  wait-freedom progress guarantees, which may be unexpected) on hardware based
+  on the Load-Linked / Store-Conditional (LL/SC) synchronization formalism.
+- Other atomic read-modify-write operations may or may not also compile into an
+  LL/SC loop, depending on whether they are natively supported by hardware, and
+  whether the compiler backend chose to use them if that is the case.
+
+Clearly, the mental model for the process through which these instructions are
+translated into hardware semantics is much more difficult to reason about, and
+may not be stable across compiler versions and architecture/ABI revisions.
+
+So far, the only use case that was found for these operations was to exert
+stronger control over atomic operation emission, on a hypothetical backend
+which would optimize atomics aggressively. This use case does not seem like it
+would require the full constraints of the `VolatileXyz`, and would probably be
+better implemented as an extension of `std::sync::atomic::Ordering`.
+
+One possibility would be to duplicate every ordering with a volatile variant
+(e.g. `RelaxedVolatile`, `AcquireVolatile...`). Another possibility would be to
+turn `std::sync::atomic::Ordering` into a bitfield, which would allow cleaner
+syntax in the `SeqCst | Volatile` style.
 
 ## Deprecating `ptr::[read|write]_volatile`
+[deprecating-ptr-volatile]: #deprecating-ptr-volatile
 
 Finally, one could consider `ptr::[read|write]_volatile` and the corresponding
 methods of pointer types as candidates for future deprecation, as they provide
