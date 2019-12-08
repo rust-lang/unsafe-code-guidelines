@@ -501,12 +501,13 @@ atomic orderings in the non-volatile case. This would mean adding one third
 
 Finally, it is extremely common to want either all operations on a memory
 location to be volatile, or none of them. Providing separate wrapper types
-helps enforce this very common usage pattern at the API level. If a need for
-mixed volatile and non-volatile operations on a given memory location ever
-emerges, we could envision providing a new `VolatileXyz` method that casts from
-`NonNull<VolatileXyz>` to `&AtomicXyz`, with a warning to the user that doing so
-voids the warranty of no out-of-thin-air memory operations that normally comes
-attached to `VolatileXyz`.
+helps enforce this very common usage pattern at the API level.
+
+If a need for mixed volatile and non-volatile operations on a given memory
+location ever emerges, we could envision providing a new `VolatileXyz` method
+that casts from `NonNull<VolatileXyz>` to `&AtomicXyz`, with a clear warning in
+its documentation that doing so voids the warranty of no out-of-thin-air memory
+operations that `VolatileXyz` tries to hard to provide.
 
 ## Self-type or not self-type
 [self-type]: #self-type
