@@ -8,10 +8,10 @@
 
 Introduce a set of `core::volatile::VolatileXyz` structs, roughly modeled after
 the existing `core::sync::atomic::AtomicXyz` APIs, which expose volatile loads
-and stores of machine-native width with atomic semantics. Recommend that these
-operations be preferred to `ptr::[read|write]_volatile` and the corresponding
-methods of pointer types, as they have stronger semantics that are almost always
-closer to user intent.
+and stores of machine-native width with atomic (but not ordered) semantics.
+Recommend that these operations be preferred to `ptr::[read|write]_volatile` and
+the corresponding methods of pointer types, as they have stronger semantics that
+are almost always closer to user intent.
 
 
 # Motivation
@@ -150,33 +150,33 @@ environments are unlike that of any atomic operation ordering:
   the underlying CPU in program order...
 - ...but the order in which these operations are subsequently _observed_ to
   occur by another thread performing volatile operations on the same memory
-  location is fully unspecified, and may defy even `Ordering::Relaxed` logic.
+  location is not subjected to any guarantee, to the point where it may defy
+  even seemingly basic `Ordering::Relaxed` logic.
 
 For example, assuming that a thread A successively writes the values 24 and 42
 to a memory location using volatile operations, other threads B and C repeatedly
 reading the value of said memory location are allowed to observe these writes
-without any commonly agreed upon coherence ordering:
+without any commonly agreed upon coherence ordering...
 
-    Thread B:             Thread C:
-    24                    42
-    42                    24
+    Thread B's view:         Thread C's view:
+    24                       42
+    42                       24
 
-As a matter of fact, other threads are not even guaranteed to eventually observe
-either of the writes carried out by thread A if no further sychronization action
-is taken to guarantee their visibility.
+...and that is assuming that they do observe the writes from thread A, which may
+not even happen until further hardware-specific action (such as an explicit
+cache flush) is taken.
 
-Individual hardware targets supported by Rust may and often will provide
+Individual hardware targets supported by Rust can and often will provide
 stronger ordering and visibility guarantees under the above intra-thread
 execution ordering constraint. But a program relying on these hardware
 guarantees will not be portable to all hardware targets supported by Rust.
 
 Readers who would still feel the perverted temptation to use volatile operations
-for synchronization in spite of the above warning should keep in mind that the
+for synchronization in spite of the above warnings should keep in mind that the
 presence of volatile operations does not affect the optimization of surrounding
 non-volatile operations in any significant ways. Said operations may still be
 added, elided, split, narrowed, extended, or reordered as deemed useful by the
-compiler's optimizer, including by moving them across neighboring volatile
-operations.
+optimizer, including by moving them across neighboring volatile operations.
 
 ### No-elision guarantee
 [no-elision-guarantee]: #no-elision-guarantee
@@ -293,9 +293,9 @@ operations, do not achieve this goal very well because:
    controlled, such as memory-mapped I/O.
 
 Both of these problems can be resolved by using atomic volatile operations
-instead of non-atomic volatile operations. However, in doing so, we must be very
-careful to stick with the subset of atomic operations that is supported by all
-Rust hardware targets.
+instead of non-atomic volatile operations. However, for atomic volatile to act
+as a full replacement to non-volatile volatile, we must be very careful to stick
+with the subset of atomic operations that is supported by all Rust targets.
 
 This means that we should not expose anything more than loads or stores in our
 standard subset, as some hardware architectures which are either very old or
@@ -304,7 +304,7 @@ lack multiprocessing support do not support more than that.
 More surprisingly, maximizing hardware support also means that we cannot rely on
 `Ordering::Relaxed` as a minimal level of atomic sanity, because this ordering
 assumes a global order of operations targeting a single memory location across
-all threads in the program, and this property is not provided by native
+all threads in the program, and this property is actually not provided by basic
 load/store operations on some targets without global cache coherence such as GPU
 architectures (NVPTX, AMD GCN, ...).
 
@@ -316,9 +316,9 @@ developers can refer to their hardware's memory model for precise semantics.
 
 One design goal of the proposed semantics is that it should be possible to
 implement `VolatileXyz::[load|store]` by compiling it down to LLVM unordered
-atomic volatile load/store operations of the same width, without specifying it
-in terms of "whatever LLVM unordered does" as that would make the life of
-alternate rustc backends like cranelift harder.
+atomic volatile load/store operations of the same width, but without specifying
+it in terms of "whatever LLVM unordered does" as that would make the life of
+alternate rustc backends like cranelift hard.
 
 ## API design
 [api-design]: #api-design
@@ -466,8 +466,8 @@ of memory unsafety. It also makes for a less familiar API design that users will
 have a harder time getting to grips with. In this sense, maybe it would just be
 better to resolve the `dereferenceable` issue first (allowing some sort of
 non-`dereferenceable` reference which remains subjected to all other normal
-guarantees of references), and then redesign this API in terms of whatever the
-chosen solution ends up being.
+guarantees of Rust references), and then redesign this API in terms of whatever
+the chosen solution ends up being.
 
 
 # Rationale and alternatives
@@ -523,9 +523,9 @@ unstable feature. But it would have the drawback of being very verbose. Typing
 the same volatile type name over and over again in a complex transaction would
 certainly obscure the intent of the code, whereas code that requires use of
 volatile operations is often very subtle and benefits from being as readable as
-it gets.
+it can possibly get.
 
-## `NonNull<T>` vs `*mut T` vs `*const T` vs other
+## `NonNull<T>` vs `*mut T`/`*const T` vs other
 [pointers]: #pointers
 
 It is pretty clear that volatile operations cannot be expressed through `&self`
@@ -636,13 +636,16 @@ implementation has no knowledge of, may or may not require systematic use of
 volatile memory accesses.
 
 - If we go in the "maximal Rust performance" direction, then every access to
-  shared memory must be marked volatile because the Rust compiler is allowed to
-  optimize it out if it is not subsequently used by Rust code (or if it can
-  transform the Rust code to eliminate that use).
+  shared memory in IPC must be marked volatile because the Rust compiler is
+  allowed to optimize it out if it is not subsequently used by Rust code (or if
+  it can transform the Rust code to eliminate that use).
 - If we go in the "maximal FFI ergonomics" direction, then volatile accesses are
   only needed when they are not coupled with atomics-based synchronization, as
   the mere presence of atomics acts as a trigger that disables the above
   optimizations.
+
+So far, the consensus has been that FFI ergonomics should be optimized in this
+case, in which case nothing extra needs to be done here.
 
 ## Safer self types
 [safer-self-types]: #safer-self-types
@@ -651,6 +654,24 @@ This RFC would also benefit from a safer way to interact with volatile memory
 regions than raw pointers, by providing a way to opt out of LLVM's
 "dereferenceable" semantics without also having to opt out from all the
 memory-safety guarantees provided by the Rust borrow checker.
+
+As further fuel for this design direction, note that the fact that Rust
+references are automatically marked as `dereferenceable` has caused a some of
+pain recently in the Rust community:
+
+- [Unsoundness and poor ergonomics in embedded crates](https://github.com/rust-embedded/wg/pull/387)
+- [Unsoundness in deallocate-on-drop smart pointers](https://github.com/rust-lang/rust/issues/55005)
+
+Therefore, in the author's opinion, it would be most prudent to punt on
+stabilization of this language feature until we have a clearer picture of
+whether or not we want to introduce a way to opt-out of `dereferenceable`
+semantics for Rust references without needing to go for raw pointer based APIs.
+If we do introduce such a way, then the Volatile API should definitely use it.
+
+However, this concern does not seem to block introduction of `Volatile` wrappers
+in an _unstable_ form, as a short-term answer to embedded MMIO concerns until a
+better fix for `dereferenceable` is introduced (if ever). It should only be
+considered as a stabilization blocker.
 
 
 # Future possibilities
