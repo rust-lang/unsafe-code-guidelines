@@ -702,10 +702,11 @@ translated into hardware semantics is much more difficult to reason about, and
 may not be stable across compiler versions and architecture/ABI revisions.
 
 So far, the only use case that was found for these operations was to exert
-stronger control over atomic operation emission, on a hypothetical backend
-which would optimize atomics aggressively. This use case does not seem like it
-would require the full constraints of the `VolatileXyz` API, and it could
-therefore probably be turned into an extension of `std::sync::atomic::Ordering`.
+stronger control over atomic operation emission, on a hypothetical compiler
+which would [optimize atomics too aggressively](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0062r1.html).
+This use case does not seem like it would require the full constraints of the
+`VolatileXyz` API, and it could therefore probably be turned into an extension
+of `std::sync::atomic::Ordering`.
 
 One possibility would be to duplicate every ordering with a volatile variant
 (e.g. `RelaxedVolatile`, `AcquireVolatile...`). Another possibility would be to
