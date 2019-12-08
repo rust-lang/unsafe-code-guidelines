@@ -645,6 +645,23 @@ volatile memory accesses.
   the mere presence of atomics acts as a trigger that disables the above
   optimizations.
 
+## Necessity of non-atomic operations
+
+The necessity of having `load_not_atomic()` and `store_not_atomic()` methods,
+as opposed to alternatives such as weaker-than-`Relaxed` atomics, should be
+researched before stabilizing that subset of this RFC.
+
+## Safer self types
+
+This RFC would also benefit from a safer way to interact with volatile memory
+regions than raw pointers, by providing a way to opt out of LLVM's
+"dereferenceable" semantics without also having to opt out from all the
+memory-safety guarantees provided by the Rust borrow checker.
+
+
+# Future possibilities
+[future-possibilities]: #future-possibilities
+
 ## Untrusted shared-memory IPC
 
 Although it performs a step in the right direction by strengthening the
@@ -658,25 +675,12 @@ absolutely clear that a malicious process cannot cause UB in another process by
 by writing data in memory that's shared between the two, no matter if said
 writes are non-atomic, non-volatile, etc.
 
-## Necessity of non-atomic operations
-
-The necessity of having `load_not_atomic()` and `store_not_atomic()` methods,
-as opposed to alternatives such as weaker-than-`Relaxed` atomics, should be
-researched before stabilizing that subset of this RFC.
-
-
-# Future possibilities
-[future-possibilities]: #future-possibilities
-
-As mentioned above, this RFC is a step forward in addressing the untrusted
-shared-memory IPC use case that is of interest to many "supervisor" programs,
-but not the end of that story. Finishing it will likely require LLVM assistance.
+## Volatile atomic operations
 
 If we decide to drop advanced atomic orderings and operations from this RFC,
 then they will fall out in this section.
 
-This RFC would also benefit from a safer way to interact with volatile memory
-regions than raw pointers.
+## Deprecating `ptr::[read|write]_volatile`
 
 Finally, one could consider `ptr::[read|write]_volatile` and the corresponding
 methods of pointer types as candidates for future deprecation, as they provide
