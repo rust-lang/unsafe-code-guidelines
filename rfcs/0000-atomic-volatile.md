@@ -684,13 +684,17 @@ to exert tight control on the stream of hardware instructions that is emitted:
 
 - `Relaxed` and stronger ordering may lead to the emission of different hardware
   load and store instructions, or to the emission of hardware memory barriers,
-  in a target- and ABI-dependent fashion.
+  in a target- and ABI-dependent fashion. As memory barriers can be coalesced,
+  the details of which instructions will be used depend on surrounding code.
 - `compare_and_swap` will lead to the generation a full loop (and thus break
   wait-freedom progress guarantees, which may be unexpected) on hardware based
   on the Load-Linked / Store-Conditional (LL/SC) synchronization formalism.
-- Other atomic read-modify-write operations may or may not also compile into an
-  LL/SC loop, depending on whether they are natively supported by hardware, and
-  whether the compiler backend chose to use them if that is the case.
+- Some atomic read-modify-write operations will lead to the generation a loop
+  (and thus break wait-freedom progress guarantees, which may be unexpected) on
+  hardware based on the Load-Linked / Store-Conditional (LL/SC) synchronization
+  formalism. Which instructions will be subjected to this treatment depends on
+  target CPU instruction set and whether the compiler backend will choose to use
+  dedicated wait-free instructions over an LL/SC loop.
 
 Clearly, the mental model for the process through which these instructions are
 translated into hardware semantics is much more difficult to reason about, and
@@ -699,8 +703,8 @@ may not be stable across compiler versions and architecture/ABI revisions.
 So far, the only use case that was found for these operations was to exert
 stronger control over atomic operation emission, on a hypothetical backend
 which would optimize atomics aggressively. This use case does not seem like it
-would require the full constraints of the `VolatileXyz`, and would probably be
-better implemented as an extension of `std::sync::atomic::Ordering`.
+would require the full constraints of the `VolatileXyz` API, and it could
+therefore probably be turned into an extension of `std::sync::atomic::Ordering`.
 
 One possibility would be to duplicate every ordering with a volatile variant
 (e.g. `RelaxedVolatile`, `AcquireVolatile...`). Another possibility would be to
