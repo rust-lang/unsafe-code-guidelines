@@ -660,7 +660,7 @@ references are automatically marked as `dereferenceable` has caused a some of
 pain recently in the Rust community:
 
 - [Unsoundness and poor ergonomics in embedded crates](https://github.com/rust-embedded/wg/pull/387)
-- [Unsoundness in deallocate-on-drop smart pointers](https://github.com/rust-lang/rust/issues/55005)
+- Unsoundness in deallocate-on-drop smart pointers like [Arc](https://github.com/rust-lang/rust/issues/55005) and [Box](https://github.com/rust-lang/rust/issues/66600)
 
 Therefore, in the author's opinion, it would be most prudent to punt on
 stabilization of this language feature until we have a clearer picture of
