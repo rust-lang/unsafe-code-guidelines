@@ -235,7 +235,7 @@ a detailed write-up of what such rules entail (as well as the relevant
 specs for your platform). For most platforms, however, this means the
 following:
 
-[C17]: http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
+[C17]: https://web.archive.org/web/20181230041359if_/http://www.open-std.org/jtc1/sc22/wg14/www/abq/c17_updated_proposed_fdis.pdf
 
 - Field order is preserved.
 - The first field begins at offset 0.
