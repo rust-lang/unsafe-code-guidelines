@@ -336,7 +336,6 @@ be to fill the newly built `std::volatile` module with the following entities
 (some of which may not be available on a given platform, we will come back to
 this point in a moment):
 
-- `VolatileBool`
 - `VolatileI8`
 - `VolatileI16`
 - `VolatileI32`
@@ -349,6 +348,18 @@ this point in a moment):
 - `VolatileU64`
 - `VolatileUsize`
 
+Note that this list does not include a `VolatileBool`. Although this type would
+be easy to implement and providing it would be consistent with `AtomicBool`
+prior art, it is left as a possible future extension because...
+
+- Several key use cases for volatile accesses involve interaction with entities
+  which are not guaranteed to uphold `bool` data validity invariants. From this
+  perspective, `VolatileBool` would be somewhat tracherous.
+- It is not clear whether Rust is ready to commit to a stable ABI for `bool`,
+  which would seem to be a prerequisite for many use cases of `VolatileBool`.
+- No use case for `VolatileBool` which would avoid or counterbalance these
+  drawbacks has been submitted yet.
+
 Unlike `AtomicXyz` types, these volatile types would be restricted to load and
 store operations with sub-`Relaxed` concurrent ordering guarantees (see above),
 and their API would be based on raw pointers instead of references. That is
@@ -357,7 +368,7 @@ a `dereferenceable` annotation on the LLVM side, which in turn is fundamentally
 at odds with the precise control of hardware load and store generation that is
 required by volatile access use case.
 
-To give a more concrete example, here is what the API of `VolatileBool` would
+To give a more concrete example, here is what the API of `VolatileU8` would
 look like on a platform with support for this type:
 
 ```rust
@@ -366,33 +377,33 @@ use std::sync::atomic::Ordering;
 
 
 #[repr(transparent)]
-struct VolatileBool(bool);
+struct VolatileU8(u8);
 
-impl VolatileBool {
-    /// Creates a new VolatileBool pointer
+impl VolatileU8 {
+    /// Creates a new VolatileU8 pointer
     ///
     /// This is safe as creating a pointer is considered safe in Rust and
     /// volatile adds no safety invariant to the input pointer.
     ///
-    pub const fn new(v: NonNull<bool>) -> NonNull<Self> { /* ... */ }
+    pub const fn new(v: NonNull<u8>) -> NonNull<Self> { /* ... */ }
 
-    /// Load the target bool value in an atomic and volatile way
+    /// Load the target u8 value in an atomic and volatile way
     ///
     /// # Safety
     ///
     /// The `self` pointer must be well-aligned and point to a valid memory
-    /// location containing a valid `bool` value.
+    /// location containing an initialized `u8` value.
     ///
-    pub unsafe fn load(self: NonNull<Self>) -> bool { /* ... */ }
+    pub unsafe fn load(self: NonNull<Self>) -> u8 { /* ... */ }
 
-    /// Store a bool into the target in an atomic and volatile way
+    /// Store an u8 into the target in an atomic and volatile way
     ///
     /// # Safety
     ///
     /// The `self` pointer must be well-aligned and point to a valid memory
-    /// location containing a valid `bool` value.
+    /// location containing an initialized `u8` value.
     ///
-    pub unsafe fn store(self: NonNull<Self>, val: bool) { /* ... */ }
+    pub unsafe fn store(self: NonNull<Self>, val: u8) { /* ... */ }
 }
 ```
 
@@ -743,3 +754,17 @@ less clear semantics than atomic volatile accesses (e.g. no guarantee of being
 exempted from the definition of data races) for no clear benefit. As a more
 backward-compatible alternative, one could also reimplement those methods using
 a loop of atomic volatile operations of unspecified width.
+
+## `VolatileBool`
+[volatile-bool]: #volatile-bool
+
+As mentioned previously, `VolatileBool` is not proposed for initial
+stabilization and instead left as a possible future extension. Such an extension
+would need to answer the following concerns:
+
+- Which use cases motivate the introduction of a `VolatileBool`, in spite of
+  `bool` being a dangerous type to use for MMIO or interaction with untrusted
+  code due to its data validity invariants?
+- Does the extension come together with a proposal to stabilize the ABI of
+  `repr(Rust)` booleans, and if not how does the proposed use case handle the
+  (so far theoretical) ABI unstability of Rust's `bool`?
