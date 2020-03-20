@@ -7,4 +7,4 @@ script: bash -c "cd reference && mdbook build && mdbook test"
 env:
   RUSTINFRA_DEPLOY_DIR: reference/book
 import:
-  - rust-lang/simpleinfra/travis-configs/static-websites.yml
+  - rust-lang/simpleinfra:travis-configs/static-websites.yml
