@@ -1,7 +1,8 @@
 # Layout of scalar types
 
 This chapter represents the consensus from issue [#9]. It documents the memory
-layout and considerations for `bool`, `char`, floating point types (`f{32, 64}`), and integral types (`{i,u}{8,16,32,64,128,size}`).
+layout and considerations for `bool`, `char`, floating point types (`f{32, 64}`),
+and integral types (`{i,u}{8,16,32,64,128,size}`).
 
 These types are all scalar types, representing a single value, and have no
 layout `#[repr()]` flags.
@@ -10,9 +11,9 @@ layout `#[repr()]` flags.
 
 ## `bool`
 
-Rust's `bool` has the same layout as C17's` _Bool`, that is, its size and
-alignment are implementation-defined. Any `bool` can be cast into an integer,
-taking on the values 1 (`true`) or 0 (`false`).
+Rust's `bool` has the same layout as C17's` _Bool`, that is, its size
+and alignment are [implementation-defined][data-layout]. Any `bool` can be
+cast into an integer, taking on the values 1 (`true`) or 0 (`false`).
 
 > **Note**: on all platforms that Rust's currently supports, its size and
 > alignment are 1, and its ABI class is `INTEGER` - see [Rust Layout and ABIs].
@@ -22,7 +23,7 @@ taking on the values 1 (`true`) or 0 (`false`).
 ## `char`
 
 Rust char is 32-bit wide and represents an [unicode scalar value]. The alignment
-of `char` is _implementation-defined_.
+of `char` is [implementation-defined][data-layout].
 
 [unicode scalar value]: http://www.unicode.org/glossary/#unicode_scalar_value
 
@@ -38,7 +39,7 @@ They have the same layout as the [pointer types] for which the pointee is
 `Sized`, and are layout compatible with C's `uintptr_t` and `intptr_t` types.
 
 > **Note**: C99 [7.18.2.4](https://port70.net/~nsz/c/c99/n1256.html#7.18.2.4)
-> requires `uintptr_t` and `intptr_t` to be at least 16-bit wide. All 
+> requires `uintptr_t` and `intptr_t` to be at least 16-bit wide. All
 > platforms we currently support have a C platform, and as a consequence,
 > `isize`/`usize` are at least 16-bit wide for all of them.
 
@@ -48,15 +49,15 @@ They have the same layout as the [pointer types] for which the pointee is
 
 > **Note**: in the current Rust implementation, the layouts of `isize` and
 > `usize` determine the following:
-> 
+>
 > * the maximum size of Rust _allocations_ is limited to `isize::MAX`.
 >   The LLVM `getelementptr` instruction uses signed-integer field offsets. Rust
 >   calls `getelementptr` with the `inbounds` flag which assumes that field
 >   offsets do not overflow,
 >
-> * the maximum number of elements in an array is `usize::MAX` (`[T; N:
->   usize]`. Only ZST arrays can probably be this large in practice, non-ZST
->   arrays are bound by the maximum size of Rust values,
+> * the maximum number of elements in an array is `usize::MAX` (`[T; N: usize]`).
+>   Only ZST arrays can probably be this large in practice, non-ZST arrays
+>   are bound by the maximum size of Rust values,
 >
 > * the maximum value in bytes by which a pointer can be offseted using
 >   `ptr.add` or `ptr.offset` is `isize::MAX`.
@@ -85,7 +86,7 @@ The alignment of Rust's `{i,u}128` is _unspecified_ and allowed to change.
 > **Note**: While the C standard does not define fixed-width 128-bit wide
 > integer types, many C compilers provide non-standard `__int128` types as a
 > language extension. The layout of `{i,u}128` in the current Rust
-> implementation does **not** match that of these C types, see 
+> implementation does **not** match that of these C types, see
 > [rust-lang/#54341](https://github.com/rust-lang/rust/issues/54341).
 
 ### Layout compatibility with C native integer types
@@ -94,7 +95,7 @@ The specification of native C integer types, `char`, `short`, `int`, `long`,
 ... as well as their `unsigned` variants, guarantees a lower bound on their  size,
 e.g., `short` is _at least_ 16-bit wide and _at least_ as wide as `char`.
 
-Their exact sizes are _implementation-defined_. 
+Their exact sizes are _implementation-defined_.
 
 Libraries like `libc` use knowledge of this _implementation-defined_ behavior on
 each platform to select a layout-compatible Rust fixed-width integer type when
@@ -123,3 +124,4 @@ _implementation-defined_.
 > `libc::c_double` types that can be used to safely interface with C via FFI.
 
 [IEEE-754]: https://en.wikipedia.org/wiki/IEEE_754
+[data-layout]: https://doc.rust-lang.org/nightly/reference/type-layout.html#primitive-data-layout
