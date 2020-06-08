@@ -348,3 +348,4 @@ libstd needed/needs some patches to comply with this model. These provide a good
 * [`BTreeMap` creating mutable references that overlap with shared references](https://github.com/rust-lang/rust/pull/58431)
 * [`LinkedList` creating overlapping mutable references](https://github.com/rust-lang/rust/pull/60072)
 * [`VecDeque` invalidates a protected shared reference](https://github.com/rust-lang/rust/issues/60076)
+* [Windows `Env` iterator creating `*const T` from `&T` to read memory outside of `T`](https://github.com/rust-lang/rust/pull/70479)
