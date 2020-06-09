@@ -340,7 +340,7 @@ After that is done, we additionally check all protectors remaining in the stack:
 
 ## Adjustments to libstd
 
-libstd needed/needs some patches to comply with this model. These provide a good opportunity to review if we are okay with the requirements that Stacked Borrows places onto unsafe code.
+libstd needed/needs some patches to comply with this model. These provide a good opportunity to review if we are okay with the requirements that Stacked Borrows places onto unsafe code. For an up-to-date list of **"violations of Stacked Borrows"**, please refer to [this list maintained in the Miri repo](https://github.com/rust-lang/miri#bugs-found-by-miri).
 
 * [`VecDeque` creating overlapping mutable references](https://github.com/rust-lang/rust/pull/56161)
 * [Futures turning a shared reference into a mutable one](https://github.com/rust-lang/rust/pull/56319)
@@ -348,3 +348,4 @@ libstd needed/needs some patches to comply with this model. These provide a good
 * [`BTreeMap` creating mutable references that overlap with shared references](https://github.com/rust-lang/rust/pull/58431)
 * [`LinkedList` creating overlapping mutable references](https://github.com/rust-lang/rust/pull/60072)
 * [`VecDeque` invalidates a protected shared reference](https://github.com/rust-lang/rust/issues/60076)
+
