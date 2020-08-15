@@ -177,11 +177,15 @@ A struct with only one field has the same layout as that field.
 
 #### Structs with 1-ZST fields
 
-For the purposes of struct layout [1-ZST] fields are ignored.
+For the purposes of struct layout [1-ZST] fields are ignored, *except* when it
+is the final field and could be subject to an unsizing coercion.
 
 In particular, if all but one field are 1-ZST, then the struct is equivalent to
 a [single-field struct][single-field structs].  In other words, if all but one
 field is a 1-ZST, then the entire struct has the same layout as that one field.
+(Again, with an exception for the last field. So for example `((), i32)` has the
+same layout as `i32`, but `(i32, ())` does not -- size and alignment agree, but
+the call ABI is different.)
 
 Similarly, if all fields are 1-ZST, then the struct has the same layout as a
 [struct with no fields][zero-sized structs], and is itself a 1-ZST.
