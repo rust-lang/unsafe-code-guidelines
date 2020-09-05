@@ -1,9 +1,11 @@
 # Layout of scalar types
 
-This chapter represents the consensus from issue [#9]. It documents the memory
-layout and considerations for `bool`, `char`, floating point types (`f{32, 64}`),
-and integral types (`{i,u}{8,16,32,64,128,size}`).
+**Disclaimer:** This chapter represents the consensus from issue
+[#9].  The statements in here are not (yet) "guaranteed"
+not to change until an RFC ratifies them.
 
+This documents the memory layout and considerations for `bool`, `char`, floating
+point types (`f{32, 64}`), and integral types (`{i,u}{8,16,32,64,128,size}`).
 These types are all scalar types, representing a single value, and have no
 layout `#[repr()]` flags.
 
