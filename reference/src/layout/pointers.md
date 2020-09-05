@@ -1,5 +1,11 @@
 # Layout of reference and pointer types
 
+**Disclaimer:** Everything this section says about pointers to dynamically sized
+types represents the consensus from issue [#16], but has not been stabilized
+through an RFC. As such, this is preliminary information.
+
+[#16]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/16
+
 ### Terminology
 
 Reference types are types of the form `&T`, `&mut T`.
