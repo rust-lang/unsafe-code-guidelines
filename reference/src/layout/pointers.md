@@ -57,7 +57,7 @@ struct DynObject {
 }
 ```
 
-> **note**: In the layout of `&dyn mut Trait` the field `data` is of the type `*mut u8`.
+> **note**: In the layout of `&mut dyn Trait` the field `data` is of the type `*mut u8`.
 
 The layout of `&[T]` is the same as that of:
 ```rust
