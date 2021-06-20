@@ -116,7 +116,7 @@ pub enum RetagKind {
 
 `Retag` is inserted into the MIR for the following situations:
 
-* A retag happens after every assignment MIR statement where the assigned type may by of reference or box type.
+* A retag happens after every assignment MIR statement where the assigned type may be of reference or box type.
   This is usually a `Default` retag.  However, if the RHS of this assignment is a `Ref` which allows two-phase borrows, then this is a `TwoPhase` retag.
 
     Currently, if the LHS of the assignment involves a `Deref`, no `Retag` is inserted.
