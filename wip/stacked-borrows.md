@@ -323,7 +323,7 @@ location.stack.grant(
 
 ### Retagging
 
-When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[mut] _`) or box (`Box<_>`), and if `kind == Raw` we also check each raws pointer (`*[const,mut] _`).
+When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[mut] _`) or box (`Box<_>`), and if `kind == Raw` we also check each raw pointer (`*[const,mut] _`).
 For those we perform the following steps:
 
 1. We compute a fresh tag: `Untagged` for raw pointers, `Tag(Tracking::new_ptr_id())` for everything else.
