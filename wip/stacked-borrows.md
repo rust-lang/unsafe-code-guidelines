@@ -116,7 +116,7 @@ pub enum RetagKind {
 
 `Retag` is inserted into the MIR for the following situations:
 
-* A retag happens after every assignment MIR statement where the assigned type may by of reference or box type.
+* A retag happens after every assignment MIR statement where the assigned type may be of reference or box type.
   This is usually a `Default` retag.  However, if the RHS of this assignment is a `Ref` which allows two-phase borrows, then this is a `TwoPhase` retag.
 
     Currently, if the LHS of the assignment involves a `Deref`, no `Retag` is inserted.
@@ -323,7 +323,7 @@ location.stack.grant(
 
 ### Retagging
 
-When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[mut] _`) or box (`Box<_>`), and if `kind == Raw` we also check each raws pointer (`*[const,mut] _`).
+When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[mut] _`) or box (`Box<_>`), and if `kind == Raw` we also check each raw pointer (`*[const,mut] _`).
 For those we perform the following steps:
 
 1. We compute a fresh tag: `Untagged` for raw pointers, `Tag(Tracking::new_ptr_id())` for everything else.
