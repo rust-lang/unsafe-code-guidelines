@@ -86,6 +86,8 @@ bool for_all(struct Cons const *self, bool (*func)(int, void *), void *thunk);
 #    os::raw::c_int,
 # };
 #
+
+#[repr(C)]
 pub struct Cons {
   data: c_int,
   next: Option<Box<Cons>>,
