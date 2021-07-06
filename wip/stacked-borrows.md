@@ -213,13 +213,13 @@ Using any item within a block is equivalent to using any other item in that same
 
 When allocating memory, we have to initialize the `Stack` associated with the new locations, and we have to choose a `Tag` for the initial pointer to this memory.
 
-For most memory, the stack of each freshly allocated memory location is `Stack { borrows: vec![(Untagged: SharedReadWrite)] }`, and the initial pointer to that memory has tag `Alias(None)`.
-
-The only exception is stack memory.
-Stack memory is handled by an environment (which is part of the information carried in a stack frame of the Rust abstract machine) that maps each local variable to a place.
-A place is a pointer together with some other data that is not relevant here -- the key point is that a place, just like every other pointer, carries a tag.
-When the local variable becomes live and its backing memory gets allocated, we generate a new pointer ID `id` by calling `Tracking::new_ptr` and use `Tag(id)` as tag for the place of this local variable.
-We also initialize the stack of all the memory locations in this new memory allocation with `Stack { borrows: vec![(Tag(id): Unique)] }`.
+- For heap allocations, the stack of each freshly allocated memory location is `Stack { borrows: vec![(Untagged: SharedReadWrite)] }`, and the initial pointer to that memory has tag `Untagged`.
+- For global allocations (`static`, environment and program argument data, ...), we pick a fresh `id` associated with the global, and each time a pointer to the global is created, it gets tagged `Tag(id)`.
+  The stacks in that memory are initialized with `Stack { borrows: vec![(Tag(id): SharedReadWrite)] }`.
+- Stack memory is handled by an environment (which is part of the information carried in a stack frame of the Rust abstract machine) that maps each local variable to a place.
+  A place is a pointer together with some other data that is not relevant here -- the key point is that a place, just like every other pointer, carries a tag.
+  When the local variable becomes live and its backing memory gets allocated, we generate a new pointer ID `id` by calling `Tracking::new_ptr` and use `Tag(id)` as tag for the place of this local variable.
+  We also initialize the stack of all the memory locations in this new memory allocation with `Stack { borrows: vec![(Tag(id): Unique)] }`.
 
 ### Accessing memory
 
