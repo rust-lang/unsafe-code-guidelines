@@ -149,16 +149,15 @@ For some more information, see [this blog post](https://www.ralfj.de/blog/2018/0
 #### Undefined Behavior
 [ub]: #undefined-behavior
 
-*Undefined Behavior* is a concept of the contract between the Rust programmer and the compiler:
-The programmer promises that the code exhibits no undefined behavior.
-In return, the compiler promises to compile the code in a way that the final program does on the real hardware what the source program does according to the Rust Abstract Machine.
-If it turns out the program *does* have undefined behavior, the contract is void, and the program produced by the compiler is essentially garbage (in particular, it is not bound by any specification; the program does not even have to be well-formed executable code).
+Undefined Behavior (UB) is an error condition of the Rust Abstract Machine.
+The Rust language provides no guarantees for programs that can reach this error condition.
+As part of the contract between the Rust programmer and the compiler, is thus the obligation of the programmer to ensure that their code, when run according to the rules of the Rust Abstract Machine, does not exhibit undefined behavior.
+In return, the compiler guarantees that programs that do not exhibit undefined behavior execute on real hardware according to the semantics of the Rust Abstract Machine.
+Rust imposes no requirements on the behavior of programs that exhibit undefined behavior; these programs are not bound by any specification (in particular, the program produced by the compiler is essentially garbage, it does not even have to be well-formed executable code).
 
-In Rust, the [Nomicon](https://doc.rust-lang.org/nomicon/what-unsafe-does.html) and the [Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) both have a list of behavior that the language considers undefined.
-Rust promises that safe code cannot cause Undefined Behavior---the compiler and authors of unsafe code takes the burden of this contract on themselves.
-For unsafe code, however, the burden is still on the programmer.
+Rust requires that *safe* Rust is not able to exhibit *undefined behavior* (see [soundness][soundness]). For `unsafe` code, however, the burden is still on the programmer.
 
-Also see: [Soundness][soundness].
+A list of behavior considered undefined is available in the [Rust Language Reference](https://doc.rust-lang.org/reference/behavior-considered-undefined.html) and the [Nomicon](https://doc.rust-lang.org/nomicon/what-unsafe-does.html).
 
 #### Soundness (of code / of a library)
 [soundness]: #soundness-of-code--of-a-library
