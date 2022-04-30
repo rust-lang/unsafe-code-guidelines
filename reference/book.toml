@@ -6,4 +6,3 @@ title = "Unsafe Code Guidelines Reference"
 
 [output.html]
 git-repository-url = "https://github.com/rust-lang/unsafe-code-guidelines"
-git-repository-icon = "fa-github"
