@@ -15,10 +15,15 @@ Stacked Borrows is also the subject of the following blog-posts:
 * [Stacked Borrows 2.0](https://www.ralfj.de/blog/2019/04/30/stacked-borrows-2.html) is a re-design of Stacked Borrows 1 that maintains the original core ideas, but changes the mechanism to support more precise tracking of shared references.
 * [Stacked Borrows 2.1](https://www.ralfj.de/blog/2019/05/21/stacked-borrows-2.1.html) slightly tweaks the rules for read and write accesses and describes a high-level way of thinking about the new shape of the "stack" in Stacked Borrows 2.
 
-Changes compared to the latest post (2.1):
+Changes from to the latest post (2.1) to the paper:
 
 * Retags are "shallow" instead of recursively looking for references inside compound types.
 * Reborrowing of a shared reference, when searching for `UnsafeCell`, no longer reads enum discriminants. It treats enums like unions now.
+
+Changes since publication of the paper:
+
+* HACK: Mutable references to `!Unpin` types do not make uniqueness assumptions.
+* Items with `SharedReadWrite` permission are not protected even with `FnEntry` retagging.
 
 [Miri]: https://github.com/solson/miri/
 [all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
@@ -283,11 +288,11 @@ fn reborrow(
 
 We will grant `new_tag` permission for all the locations covered by this place, by calling `grant` for each location.
 The parent tag (`derived_from`) is given by the place.
-If the reborrow is protected, the new item will have its protector set to the `CallId` of the current function call (i.e., of the topmost frame in the call stack).
 The interesting question is which permission to use for the new item:
-- For non-two-phase `Unique`, the permission is `Unique`.
-- For mutable raw pointers and two-phase `Unique`, the permission is `SharedReadWrite`.
-- For `Shared`, the permission is different for locations inside of and outside of `UnsafeCell`.
+- For non-two-phase `Unique` to an `Unpin` type, the permission is `Unique`.
+  (The `Unpin` exception is a special hack to avoid soundness issues due to self-referential generators.)
+- For mutable raw pointers and the remaining `Unique`, the permission is `SharedReadWrite`.
+- For `Shared` and immutable raw pointers, the permission is different for locations inside of and outside of `UnsafeCell`.
   Inside `UnsafeCell`, it is `SharedReadWrite`; outside it is `SharedReadOnly`.
   - The `UnsafeCell` detection is entirely static: it recurses through structs,
     tuples and the like, but when hitting an `enum` or `union` or so, it treats
@@ -296,23 +301,27 @@ The interesting question is which permission to use for the new item:
     memory accesses that are subject to Stacked Borrows rules.
 - For immutable raw pointers, the rules are the same as for `Shared`.
 
+If the reborrow is protected and we are not inside an `UnsafeCell` behind a `Shared` or an immutable raw pointer,
+the new item will have its protector set to the `CallId` of the current function call (i.e., of the topmost frame in the call stack).
+Otherwise the new item will not have a protector.
+
 So, basically, for every location, we call `grant` like this:
 ```rust
+let (perm, protect) = match ref_kind {
+    RefKind::Unique { two_phase: false } if unpin =>
+        (Permission::Unique, protect),
+    RefKind::Raw { mutable: true } |
+    RefKind::Unique { .. } =>
+        (Permission::SharedReadWrite, protect),
+    RefKind::Raw { mutable: false } |
+    RefKind::Shared =>
+        if inside_unsafe_cell { (Permission::SharedReadWrite, /* do not protect */ false) }
+        else { (Permission::SharedReadOnly, protect) }
+};
 let protector = if protect {
     Some(current_call_id())
 } else {
     None
-};
-let perm = match ref_kind {
-    RefKind::Unique { two_phase: false } =>
-        Permission::Unique,
-    RefKind::Raw { mutable: true } |
-    RefKind::Unique { two_phase: true } =>
-        Permission::SharedReadWrite,
-    RefKind::Raw { mutable: false } |
-    RefKind::Shared =>
-        if inside_unsafe_cell { Permission::SharedReadWrite }
-        else { Permission::SharedReadOnly }
 };
 
 location.stack.grant(
