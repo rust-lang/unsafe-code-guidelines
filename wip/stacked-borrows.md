@@ -22,7 +22,6 @@ Changes from to the latest post (2.1) to the paper:
 
 Changes since publication of the paper:
 
-* HACK: Mutable references to `!Unpin` types do not make uniqueness assumptions.
 * Items with `SharedReadWrite` permission are not protected even with `FnEntry` retagging.
 
 [Miri]: https://github.com/solson/miri/
@@ -289,9 +288,8 @@ fn reborrow(
 We will grant `new_tag` permission for all the locations covered by this place, by calling `grant` for each location.
 The parent tag (`derived_from`) is given by the place.
 The interesting question is which permission to use for the new item:
-- For non-two-phase `Unique` to an `Unpin` type, the permission is `Unique`.
-  (The `Unpin` exception is a special hack to avoid soundness issues due to self-referential generators.)
-- For mutable raw pointers and the remaining `Unique`, the permission is `SharedReadWrite`.
+- For non-two-phase `Unique`, the permission is `Unique`.
+- For mutable raw pointers and two-phase `Unique`, the permission is `SharedReadWrite`.
 - For `Shared` and immutable raw pointers, the permission is different for locations inside of and outside of `UnsafeCell`.
   Inside `UnsafeCell`, it is `SharedReadWrite`; outside it is `SharedReadOnly`.
   - The `UnsafeCell` detection is entirely static: it recurses through structs,
@@ -308,10 +306,10 @@ Otherwise the new item will not have a protector.
 So, basically, for every location, we call `grant` like this:
 ```rust
 let (perm, protect) = match ref_kind {
-    RefKind::Unique { two_phase: false } if unpin =>
+    RefKind::Unique { two_phase: false } =>
         (Permission::Unique, protect),
     RefKind::Raw { mutable: true } |
-    RefKind::Unique { .. } =>
+    RefKind::Unique { two_phase: true } =>
         (Permission::SharedReadWrite, protect),
     RefKind::Raw { mutable: false } |
     RefKind::Shared =>
