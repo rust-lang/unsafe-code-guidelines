@@ -13,5 +13,6 @@
   - [Packed SIMD vectors](./layout/packed-simd-vectors.md)
 - [Validity](./validity.md)
   - [Unions](./validity/unions.md)
+  - [Function Pointers](./validity/function-pointers.md)
 - [Optimizations](./optimizations.md)
   - [Return value optimization](./optimizations/return_value_optimization.md)
