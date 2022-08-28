@@ -161,7 +161,7 @@ In other words, the per-stack-frame `CallId` is initialized by `Tracking::new_ca
 We say that a `CallId` is *active* if the call stack contains a stack frame with that ID.
 In the following, we pretend there exists a function `call_is_active(id)` that can check this.
 
-**Note**: Miri uses a slightly more complex system with a `HashSet<CallId>` tracking the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
+**Note**: Miri uses a slightly more complex system to track the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
 
 ### Preliminaries for items
 
@@ -333,6 +333,9 @@ For those we perform the following steps:
 3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique { two_phase: false }`.
 
 We do not recurse into fields of structs or other compound types, only "bare" references/... get retagged.
+
+**Note**: Miri offers a flag, `-Zmiri-retag-fields`, that changes this behavior to also recurse into compound types to search for references to retag.
+We never recurse through a pointer indirection.
 
 ### Deallocating memory
 
