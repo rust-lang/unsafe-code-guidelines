@@ -23,6 +23,7 @@ Changes from to the latest post (2.1) to the paper:
 Changes since publication of the paper:
 
 * Items with `SharedReadWrite` permission are not protected even with `FnEntry` retagging.
+* Removal of `Untagged`.
 
 [Miri]: https://github.com/solson/miri/
 [all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
@@ -38,18 +39,11 @@ Moreover, there is a per-call-frame `CallId` as well as some global tracking sta
 // `nat` is the type of mathematical natural numbers, meaning we don't want to think about overflow.
 // NOTE: Miri just uses `NonZeroU64` which, realistically, will not overflow because we only ever increment by 1.
 type PtrId = nat;
+/// For historic reasons we often call pointer IDs "tags".
+type Tag = PtrId;
 
 /// CallId: uniquely identifying a stack frame.
 type CallId = nat;
-
-/// Extra per-pointer state (the "tag"), tracking how this pointer was computed
-/// ("pointer provenance").
-pub enum Tag {
-    /// References are tagged: we know where they got created.
-    Tag(PtrId),
-    /// Raw pointers are not tracked.
-    Untagged,
-}
 
 /// Indicates which permission is granted (by this item to some pointers)
 pub enum Permission {
@@ -78,7 +72,7 @@ pub struct Stack {
     /// Used *mostly* as a stack; never empty.
     /// Invariants:
     /// * Above a `SharedReadOnly` there can only be more `SharedReadOnly`.
-    /// * Except for `Untagged`, no tag occurs in the stack more than once.
+    /// * No tag occurs in the stack more than once.
     borrows: Vec<Item>,
 }
 
@@ -167,7 +161,7 @@ In other words, the per-stack-frame `CallId` is initialized by `Tracking::new_ca
 We say that a `CallId` is *active* if the call stack contains a stack frame with that ID.
 In the following, we pretend there exists a function `call_is_active(id)` that can check this.
 
-**Note**: Miri uses a slightly more complex system with a `HashSet<CallId>` tracking the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
+**Note**: Miri uses a slightly more complex system to track the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
 
 ### Preliminaries for items
 
@@ -217,13 +211,13 @@ Using any item within a block is equivalent to using any other item in that same
 
 When allocating memory, we have to initialize the `Stack` associated with the new locations, and we have to choose a `Tag` for the initial pointer to this memory.
 
-- For heap allocations, the stack of each freshly allocated memory location is `Stack { borrows: vec![(Untagged: SharedReadWrite)] }`, and the initial pointer to that memory has tag `Untagged`.
-- For global allocations (`static`, environment and program argument data, ...), we pick a fresh `id` associated with the global, and each time a pointer to the global is created, it gets tagged `Tag(id)`.
-  The stacks in that memory are initialized with `Stack { borrows: vec![(Tag(id): SharedReadWrite)] }`.
 - Stack memory is handled by an environment (which is part of the information carried in a stack frame of the Rust abstract machine) that maps each local variable to a place.
   A place is a pointer together with some other data that is not relevant here -- the key point is that a place, just like every other pointer, carries a tag.
-  When the local variable becomes live and its backing memory gets allocated, we generate a new pointer ID `id` by calling `Tracking::new_ptr` and use `Tag(id)` as tag for the place of this local variable.
-  We also initialize the stack of all the memory locations in this new memory allocation with `Stack { borrows: vec![(Tag(id): Unique)] }`.
+  When the local variable becomes live and its backing memory gets allocated, we generate a new pointer ID `id` by calling `Tracking::new_ptr` and use `id` as tag for the place of this local variable.
+  We also initialize the stack of all the memory locations in this new memory allocation with `Stack { borrows: vec![(id: Unique)] }`.
+- For heap allocations, we pick a fresh `id` at allocation time. The stack of each freshly allocated memory location is `Stack { borrows: vec![(id: SharedReadWrite)] }`, and the initial pointer to that memory has tag `id`.
+- For global allocations (`static`, environment and program argument data, ...), we pick a fresh `id` associated with the global, and each time a pointer to the global is created, it gets tagged `id`.
+  The stacks in that memory are initialized with `Stack { borrows: vec![(id: SharedReadWrite)] }`.
 
 ### Accessing memory
 
@@ -333,12 +327,15 @@ location.stack.grant(
 When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[mut] _`) or box (`Box<_>`), and if `kind == Raw` we also check each raw pointer (`*[const,mut] _`).
 For those we perform the following steps:
 
-1. We compute a fresh tag: `Untagged` for raw pointers, `Tag(Tracking::new_ptr_id())` for everything else.
+1. We compute a fresh tag: `Tracking::new_ptr_id()`.
 2. We determine if we will want to protect the items we are going to generate:
    This is the case only if `kind == FnEntry` and the type of this pointer is a reference (not a box).
 3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique { two_phase: false }`.
 
 We do not recurse into fields of structs or other compound types, only "bare" references/... get retagged.
+
+**Note**: Miri offers a flag, `-Zmiri-retag-fields`, that changes this behavior to also recurse into compound types to search for references to retag.
+We never recurse through a pointer indirection.
 
 ### Deallocating memory
 
