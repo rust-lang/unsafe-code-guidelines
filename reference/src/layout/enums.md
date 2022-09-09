@@ -220,7 +220,7 @@ variants.
 This layout, while more compatible and arguably more obvious, is also
 less efficient than the non-C compatible layout in some cases in terms
 of total size. For example, the `TwoCases` example given in the
-preivous section only occupies 4 bytes with `#[repr(u8)]`, but would
+previous section only occupies 4 bytes with `#[repr(u8)]`, but would
 occupy 6 bytes with `#[repr(C, u8)]`, as more padding is required.
 
 **Example.** The following enum:
