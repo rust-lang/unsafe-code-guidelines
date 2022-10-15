@@ -190,8 +190,12 @@ guarantee that `Option<&mut T>` has the same size as `&mut T`.
 
 While all niches are invalid bit-patterns, not all invalid bit-patterns are
 niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
-`&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
-niche.
+`&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a niche.
+
+It is a surprisingly common misconception that niches can occur in [padding] bytes.
+They cannot: A niche representation must be invalid for `T`.
+But a padding byte must be irrelevant to the value of `T`.
+A byte that participates in deciding whether or not the representation is valid cannot, therefore, be a padding byte.
 
 #### Zero-sized type / ZST
 
@@ -207,6 +211,8 @@ requirement of 2.
 
 *Padding* (of a type `T`) refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
 
+Padding for a type is either [interior padding], which is part of one or more fields, or [exterior padding], which is before, between, or after the fields.
+
 Padding can be though of as `[Pad; N]` for some hypothetical type `Pad` (of size 1) with the following properties:
 * `Pad` is valid for any byte, i.e., it has the same validity invariant as `MaybeUninit<u8>`.
 * Copying `Pad` ignores the source byte, and writes *any* value to the target byte. Or, equivalently (in terms of Abstract Machine behavior), copying `Pad` marks the target byte as uninitialized.
@@ -217,8 +223,26 @@ for all values `v` and lists of bytes `b` such that `v` and `b` are related at `
 changing `b` at index `i` to any other byte yields a `b'` such `v` and `b'` are related (`Vrel_T(v, b')`).
 In other words, the byte at index `i` is entirely ignored by `Vrel_T` (the value relation for `T`), and two lists of bytes that only differ in padding bytes relate to the same value(s), if any.
 
-This definition works fine for product types (structs, tuples, arrays, ...).
-The desired notion of "padding byte" for enums and unions is still unclear.
+This definition works fine for product types (structs, tuples, arrays, ...) and for unions. The desired notion of "padding byte" for enums is still unclear.
+
+#### Padding (exterior)
+[exterior padding]: #exterior-padding
+
+Exterior padding bytes are [padding] bytes that are not part of one or more fields. They are exactly the padding bytes that are not [interior padding], and therefore must be before, between, or after the fields of the type. Padding that comes after all fields is called [tail padding].
+
+#### Padding (interior)
+[interior padding]: #interior-padding
+
+Interior padding bytes are [padding] bytes that are part of one or more fields of a type.
+
+We can say that a field `f: F` *contains* the byte at index `i` in the type `T` if the layout of `T` places `f` at offset `j` and we have `j <= i < j + size_of::<F>()`. Then a padding byte is interior padding if and only if there exists a field `f` that contains it.
+
+It follows that, provided `T` is not an enum, for any such `f`, the byte at index `i - j` in `F` is a padding byte of `F`. This is because all values of `f` give rise to distinct values of `T`.
+
+#### Padding (tail)
+[tail padding]: #tail-padding
+
+Tail padding is [exterior padding] that comes after all fields of a type.
 
 #### Place
 
@@ -254,8 +278,8 @@ The relation should be functional for a fixed list of bytes (i.e., every list of
 It is partial in both directions: not all values have a representation (e.g. the mathematical integer `300` has no representation at type `u8`), and not all lists of bytes correspond to a value of a specific type (e.g. lists of the wrong size correspond to no value, and the list consisting of the single byte `0x10` corresponds to no value of type `bool`).
 For a fixed value, there can be many representations (e.g., when considering type `#[repr(C)] Pair(u8, u16)`, the second byte is a [padding byte][padding] so changing it does not affect the value represented by a list of bytes).
 
-See the [value domain][value-domain] for an example how values and representation relations can be made more precise.
+See the [MiniRust page on values][minirust-values] for an example how values and representation relations can be made more precise.
 
 [stacked-borrows]: https://github.com/rust-lang/unsafe-code-guidelines/blob/master/wip/stacked-borrows.md
-[value-domain]: https://github.com/rust-lang/unsafe-code-guidelines/tree/master/wip/value-domain.md
+[minirust-values]: https://github.com/RalfJung/minirust/blob/master/lang/values.md
 [place-value-expr]: https://doc.rust-lang.org/reference/expressions.html#place-expressions-and-value-expressions
