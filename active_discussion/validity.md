@@ -140,8 +140,7 @@ To start, we will create threads for each major category of types.
     allow the remaining bits to be uninitialized?
 
 * Unions
-  * Do we make any restrictions here, or are unions just "bags of bits" that may
-    contain anything?  That would mean we can do no layout optimizations.
+  * See [this page](unions.md).
 
 * Enums
   * Is there anything to say besides: The discriminant must be valid, and all
