@@ -24,6 +24,7 @@ Changes since publication of the paper:
 
 * Items with `SharedReadWrite` permission are not protected even with `FnEntry` retagging.
 * Removal of `Untagged`.
+* Addition of "weak protectors" to justify `noalias` on `Box` parameters.
 
 [Miri]: https://github.com/solson/miri/
 [all-hands]: https://paper.dropbox.com/doc/Topic-Stacked-borrows--AXAkoFfUGViWL_PaSryqKK~hAg-2q57v4UM7cIkxCq9PQc22
@@ -58,6 +59,25 @@ pub enum Permission {
     Disabled,
 }
 
+/// The flavor of the protector.
+enum ProtectorKind {
+    /// Protected against aliasing violations from other pointers.
+    ///
+    /// Items protected like this cause UB when they are invalidated, *but* the pointer itself may
+    /// still be used to issue a deallocation.
+    ///
+    /// This is required for LLVM IR pointers that are `noalias` but *not* `dereferenceable`.
+    WeakProtector,
+
+    /// Protected against any kind of invalidation.
+    ///
+    /// Items protected like this cause UB when they are invalidated or the memory is deallocated.
+    /// This is strictly stronger protection than `WeakProtector`.
+    ///
+    /// This is required for LLVM IR pointers that are `dereferenceable` (and also allows `noalias`).
+    StrongProtector,
+}
+
 /// An item on the per-location stack, controlling which pointers may access this location and how.
 pub struct Item {
     /// The permission this item grants.
@@ -65,8 +85,9 @@ pub struct Item {
     /// The pointers the permission is granted to.
     tag: Tag,
     /// An optional protector, ensuring the item cannot get popped until `CallId` is over.
-    protector: Option<CallId>,
+    protector: Option<(ProtectorKind, CallId)>,
 }
+
 /// Per-location stack of borrow items.
 pub struct Stack {
     /// Used *mostly* as a stack; never empty.
@@ -159,13 +180,12 @@ To attach metadata to a particular function call, we assign a fresh ID to every 
 In other words, the per-stack-frame `CallId` is initialized by `Tracking::new_call`.
 
 We say that a `CallId` is *active* if the call stack contains a stack frame with that ID.
-In the following, we pretend there exists a function `call_is_active(id)` that can check this.
 
 **Note**: Miri uses a slightly more complex system to track the set of active `CallId`; that is just an optimization to avoid having to scan the call stack all the time.
 
 ### Preliminaries for items
 
-For brevity, we will write `(tag: perm)` to represent `Item { tag, perm, protector: None }`, and `(tag: perm; call)` to represent `Item { tag, perm, protector: Some(call) }`.
+For brevity, we will write `(tag: perm)` to represent `Item { tag, perm, protector: None }`, and `(tag: perm; kind, call)` to represent `Item { tag, perm, protector: Some((kind, call)) }`.
 
 The following defines whether a permission grants a particular kind of memory access to a pointer with the right tag:
 `Unique` and `SharedReadWrite` grant all accesses, `SharedReadOnly` grants only read access.
@@ -221,12 +241,13 @@ When allocating memory, we have to initialize the `Stack` associated with the ne
 
 ### Accessing memory
 
-On every memory access, we perform the following extra operation for every location that gets accessed (i.e., for a 4-byte access, this happens for each of the 4 bytes):
+On every memory access (reads and writes -- see below for deallocation),
+we perform the following extra operation for every location that gets accessed (i.e., for a 4-byte access, this happens for each of the 4 bytes):
 
 1. Find the granting item. If there is none, this is UB.
 2. Check if this is a read access or a write access.
-    - For write accesses, pop all *blocks* above the one containing the granting item. That is, remove all items above the granting one, except if the granting item is a `SharedReadWrite` in which case the consecutive `SharedReadWrite` above it are kept (but everything beyond is popped).
-    - For read accesses, disable all `Unique` items above the granting one: change their permission to `Disabled`.  This means they cannot be used any more.  We do not remove them from the stack to avoid merging two blocks of `SharedReadWrite`.
+    - For write accesses, pop all *blocks* above the one containing the granting item. That is, remove all items above the granting one, except if the granting item is a `SharedReadWrite` in which case the consecutive `SharedReadWrite` above it are kept (but everything beyond is popped). If any of the popped items is protected (weakly or strongly) with a `CallId` of an active call, we have UB.
+    - For read accesses, disable all `Unique` items above the granting one: change their permission to `Disabled`.  This means they cannot be used any more.  We do not remove them from the stack to avoid merging two blocks of `SharedReadWrite`.  If any disabled item is protected (weakly or strongly) with a `CallId` of an active call, we have UB.
 
 ### Reborrowing
 
@@ -256,7 +277,7 @@ To reborrow a pointer, we are given:
 - a (typed) place, i.e., a location in memory, a tag and the type of the data we expect there (from which we can compute the size);
 - which kind of reference/pointer this is (`Unique`, `Shared` or a raw pointer which might be mutable or not);
 - a `new_tag: Tag` for the reborrowed pointer;
-- whether this reborrow needs to be protected.
+- whether this reborrow needs to be protected, and if yes, how (weak or strong protection).
 
 The type of the place and the kind of reference/pointer together give the full type of the reference/pointer (or as much of it was we need).
 As a Rust signature, this would be:
@@ -275,7 +296,7 @@ fn reborrow(
     place: MPlaceTy<Tag>,
     kind: RefKind,
     new_tag: Tag,
-    protect: bool,
+    protect: Option<ProtectorKind>,
 )
 ```
 
@@ -307,14 +328,10 @@ let (perm, protect) = match ref_kind {
         (Permission::SharedReadWrite, protect),
     RefKind::Raw { mutable: false } |
     RefKind::Shared =>
-        if inside_unsafe_cell { (Permission::SharedReadWrite, /* do not protect */ false) }
+        if inside_unsafe_cell { (Permission::SharedReadWrite, /* do not protect */ None) }
         else { (Permission::SharedReadOnly, protect) }
 };
-let protector = if protect {
-    Some(current_call_id())
-} else {
-    None
-};
+let protector = protect.map(|kind| (kind, current_call_id()));
 
 location.stack.grant(
   place.tag,
@@ -328,8 +345,10 @@ When executing `Retag(kind, place)`, we check if `place` holds a reference (`&[m
 For those we perform the following steps:
 
 1. We compute a fresh tag: `Tracking::new_ptr_id()`.
-2. We determine if we will want to protect the items we are going to generate:
-   This is the case only if `kind == FnEntry` and the type of this pointer is a reference (not a box).
+2. We determine if and how will want to protect the items we are going to generate:
+   If `kind == FnEntry`, then a protector will be added; for references, we use a `StrongProtector`, for box a `WeakProtector`.
+   (This means for both of them there is UB if the pointer gets invalidated while the call is active; and for references, additionally there is UB if the memory the pointer points to gets deallocated in anyway -- even if the pointer itself is used for that deallocation.)
+   For other `kind`, no protector is added.
 3. We perform reborrowing of the memory this pointer points to with the new tag and indicating whether we want protection, treating boxes as `RefKind::Unique { two_phase: false }`.
 
 We do not recurse into fields of structs or other compound types, only "bare" references/... get retagged.
@@ -340,7 +359,8 @@ We never recurse through a pointer indirection.
 ### Deallocating memory
 
 Memory deallocation first acts like a write access through the pointer used for deallocation.
-After that is done, we additionally check all protectors remaining in the stack: if any of them is still active, we have undefined behavior.
+After that is done, we additionally check all *strong* protectors remaining in the stack: if any of them is still active, we have undefined behavior.
+(Weak protectors do not matter here.)
 
 ## Adjustments to libstd
 
