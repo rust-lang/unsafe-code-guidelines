@@ -76,8 +76,8 @@ struct A(u16, u8);
 type B = [A; 4];
 ```
 
-In the current Rust implementation, `A` has an alignment and a size of `4`, and
-`B` has a size of `16`, such that `B` contains four `A`s that are contiguously
+In the current Rust implementation, `A` has an alignment of `2` and a size of `4`,
+and `B` has a size of `16`, such that `B` contains four `A`s that are contiguously
 laid in memory. 
 
 However, a future Rust implementation could implement a layout optimization that
