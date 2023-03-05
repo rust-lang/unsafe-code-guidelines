@@ -207,9 +207,12 @@ requirement of 2.
 
 *Padding* (of a type `T`) refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
 
-Padding can be though of as `[Pad; N]` for some hypothetical type `Pad` (of size 1) with the following properties:
+Padding can be though of as the type containing secret fields of type `[Pad; N]` for some hypothetical type `Pad` (of size 1) with the following properties:
 * `Pad` is valid for any byte, i.e., it has the same validity invariant as `MaybeUninit<u8>`.
 * Copying `Pad` ignores the source byte, and writes *any* value to the target byte. Or, equivalently (in terms of Abstract Machine behavior), copying `Pad` marks the target byte as uninitialized.
+
+Note that padding is a property of the *type* and not the memory: reading from the padding of an `&Foo` (by casting to a byte reference) may produce initialized values if the `&Foo` is pointing to memory that was initialized (for example, if it was originally a byte buffer initialized to `0`), but the moment you perform a typed copy out of that reference you will have uninitialized padding bytes in the copy.
+
 
 We can also define padding in terms of the [representation relation]:
 A byte at index `i` is a padding byte for type `T` if,
