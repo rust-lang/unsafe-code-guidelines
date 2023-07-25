@@ -7,6 +7,9 @@ and which parts are still in a "preliminary" state, at least until we
 start to open RFCs ratifying parts of the Unsafe Code Guidelines
 effort.
 
+**Note:** This document has not yet been updated to
+[RFC 2645](https://github.com/rust-lang/rfcs/blob/master/text/2645-transparent-unions.md).
+
 [#10]: https://github.com/rust-rfcs/unsafe-code-guidelines/issues/10
 
 ## Categories of enums
