@@ -1,1 +1,1 @@
-This file [moved](https://github.com/RalfJung/minirust/blob/master/mem/interface.md)
+This file [moved](https://github.com/RalfJung/minirust/blob/master/spec/mem/interface.md)
