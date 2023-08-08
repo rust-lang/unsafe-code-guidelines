@@ -1,6 +1,6 @@
 ## Glossary
 
-#### Aliasing
+### Aliasing
 
 *Aliasing* occurs when one pointer or reference points to a "span" of memory
 that overlaps with the span of another pointer or reference. A span of memory is
@@ -55,7 +55,7 @@ somewhat differently from this definition. However, that's considered a low
 level detail of a particular Rust implementation. When programming Rust, the
 Abstract Rust Machine is intended to operate according to the definition here.
 
-#### (Pointer) Provenance
+### (Pointer) Provenance
 
 The *provenance* of a pointer is used to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
 Provenance is extra state that only exists in the Rust Abstract Machine; it is needed to specify program behavior but not present any more when the program runs on real hardware.
@@ -95,7 +95,7 @@ For some more information, see [this document proposing a more precise definitio
 Another example of pointer provenance is the "tag" from [Stacked Borrows][stacked-borrows].
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html).
 
-#### Interior mutability
+### Interior mutability
 
 *Interior Mutation* means mutating memory where there also exists a live shared reference pointing to the same memory; or mutating memory through a pointer derived from a shared reference.
 "live" here means a value that will be "used again" later.
@@ -109,7 +109,7 @@ If data immediately pointed to by a `*const T` or `&*const T` is mutated, that's
 *Interior mutability* refers to the ability to perform interior mutation without causing UB.
 All interior mutation in Rust has to happen inside an [`UnsafeCell`](https://doc.rust-lang.org/core/cell/struct.UnsafeCell.html), so all data structures that have interior mutability must (directly or indirectly) use `UnsafeCell` for this purpose.
 
-#### Validity and safety invariant
+### Validity and safety invariant
 
 The *validity invariant* is an invariant that all data must uphold any time it is accessed or copied in a typed manner.
 This invariant is known to the compiler and exploited by optimizations such as improved enum layout or eliding in-bounds checks.
@@ -146,7 +146,7 @@ Moreover, such unsafe code must not return a non-UTF-8 string to the "outside" o
 To summarize: *Data must always be valid, but it only must be safe in safe code.*
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
 
-#### Undefined Behavior
+### Undefined Behavior
 [ub]: #undefined-behavior
 
 *Undefined Behavior* is a concept of the contract between the Rust programmer and the compiler:
@@ -160,7 +160,7 @@ For unsafe code, however, the burden is still on the programmer.
 
 Also see: [Soundness][soundness].
 
-#### Soundness (of code / of a library)
+### Soundness (of code / of a library)
 [soundness]: #soundness-of-code--of-a-library
 
 *Soundness* is a type system concept (actually originating from the study of logics) and means that the type system is "correct" in the sense that well-typed programs actually have the desired properties.
@@ -170,7 +170,7 @@ This promise only extends to safe code however; for `unsafe` code, it is up to t
 Accordingly, we say that a library (or an individual function) is *sound* if it is impossible for safe code to cause Undefined Behavior using its public API.
 Conversely, the library/function is *unsound* if safe code *can* cause Undefined Behavior.
 
-#### Layout
+### Layout
 [layout]: #layout
 
 The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
@@ -179,7 +179,7 @@ Moreover, the layout of a type records its *function call ABI* (or just *ABI* fo
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
 In this document, *layout* and *representation* are not synonyms.
 
-#### Niche
+### Niche
 
 The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
 
@@ -193,7 +193,7 @@ niches. For example, the "all bits uninitialized" is an invalid bit-pattern for
 `&mut T`, but this bit-pattern cannot be used by layout optimizations, and is not a
 niche.
 
-#### Zero-sized type / ZST
+### Zero-sized type / ZST
 
 Types with zero size are called zero-sized types, which is abbreviated as "ZST".
 This document also uses the "1-ZST" abbreviation, which stands for "one-aligned
@@ -202,7 +202,7 @@ zero-sized type", to refer to zero-sized types with an alignment requirement of 
 For example, `()` is a "1-ZST" but `[u16; 0]` is not because it has an alignment
 requirement of 2.
 
-#### Padding
+### Padding
 [padding]: #padding
 
 *Padding* (of a type `T`) refers to the space that the compiler leaves between fields of a struct or enum variant to satisfy alignment requirements, and before/after variants of a union or enum to make all variants equally sized.
@@ -223,7 +223,7 @@ In other words, the byte at index `i` is entirely ignored by `Vrel_T` (the value
 This definition works fine for product types (structs, tuples, arrays, ...).
 The desired notion of "padding byte" for enums and unions is still unclear.
 
-#### Place
+### Place
 
 A *place* (called "lvalue" in C and "glvalue" in C++) is the result of computing a [*place expression*][place-value-expr].
 A place is basically a pointer (pointing to some location in memory, potentially carrying [provenance](#pointer-provenance)), but might contain more information such as size or alignment (the details will have to be determined as the Rust Abstract Machine gets specified more precisely).
@@ -235,7 +235,7 @@ The key operations on a place are:
 * Converting between a place (of type `T`) and a pointer value (of type `&T`, `&mut T`, `*const T` or `*mut T`) using the `&` and `*` operators.
   This is also the only way a place can be "stored": by converting it to a value first.
 
-#### Value
+### Value
 
 A *value* (called "value of the expression" or "rvalue" in C and "prvalue" in C++) is what gets stored in a [place](#place), and also the result of computing a [*value expression*][place-value-expr].
 A value has a type, and it denotes the abstract mathematical concept that is represented by data in our programs.
@@ -245,7 +245,7 @@ Values can be (according to their type) turned into a list of bytes, which is ca
 Values are ephemeral; they arise during the computation of an instruction but are only ever persisted in memory through their representation.
 (This is comparable to how run-time data in a program is ephemeral and is only ever persisted in serialized form.)
 
-#### Representation (relation)
+### Representation (relation)
 [representation relation]: #representation-relation
 
 A *representation* of a [value](#value) is a list of bytes that is used to store or "represent" that value in memory.
