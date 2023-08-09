@@ -1,5 +1,31 @@
 ## Glossary
 
+### Abstract Byte
+[abstract byte]: #abstract-byte
+
+The "byte" is the smallest unit of storage in Rust.
+Memory allocations are thought of as storing a list of bytes, and at the lowest level each load return a list of bytes and each store takes a list of bytes and puts it into memory.
+(The [representation relation] then defines how to convert between those lists of bytes and higher-level values such as mathematical integers or pointers.)
+
+However, a "byte" in the Rust Abstract Machine is more complicated than just a `u8` -- think if it as there being some extra "shadow state" that is relevant for the Abstract Machine execution (in particular, for whether this execution has UB), but that disappears when compiling the program to assembly.
+That's why we call it "abstract byte", to distinguish it from the physical machine byte that is represented by a `u8`.
+The most obvious "shadow state" is tracking whether memory is initialized.
+See [this blog post](https://www.ralfj.de/blog/2019/07/14/uninit.html) for details, but the gist of it is that bytes in memory are more like `Option<u8>` where `None` indicates that this byte is uninitialized.
+Operations like `copy` work on that representation, so if you copy from some uninitialized memory into initialized memory, the target memory becomes "de-initialized".
+Another piece of shadow state is [pointer provenance][provenance]: the Abstract Machine tracks the "origin" of each pointer value to enforce the rule that a pointer used to access some memory is "based on" the original pointer produced when that memory got allocated.
+This provenance must be preserved when the pointer is stored to memory and loaded again later, which implies that abstract bytes must be able to carry provenance.
+
+Without committing to the exact shape of provenance in Rust, we can therefore say that an (abstract) byte in the Rust Abstract Machine looks as follows:
+
+```rust
+pub enum AbstractByte<Provenance> {
+    /// An uninitialized byte.
+    Uninit,
+    /// An initialized byte, optionally with some provenance (if it is encoding a pointer).
+    Init(u8, Option<Provenance>),
+}
+```
+
 ### Aliasing
 
 *Aliasing* occurs when one pointer or reference points to a "span" of memory
@@ -114,18 +140,20 @@ This definition works fine for product types (structs, tuples, arrays, ...).
 The desired notion of "padding byte" for enums and unions is still unclear.
 
 ### Place
+[place]: #place
 
 A *place* (called "lvalue" in C and "glvalue" in C++) is the result of computing a [*place expression*][place-value-expr].
-A place is basically a pointer (pointing to some location in memory, potentially carrying [provenance](#pointer-provenance)), but might contain more information such as size or alignment (the details will have to be determined as the Rust Abstract Machine gets specified more precisely).
-A place has a type, indicating the type of [values](#value) that it stores.
+A place is basically a pointer (pointing to some location in memory, potentially carrying [provenance]), but might contain more information such as size or alignment (the details will have to be determined as the Rust Abstract Machine gets specified more precisely).
+A place has a type, indicating the type of [values][value] that it stores.
 
 The key operations on a place are:
-* Storing a [value](#value) of the same type in it (when it is used on the left-hand side of an assignment).
-* Loading a [value](#value) of the same type from it (through the place-to-value coercion).
+* Storing a [value] of the same type in it (when it is used on the left-hand side of an assignment).
+* Loading a [value] of the same type from it (through the place-to-value coercion).
 * Converting between a place (of type `T`) and a pointer value (of type `&T`, `&mut T`, `*const T` or `*mut T`) using the `&` and `*` operators.
   This is also the only way a place can be "stored": by converting it to a value first.
 
 ### Pointer Provenance
+[provenance]: #pointer-provenance
 
 The *provenance* of a pointer is used to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
 Provenance is extra state that only exists in the Rust Abstract Machine; it is needed to specify program behavior but not present any more when the program runs on real hardware.
@@ -168,7 +196,7 @@ For some more information, see [this blog post](https://www.ralfj.de/blog/2018/0
 ### Representation (relation)
 [representation relation]: #representation-relation
 
-A *representation* of a [value](#value) is a list of bytes that is used to store or "represent" that value in memory.
+A *representation* of a [value] is a list of [(abstract) bytes][abstract byte] that is used to store or "represent" that value in memory.
 
 We also sometimes speak of the *representation of a type*; this should more correctly be called the *representation relation* as it relates values of this type to lists of bytes that represent this value.
 The term "relation" here is used in the mathematical sense: the representation relation is a predicate that, given a value and a list of bytes, says whether this value is represented by that list of bytes (`val -> list byte -> Prop`).
@@ -241,12 +269,13 @@ To summarize: *Data must always be valid, but it only must be safe in safe code.
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html).
 
 ### Value
+[value]: #value
 
-A *value* (called "value of the expression" or "rvalue" in C and "prvalue" in C++) is what gets stored in a [place](#place), and also the result of computing a [*value expression*][place-value-expr].
+A *value* (called "value of the expression" or "rvalue" in C and "prvalue" in C++) is what gets stored in a [place], and also the result of computing a [*value expression*][place-value-expr].
 A value has a type, and it denotes the abstract mathematical concept that is represented by data in our programs.
 
 For example, a value of type `u8` is a mathematical integer in the range `0..256`.
-Values can be (according to their type) turned into a list of bytes, which is called a [representation](#representation) of the value.
+Values can be (according to their type) turned into a list of [(abstract) bytes][abstract byte], which is called a [representation][representation relation] of the value.
 Values are ephemeral; they arise during the computation of an instruction but are only ever persisted in memory through their representation.
 (This is comparable to how run-time data in a program is ephemeral and is only ever persisted in serialized form.)
 
