@@ -35,6 +35,12 @@ We should evaluate whether there truly is some use-case here that is not current
   This could be fixed by [`MaybeDangling`](https://github.com/rust-lang/rfcs/pull/3336).
 * The entire `async fn` ecosystem and every hand-implemented self-referential generator or future is unsound since the self-reference aliases the `&mut` reference to the full generator/future.
   This is currently hackfixed by making `Unpin` meaningful for UB; a proper solution would be to add something like [`UnsafeAliased`](https://github.com/rust-lang/rfcs/pull/3467).
+* Stacked Borrows forbids a bunch of things that might be considered too restrictive (and that go well beyond LLVM `noalias`):
+  strict subobject provenance [rules out the `&Header` pattern](https://github.com/rust-lang/unsafe-code-guidelines/issues/256) and also affects [raw pointers derived from references](https://github.com/rust-lang/unsafe-code-guidelines/issues/134);
+  eager assertion of uniquess makes [even read-only functions such as `as_mut_ptr` dangerous when they take `&mut`](https://github.com/rust-lang/unsafe-code-guidelines/issues/133);
+  `&UnsafeCell` surprisingly [requires read-write memory even when it is never written](https://github.com/rust-lang/unsafe-code-guidelines/issues/303).
+  There is a bunch of code out there that violates these rules one way or another.
+  All of these are resolved by [Tree Borrows](https://perso.crans.org/vanille/treebor/), though [some subtleties around `as_mut_ptr` do remain](https://github.com/rust-lang/unsafe-code-guidelines/issues/450).
 
 ## Former cases of deliberate UB that have at least a work-in-progress solution to them
 
