@@ -1,5 +1,10 @@
 # Layout of Rust array types and slices
 
+## Editor's Note
+
+Issue #176 clarified that as of this writing, Rust does not distinguish between size and stride, ie
+they are always equal.
+
 ## Layout of Rust array types 
 
 Array types, `[T; N]`, store `N` values of type `T` with a constant _stride_.
