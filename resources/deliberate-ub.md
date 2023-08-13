@@ -13,7 +13,9 @@ We should evaluate whether there truly is some use-case here that is not current
   However, doing an `AtomicU32` atomic read on a `(u16, u8)` is unsound because the padding byte can be uninitialized.
   (Also, pointer provenance is lost.)
   To fix this we need to be able to perform atomic loads at type `MaybeUninit<u32>`.
-  The LLVM IR we generate here contains `noundef` so this UB is not just a specification artifact.
+  The LLVM IR we generate here contains `noundef` so this UB is not just a specification artifact.<br>
+  Furthermore, `compare_exchange` will compare padding bytes, which leads to UB.
+  It is not clear how to best specify a useful `compare_exchange` that can work on padding bytes.
 * `bytes` does [a non-atomic plain load that races](https://github.com/tokio-rs/bytes/blob/dea868a4b0eec28877e9013702c0ae12dbc40c4b/src/bytes.rs#L2508),
   because relaxed loads are claimed to cost too much performance (also see [this LLVM issue](https://github.com/llvm/llvm-project/issues/37064)).
   (Note that LLVM's handling of data races is not enough here, data races still return garbage data -- so this is UB in the generated LLVM IR. Also see [this thread](https://internals.rust-lang.org/t/unordered-as-a-solution-to-bit-wise-reasoning-for-atomic-accesses/11079) on using "unordered".)
