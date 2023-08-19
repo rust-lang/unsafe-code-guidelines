@@ -1,0 +1,48 @@
+name: Deploy
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    # we run this part also in PRs, to ensure that building the book works
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install mdbook
+      run: |
+        mkdir mdbook
+        curl -Lf https://github.com/rust-lang/mdBook/releases/download/v0.4.34/mdbook-v0.4.34-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=./mdbook
+        echo `pwd`/mdbook >> $GITHUB_PATH
+    - name: Generate Book
+      run: |
+        cd reference
+        mdbook build
+        mdbook test
+    - name: Upload Artifact
+      uses: actions/upload-pages-artifact@v1.0.8
+      with:
+        path: reference/book
+
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # only do this part on an actual push
+    if: github.event_name == 'push'
+
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v2.0.0
