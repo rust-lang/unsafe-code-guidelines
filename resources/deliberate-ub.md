@@ -5,7 +5,7 @@ We should evaluate whether there truly is some use-case here that is not current
 
 ### Cases related to concurrency
 
-* crossbeam's `AtomicCell` "fallback path" uses a SeqLock, which [is well-known to not be compatible with the C++ memory model](http://www.hpl.hp.com/techreports/2012/HPL-2012-68.pdf).
+* crossbeam's `AtomicCell` "fallback path" uses a SeqLock, which [is well-known to not be compatible with the C++ memory model](https://www.hpl.hp.com/techreports/2012/HPL-2012-68.pdf).
   Specifically the problem is [this non-atomic volatile read](https://github.com/crossbeam-rs/crossbeam/blob/5d07fe43540d7f21517a51813acd9332744e90cb/crossbeam-utils/src/atomic/atomic_cell.rs#L980) which can cause data races and hence UB.
   This would be fine if we either (a) adopted LLVM's handling of memory races (then the problematic read would merely return `undef` instead of UB due to a data race), or (b) added [bytewise atomic memcpy](https://github.com/rust-lang/rfcs/pull/3301) and used that instead of the non-atomic volatile load.
   This is currently *not* UB in the LLVM IR we generate, due to LLVM's different handling of read-write races and because the code carefully uses `MaybeUninit`.
