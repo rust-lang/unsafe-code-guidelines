@@ -16,7 +16,9 @@ We should evaluate whether there truly is some use-case here that is not current
   The LLVM IR we generate here contains `noundef` so this UB is not just a specification artifact.<br>
   Furthermore, `compare_exchange` will compare padding bytes, which leads to UB.
   It is not clear how to best specify a useful `compare_exchange` that can work on padding bytes,
-  see the [discussion here](https://github.com/rust-lang/unsafe-code-guidelines/issues/449).
+  see the [discussion here](https://github.com/rust-lang/unsafe-code-guidelines/issues/449).<br>
+  The alternative is to not use the "fast path" for problematic types (and fall back to the SeqLock), but that requires some way to query at `const`-time whether the type contains padding (or provenance).
+  (Or of course one can use inline assembly, but it would be better if that was not required.)
 
 ### Cases related to aliasing
 
