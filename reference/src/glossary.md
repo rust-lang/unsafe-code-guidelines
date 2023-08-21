@@ -4,11 +4,12 @@
 [abstract byte]: #abstract-byte
 
 The "byte" is the smallest unit of storage in Rust.
-Memory allocations are thought of as storing a list of bytes, and at the lowest level each load return a list of bytes and each store takes a list of bytes and puts it into memory.
+Memory allocations are thought of as storing a list of bytes, and at the lowest level each load returns a list of bytes and each store takes a list of bytes and puts it into memory.
 (The [representation relation] then defines how to convert between those lists of bytes and higher-level values such as mathematical integers or pointers.)
 
-However, a "byte" in the Rust Abstract Machine is more complicated than just a `u8` -- think if it as there being some extra "shadow state" that is relevant for the Abstract Machine execution (in particular, for whether this execution has UB), but that disappears when compiling the program to assembly.
-That's why we call it "abstract byte", to distinguish it from the physical machine byte that is represented by a `u8`.
+However, a "byte" in the Rust Abstract Machine is more complicated than just an integer in `0..256` -- think of it as there being some extra "shadow state" that is relevant for the Abstract Machine execution (in particular, for whether this execution has UB), but that disappears when compiling the program to assembly.
+That's why we call it "abstract byte", to distinguish it from the physical machine byte in `0..256`.
+
 The most obvious "shadow state" is tracking whether memory is initialized.
 See [this blog post](https://www.ralfj.de/blog/2019/07/14/uninit.html) for details, but the gist of it is that bytes in memory are more like `Option<u8>` where `None` indicates that this byte is uninitialized.
 Operations like `copy` work on that representation, so if you copy from some uninitialized memory into initialized memory, the target memory becomes "de-initialized".
@@ -21,7 +22,8 @@ Without committing to the exact shape of provenance in Rust, we can therefore sa
 pub enum AbstractByte<Provenance> {
     /// An uninitialized byte.
     Uninit,
-    /// An initialized byte, optionally with some provenance (if it is encoding a pointer).
+    /// An initialized byte with a value in `0..256`,
+    /// optionally with some provenance (if it is encoding a pointer).
     Init(u8, Option<Provenance>),
 }
 ```
