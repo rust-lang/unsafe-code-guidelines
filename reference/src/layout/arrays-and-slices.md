@@ -1,15 +1,10 @@
 # Layout of Rust array types and slices
 
-## Editor's Note
-
-Issue #176 clarified that as of this writing, Rust does not distinguish between size and stride, ie
-they are always equal.
-
 ## Layout of Rust array types 
 
-Array types, `[T; N]`, store `N` values of type `T` with a constant _stride_.
-Here, _stride_ is the distance between each pair of consecutive values within
-the array.
+Array types, `[T; N]`, store `N` values of type `T` with a _stride_ that is
+equal to the size of `T`. Here, _stride_ is the distance between each pair of
+consecutive values within the array.
 
 The _offset_ of the first array element is `0`, that is, a pointer to the array
 and a pointer to its first element both point to the same memory address.
@@ -26,32 +21,10 @@ guaranteed to be the same as the layout of a C array with the same element type.
 > }`. Pointers to arrays are fine: `extern { fn foo(x: *const [T; N]) -> *const
 > [U; M]; }`, and `struct`s and `union`s containing arrays are also fine.
 
-The _stride_ of the array is constant for all element pairs and it is computed
-as the _size_ of the element type rounded up to the next multiple of the
-_alignment_ of the element type.
-
 ### Arrays of zero-size
 
 Arrays `[T; N]` have zero size if and only if their count `N` is zero or their
 element type `T` is zero-sized.
-
-### Special case `stride == size`
-
-When the element _size_ is a multiple of the element's _alignment_, then `stride
-== size`, and the elements are laid out contiguously in memory, e.g., `[u8; 4]`.
-In this case, the _size_ of the array can be computed as `size_of::<T>() * N`,
-and a pointer to the `i`-th element of the array can be obtained by offsetting a
-pointer to the first element of the array by `i`[^1].
-
-> **Note:** In the current Rust implementation, _size_ is always a multiple of
-> the element's _alignment_, and therefore `stride == size` always holds. This
-> is, however, not guaranteed by the [layout of structs and tuples].
-
-[^1]: When `stride > size` the pointer needs to be advanced by the array
-    _stride_ instead of by the element _size_.
-
-[layout of structs and tuples]: ./structs-and-tuples.md
-
 
 ### Layout compatibility with packed SIMD vectors
 
@@ -68,29 +41,3 @@ type and the same number of elements as the vector.
 ## Layout of Rust slices
 
 The layout of a slice `[T]` of length `N` is the same as that of a `[T; N]` array. 
-
-## Unresolved questions
-
-### Guaranteeing `stride == size` ?
-
-Currently, the [layout of structs and tuples] does not guarantee that the
-element _size_ is a multiple of its _alignment_. For example, consider:
-
-```rust,ignore
-struct A(u16, u8);
-type B = [A; 4];
-```
-
-In the current Rust implementation, `A` has an alignment of `2` and a size of `4`,
-and `B` has a size of `16`, such that `B` contains four `A`s that are contiguously
-laid in memory. 
-
-However, a future Rust implementation could implement a layout optimization that
-reduces the size of `A` to `3`. For the elements of `B` to be properly aligned,
-`B` would need to choose a `stride == 4`, resulting in a `stride > size`.
-
-Guaranteeing `stride >= size` is forward-compatible with such
-layout-optimization proposals:
-  
-  * [rust-lang/rfcs/1397: Spearate size and stride for types](https://github.com/rust-lang/rfcs/issues/1397)
-  * [rust-lang/rust/17027: Collapse trailing padding](https://github.com/rust-lang/rust/issues/17027)
