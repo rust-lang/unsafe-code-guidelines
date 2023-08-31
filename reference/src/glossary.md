@@ -1,5 +1,17 @@
 ## Glossary
 
+### ABI (of a type)
+[abi]: #abi-of-a-type
+
+The *function call ABI* or short *ABI* of a type defines how it is passed *by-value* across a function boundary.
+Possible ABIs include passing the value directly in one or more registers, or passing it indirectly as a pointer to the actual data.
+The space of all possible ABIs is huge and extremely target-dependent.
+Rust therefore does generally not clearly define the ABI of any type, it only defines when two types are *ABI-compatible*,
+which means that it is legal to call a function declared with an argument or return type `T` using a declaration or function pointer with argument or return type `U`.
+
+Note that ABI compatibility is stricter than layout compatibility.
+For instance `#[repr(C)] struct S(i32)` is (guaranteed to be) layout-compatible with `i32`, but it is *not* ABI-compatible.
+
 ### Abstract Byte
 [abstract byte]: #abstract-byte
 
@@ -100,13 +112,15 @@ All interior mutation in Rust has to happen inside an [`UnsafeCell`](https://doc
 ### Layout
 [layout]: #layout
 
-The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enum/... or elements of arrays).
-Moreover, the layout of a type records its *function call ABI* (or just *ABI* for short): how the type is passed *by value* across a function boundary.
+The *layout* of a type defines its size and alignment as well as the offsets of its subobjects (e.g. fields of structs/unions/enums/... or elements of arrays, and the discriminant of enums).
+
+Note that layout does not capture everything that there is to say about how a type is represented on the machine; it notably does not include [ABI][abi] or [Niches][niche].
 
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
-In this document, *layout* and *representation* are not synonyms.
+In this document, *layout* and [*representation*][representation relation] are not synonyms.
 
 ### Niche
+[niche]: #niche
 
 The *niche* of a type determines invalid bit-patterns that will be used by layout optimizations.
 
