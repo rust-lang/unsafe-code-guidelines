@@ -4,7 +4,7 @@
 [abi]: #abi-of-a-type
 
 The *function call ABI* or short *ABI* of a type defines how it is passed *by-value* across a function boundary.
-Possible ABIs include passing the value directly in one or more registers, or passing it indirectly as a pointer to the actual data.
+Possible ABIs include passing the value directly in zero or more registers, or passing it indirectly as a pointer to the actual data.
 The space of all possible ABIs is huge and extremely target-dependent.
 Rust therefore does generally not clearly define the ABI of any type, it only defines when two types are *ABI-compatible*,
 which means that it is legal to call a function declared with an argument or return type `T` using a declaration or function pointer with argument or return type `U`.
