@@ -139,7 +139,12 @@ In this document, *layout* and [*representation*][representation relation] are n
 ### Memory Address
 [memory address]: #memory-address
 
-A *memory address* is an integer value that identifies where in the physical machine memory some data is stored.
+A *memory address* is an integer value that identifies where in the process' memory some data is stored.
+This will typically be a virtual address, if the Rust process runs as a regular user-space program.
+It can also be a physical address for bare-level / kernel code. Rust doesn't really care either way, the point is:
+it's an address as understood by the CPU, it's what the load/store instructions need to identify where in memory to perform the load/store.
+
+Note that a pointer in Rust is *not* just a memory address.
 A pointer value consists of a memory address and [provenance][pointer-provenance].
 
 ### Niche
