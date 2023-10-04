@@ -16,7 +16,7 @@ For instance `#[repr(C)] struct S(i32)` is (guaranteed to be) layout-compatible 
 [abstract byte]: #abstract-byte
 
 The *byte* is the smallest unit of storage in Rust.
-Memory allocations are thought of as storing a list of bytes, and at the lowest level each load returns a list of bytes and each store takes a list of bytes and puts it into memory.
+[Memory allocations][allocation] are thought of as storing a list of bytes, and at the lowest level each load returns a list of bytes and each store takes a list of bytes and puts it into memory.
 (The [representation relation] then defines how to convert between those lists of bytes and higher-level values such as mathematical integers or pointers.)
 
 However, a *byte* in the Rust Abstract Machine is more complicated than just an integer in `0..256` -- think of it as there being some extra "shadow state" that is relevant for the Abstract Machine execution (in particular, for whether this execution has UB), but that disappears when compiling the program to assembly.
@@ -95,6 +95,23 @@ somewhat differently from this definition. However, that's considered a low
 level detail of a particular Rust implementation. When programming Rust, the
 Abstract Rust Machine is intended to operate according to the definition here.
 
+### Allocation
+[allocation]: #allocation
+
+An *allocation* is a chunk of memory that is addressable from Rust.
+Allocations are created for objects on the heap, for stack-allocated variables, for globals (statics and consts), but also for objects that do not have Rust-inspectable data such as functions and vtables.
+An allocation has a contiguous range of [memory addresses][memory-address] that it covers, and it can generally only be deallocated all at once.
+(Though in the future, we might allow allocations with holes, and we might allow growing/shrinking an allocation.)
+This range can be empty, but even empty allocations have a *base address* that they are located at.
+The base address of an allocation is not necessarily unique; but if two distinct allocations have the same base address then at least one of them must be empty.
+
+Pointer arithmetic is generally only possible within an allocation:
+[provenance][pointer-provenance] ensures that each pointer "remembers" which allocation it points to,
+and accesses are only permitted if the address is in range of the allocation associated with the pointer.
+
+Data inside an allocation is stored as [abstract bytes][abstract-byte];
+in particular, allocations do not track which type the data inside them has.
+
 ### Interior mutability
 
 *Interior Mutation* means mutating memory where there also exists a live shared reference pointing to the same memory; or mutating memory through a pointer derived from a shared reference.
@@ -118,6 +135,17 @@ Note that layout does not capture everything that there is to say about how a ty
 
 Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
 In this document, *layout* and [*representation*][representation relation] are not synonyms.
+
+### Memory Address
+[memory address]: #memory-address
+
+A *memory address* is an integer value that identifies where in the process' memory some data is stored.
+This will typically be a virtual address, if the Rust process runs as a regular user-space program.
+It can also be a physical address for bare-level / kernel code. Rust doesn't really care either way, the point is:
+it's an address as understood by the CPU, it's what the load/store instructions need to identify where in memory to perform the load/store.
+
+Note that a pointer in Rust is *not* just a memory address.
+A pointer value consists of a memory address and [provenance][pointer-provenance].
 
 ### Niche
 [niche]: #niche
@@ -171,7 +199,7 @@ The key operations on a place are:
 ### Pointer Provenance
 [provenance]: #pointer-provenance
 
-The *provenance* of a pointer is used to distinguish pointers that point to the same memory address (i.e., pointers that, when cast to `usize`, will compare equal).
+The *provenance* of a pointer is used to distinguish pointers that point to the same [memory address][memory-address] (i.e., pointers that, when cast to `usize`, will compare equal).
 Provenance is extra state that only exists in the Rust Abstract Machine; it is needed to specify program behavior but not present any more when the program runs on real hardware.
 In other words, pointers that only differ in their provenance can *not* be distinguished any more in the final binary (but provenance can influence how the compiler translates the program).
 
@@ -180,7 +208,7 @@ It is also unclear whether provenance applies to more than just pointers, i.e., 
 In the following, we give some examples if what provenance *could* look like.
 
 *Using provenance to track originating allocation.*
-For example, we have to distinguish pointers to the same location if they originated from different allocations.
+For example, we have to distinguish pointers to the same location if they originated from different [allocations][allocation].
 Cross-allocation pointer arithmetic [does not lead to usable pointers](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset), so the Rust Abstract Machine *somehow* has to remember the original allocation to which a pointer pointed.
 It could use provenance to achieve this:
 
