@@ -106,10 +106,10 @@ This range can be empty, but even empty allocations have a *base address* that t
 The base address of an allocation is not necessarily unique; but if two distinct allocations have the same base address then at least one of them must be empty.
 
 Pointer arithmetic is generally only possible within an allocation:
-[provenance][pointer-provenance] ensures that each pointer "remembers" which allocation it points to,
+[provenance][provenance] ensures that each pointer "remembers" which allocation it points to,
 and accesses are only permitted if the address is in range of the allocation associated with the pointer.
 
-Data inside an allocation is stored as [abstract bytes][abstract-byte];
+Data inside an allocation is stored as [abstract bytes][abstract byte];
 in particular, allocations do not track which type the data inside them has.
 
 ### Interior mutability
