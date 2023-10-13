@@ -100,7 +100,7 @@ Abstract Rust Machine is intended to operate according to the definition here.
 
 An *allocation* is a chunk of memory that is addressable from Rust.
 Allocations are created for objects on the heap, for stack-allocated variables, for globals (statics and consts), but also for objects that do not have Rust-inspectable data such as functions and vtables.
-An allocation has a contiguous range of [memory addresses][memory-address] that it covers, and it can generally only be deallocated all at once.
+An allocation has a contiguous range of [memory addresses][memory address] that it covers, and it can generally only be deallocated all at once.
 (Though in the future, we might allow allocations with holes, and we might allow growing/shrinking an allocation.)
 This range can be empty, but even empty allocations have a *base address* that they are located at.
 The base address of an allocation is not necessarily unique; but if two distinct allocations have the same base address then at least one of them must be empty.
@@ -199,7 +199,7 @@ The key operations on a place are:
 ### Pointer Provenance
 [provenance]: #pointer-provenance
 
-The *provenance* of a pointer is used to distinguish pointers that point to the same [memory address][memory-address] (i.e., pointers that, when cast to `usize`, will compare equal).
+The *provenance* of a pointer is used to distinguish pointers that point to the same [memory address] (i.e., pointers that, when cast to `usize`, will compare equal).
 Provenance is extra state that only exists in the Rust Abstract Machine; it is needed to specify program behavior but not present any more when the program runs on real hardware.
 In other words, pointers that only differ in their provenance can *not* be distinguished any more in the final binary (but provenance can influence how the compiler translates the program).
 
