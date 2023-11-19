@@ -170,7 +170,7 @@ assert_eq!(size_of::<U>(), 2);
 ```
 
 **C++ compatibility hazard**: C++ does, in general, give a size of 1 to types
-with no fields. When such types are used as an union field in C++, a "naive"
+with no fields. When such types are used as a union field in C++, a "naive"
 translation of that code into Rust will not produce a compatible result. Refer
 to the [struct chapter](structs-and-tuples.md#c-compatible-layout-repr-c) for
 further details.

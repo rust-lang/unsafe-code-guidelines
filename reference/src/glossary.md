@@ -145,7 +145,7 @@ It can also be a physical address for bare-level / kernel code. Rust doesn't rea
 it's an address as understood by the CPU, it's what the load/store instructions need to identify where in memory to perform the load/store.
 
 Note that a pointer in Rust is *not* just a memory address.
-A pointer value consists of a memory address and [provenance][pointer-provenance].
+A pointer value consists of a memory address and [provenance][provenance].
 
 ### Niche
 [niche]: #niche

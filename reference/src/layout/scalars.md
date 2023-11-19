@@ -78,7 +78,7 @@ For all Rust's fixed-width integer types `{i,u}{8,16,32,64,128}` it holds that:
 * negative values of signed integer types are represented using 2's complement.
 
 Furthermore, Rust's signed and unsigned fixed-width integer types
-`{i,u}{8,16,32,64}` have the same layout the C fixed-width integer types from
+`{i,u}{8,16,32,64}` have the same layout as the C fixed-width integer types from
 the `<stdint.h>` header `{u,}int{8,16,32,64}_t`. These fixed-width integer types
 are therefore safe to use directly in C FFI where the corresponding C
 fixed-width integer types are expected.
