@@ -19,8 +19,6 @@ We should evaluate whether there truly is some use-case here that is not current
   see the [discussion here](https://github.com/rust-lang/unsafe-code-guidelines/issues/449).<br>
   The alternative is to not use the "fast path" for problematic types (and fall back to the SeqLock), but that requires some way to query at `const`-time whether the type contains padding (or provenance).
   (Or of course one can use inline assembly, but it would be better if that was not required.)
-* tokio causes race conditions between atomic and non-atomic loads which are [not permitted](https://doc.rust-lang.org/nightly/std/sync/atomic/index.html#memory-model-for-atomic-accesses);
-  see [this issue](https://github.com/tokio-rs/tokio/issues/6155) for details.
 
 ### Cases related to aliasing
 
