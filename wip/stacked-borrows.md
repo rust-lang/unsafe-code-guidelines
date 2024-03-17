@@ -373,3 +373,28 @@ libstd needed/needs some patches to comply with this model. These provide a good
 * [`LinkedList` creating overlapping mutable references](https://github.com/rust-lang/rust/pull/60072)
 * [`VecDeque` invalidates a protected shared reference](https://github.com/rust-lang/rust/issues/60076)
 
+## Biggest conceptual issues
+
+The two biggest conceptual issues with this model are the following:
+
+- Raw pointer casts generate fresh tags.
+  This is a problem because it means we need to detect the *transitions* from references to raw pointers, which is not always easy.
+  (In contrast, for all other retags we can just retag whenever we see a reference, no matter where it comes from.)
+  It is also frequently surprising to programmers, e.g. when `addr_of_mut!(local)` is invalidated by direct writes to `local`.
+  Finally it leads to the raw pointer type at the moment of transition being significant, which again defies the usual intuition and general goal of raw pointers that their type is not semantically relevant.
+- On reads we do not follow a proper stack discipline.
+  Instead, we just disable all `Unique` above the item that granted the read access.
+  This is obviously ugly, but more importantly it means that the first issue cannot be easily fixed:
+  if raw pointer casts just retained the original tag, then a raw pointer derived from `&mut` would become invalidated when the `&mut` becomes invalidated, and that just breaks way too much code.
+  (Currently, the raw pointer instead becomes a `SharedReadWrite` on top of the `Unique`, so the `Unique` can be invalidated while the raw pointer remains usable.)
+
+The best known alternative for the second point is to go the Tree Borrows route of *freezing* all `Unique` (and their children) above a read-granting item.
+This basically means we would be popping such `Unique` (and everything above them) *only for writes* but not for reads---much nicer than the current situation.
+However, this breaks *tons* of code that looks like this:
+```rust
+ptr::copy_nonoverlapping(src.as_ptr(), dest.as_mut_ptr(), dest.len());
+```
+Here `dest` is a slice.
+The issue is that calling `dest.len()` *after* `dest.as_mut_ptr()` does a shared-read-only reborrow of `dest`, which freezes the raw pointer returned by `as_mut_ptr` and thus makes later writes to it UB.
+
+It's not clear how this could be fixed without going all the way to [trees](https://perso.crans.org/vanille/treebor/).
