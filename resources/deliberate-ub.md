@@ -34,6 +34,12 @@ We should evaluate whether there truly is some use-case here that is not current
   There is a bunch of code out there that violates these rules one way or another.
   All of these are resolved by [Tree Borrows](https://perso.crans.org/vanille/treebor/), though [some subtleties around `as_mut_ptr` do remain](https://github.com/rust-lang/unsafe-code-guidelines/issues/450).
 
+### Other cases
+
+* `gxhash` wants to do a vector-sized load that may go out-of-bounds, and didn't find a better solution than causing UB with an OOB load and then masking off the extra bytes.
+  See [here](https://github.com/ogxd/gxhash/issues/82) for some discussion and [here](https://github.com/ogxd/gxhash/blob/9eb19b021ff94a7b37beb5f479880d07e029b933/src/gxhash/platform/mod.rs#L18) for the relevant code.
+  The same [also happens in `compiler-builtins`](https://github.com/rust-lang/compiler-builtins/issues/559).
+
 ## Former cases of deliberate UB that have at least a work-in-progress solution to them
 
 * Various `offset_of` implementations caused UB by using `mem::uninitialized()`, or they used `&(*base).field` or `addr_of!((*base).field)` to project a dummy pointer to the field which is UB due to out-of-bounds pointer arithmetic.
