@@ -295,49 +295,44 @@ apply, as described below.
 
 #### Discriminant elision on Option-like enums
 
-(Meta-note: The content in this section is not fully described by any RFC and is
-therefore "non-normative". Parts of it were specified in
-[rust-lang/rust#60300]).
+(Meta-note: The content in this section have been turned into stable guarantees
+[via this
+FCP](https://github.com/rust-lang/rust/pull/130628#issuecomment-2402761599).).
 
-[rust-lang/rust#60300]: https://github.com/rust-lang/rust/pull/60300
-
-**Definition.** An **option-like enum** is a 2-variant `enum` where:
+**Definition.** The fully monomorphized form of a 2-variant `enum` is called an **option-like enum**
+if all of the following are satisfied:
 
 - the `enum` has no explicit `#[repr(...)]`, and
-- one variant has a single field, and
-- the other variant has no fields (the "unit variant").
+- one variant has a single field with a type that guarantees discriminant
+  elision (to be defined below), and
+- the other variant has only 1-ZST fields (the "unit variant").
 
 The simplest example is `Option<T>` itself, where the `Some` variant
 has a single field (of type `T`), and the `None` variant has no
-fields. But other enums that fit that same template fit.
+fields. But other enums that fit that same template also qualify, e.g.
+`Result<T, ()>` or `Result<(), T>`.
 
 **Definition.** The **payload** of an option-like enum is the single
 field which it contains; in the case of `Option<T>`, the payload has
 type `T`.
 
-**Definition.** In some cases, the payload type may contain illegal
-values, which are called **[niches][niche]**. For example, a value of type `&T`
-may never be `NULL`, and hence defines a [niche] consisting of the
-bitstring `0`.  Similarly, the standard library types [`NonZeroU8`]
-and friends may never be zero, and hence also define the value of `0`
-as a [niche]. 
-
-[`NonZeroU8`]: https://doc.rust-lang.org/std/num/struct.NonZeroU8.html
-
-The [niche] values must be disjoint from the values allowed by the validity
-invariant. The validity invariant is, as of this writing, the current active
-discussion topic in the unsafe code guidelines process. [rust-lang/rust#60300]
-specifies that the following types have at least one [niche] (the all-zeros
-bit-pattern):
+**Definition.** The following payload types have guaranteed discriminant
+elision:
 
 * `&T`
 * `&mut T`
-* `extern "C" fn`
+* `Box<T>`
+* `extern "ABI" fn` (for arbitrary "ABI")
 * `core::num::NonZero*`
 * `core::ptr::NonNull<T>`
 * `#[repr(transparent)] struct` around one of the types in this list.
 
-**Option-like enums where the payload defines at least one [niche] value
+(Meta-note: all these types have at least one bit pattern that is guaranteed be
+invalid, and can therefore be used as a "[niche]" when computing the enum layout.
+More types have this property, but the *guarantee* described here only applies
+to the types listed here.)
+
+**Option-like enums where the payload has guaranteed discriminant elision
 are guaranteed to be represented using the same memory layout as their
 payload.** This is called **discriminant elision**, as there is no
 explicit discriminant value stored anywhere. Instead, [niche] values are
