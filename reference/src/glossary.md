@@ -112,6 +112,21 @@ and accesses are only permitted if the address is in range of the allocation ass
 Data inside an allocation is stored as [abstract bytes][abstract byte];
 in particular, allocations do not track which type the data inside them has.
 
+### Integer Overflow
+[integer overflow]: #integer-overflow
+
+[Integer overflow](https://en.wikipedia.org/wiki/Integer_overflow) occurs when an arithmetic operation on integers attempts to create a numeric value that is outside of the range that can be represented with a given number of digits. Such out-of-range can be **either** higher than the maximum (overflow) or lower than the minimum (underflow) representable value.
+
+For example, consider the following seemingly-harmless function:
+```rust
+pub const fn average(x: usize, y: usize) -> usize {
+    (x + y) / 2
+}
+```
+If `x` and/or `y` are close to `usize::MAX`, the term `(x + y)` will no longer fit in a `usize`-sized integer, and the result will be incorrect.
+
+Note that Rust enables runtime checking for integer overflow for `dev` builds but **not** `release` builds by default, although this [can be overridden](https://doc.rust-lang.org/cargo/reference/profiles.html#overflow-checks).
+
 ### Interior mutability
 
 *Interior Mutation* means mutating memory where there also exists a live shared reference pointing to the same memory; or mutating memory through a pointer derived from a shared reference.
@@ -133,7 +148,7 @@ The *layout* of a type defines its size and alignment as well as the offsets of 
 
 Note that layout does not capture everything that there is to say about how a type is represented on the machine; it notably does not include [ABI][abi] or [Niches][niche].
 
-Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this. 
+Note: Originally, *layout* and *representation* were treated as synonyms, and Rust language features like the `#[repr]` attribute reflect this.
 In this document, *layout* and [*representation*][representation relation] are not synonyms.
 
 ### Memory Address
@@ -146,6 +161,22 @@ it's an address as understood by the CPU, it's what the load/store instructions 
 
 Note that a pointer in Rust is *not* just a memory address.
 A pointer value consists of a memory address and [provenance][provenance].
+
+### Memory Safety
+[memory safety]: #memory-safety
+
+Memory safety can refer to **spatial** memory safety, **temporal** memory safety, or both. Rust's [ownership model](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html) guarantees specific types of memory safety, and makes it easier and less bug-prone than many other languages to address other types of memory safety.
+
+* **Spatial** memory safety generally describes "invalid access" types of errors to a region of memory (space), such as out-of-bound array accesses or the dereferencing of an invalid pointer.
+
+* **Temporal** memory safety generally refers to where the validity of memory access depends on _when_ the memory is accessed (time). Examples include use-after-free, use-before-allocation, or incorrect use of [atomics](https://doc.rust-lang.org/nomicon/atomics.html).
+
+Note that there are _other_ types of temporal safety that do not involve memory, such as (incorrect) concurrency patterns, unintentional infinite loops, liveness guarantees, work starvation, and deadlocks. In general Rust makes it easier to ameliorate this type of "unsafety", such as with [mutexes](https://doc.rust-lang.org/book/ch16-03-shared-state.html), but without care temporal safety still requires care.
+
+### Modified Condition/Decision Coverage
+[Modified Condition/Decision Coverage]: #modified-condition-decision-coverage
+
+[Modified condition/decision coverage](https://en.wikipedia.org/wiki/Modified_condition/decision_coverage) (MC/DC) is a code coverage criterion used in software testing. It is one of the most stringent forms of [code coverage](https://en.wikipedia.org/wiki/Code_coverage) that is mandated at the highest levels of avionics, automotive, and industrial functiontional safety.
 
 ### Niche
 [niche]: #niche
@@ -236,6 +267,31 @@ For some more information, see [this document proposing a more precise definitio
 *Using provenance for Rust's aliasing rules.*
 Another example of pointer provenance is the "tag" from [Stacked Borrows][stacked-borrows].
 For some more information, see [this blog post](https://www.ralfj.de/blog/2018/07/24/pointers-and-bytes.html).
+
+### Pure Function
+[pure function]: #pure-function
+
+A [pure function](https://en.wikipedia.org/wiki/Pure_function) is one that:
+* Given the same input, always returns the same output
+* Has no side effects (doesn't modify state outside its scope)
+* Doesn't depend on external state
+
+Pure functions are important because they make it considerably easier for both compilers and humans to reason about the information flow through a program.
+
+Pure functions are often used in a "numerical mathematics" sense, such as trigonometric functions like `sin` and `cos`, or abstract operators such as matrix multiplication operators, where we know _a priori_ that the same inputs always give the same outputs.
+
+However, pure functions are _also_ useful because they can be composed into a [monad](https://stackoverflow.com/questions/3870088/a-monad-is-just-a-monoid-in-the-category-of-endofunctors-whats-the-problem) design pattern. Monads can be thought of as a design pattern that helps us compose pure functions when we need to deal with effects or computations that wouldn't normally be pure. Monads provide a way to:
+* Wrap a value in a context, such as [`std::option`](https://doc.rust-lang.org/std/option/) or [`std::result`](https://doc.rust-lang.org/std/result/)
+* Chain operations on that wrapped value, such as [`std::iter::FlatMap`](https://doc.rust-lang.org/std/iter/struct.FlatMap.html)
+
+### Regulatory Approach
+[regulatory approach]: #regulatory-approach
+
+Although software engineers in general, and Rust programmers in specific, tend to view "unsafe code" through the lens of programming languages, _safety regulators_ usually view "unsafe code" through either a "risk-based" or "objective-based" approach. For example:
+
+* **Risk-based** approaches, such as the automotive standard [ISO 26262](https://en.wikipedia.org/wiki/ISO_26262), use Hazard Analysis and Risk Assessment ([HARA](https://en.wikipedia.org/wiki/Hazard_analysis)) to identify potential hazards and determine appropriate  safety requirements based on the risk class / Safety Integrity Level ([SIL](https://en.wikipedia.org/wiki/Safety_integrity_level)).
+
+* **Objective-based** approaches, such as the guidance provided by [DO-178C/ED-12C](https://en.wikipedia.org/wiki/DO-178C) in aerospace, focus on achieving specific objectives rather than prescribing specific processes.
 
 ### Representation (relation)
 [representation relation]: #representation-relation
