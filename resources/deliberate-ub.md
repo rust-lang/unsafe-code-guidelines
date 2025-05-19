@@ -18,7 +18,7 @@ We should evaluate whether there truly is some use-case here that is not current
   It is not clear how to best specify a useful `compare_exchange` that can work on padding bytes,
   see the [discussion here](https://github.com/rust-lang/unsafe-code-guidelines/issues/449).<br>
   The alternative is to not use the "fast path" for problematic types (and fall back to the SeqLock), but that requires some way to query at `const`-time whether the type contains padding (or provenance).
-  (Or of course one can use inline assembly, but it would be better if that was not required.)
+  (Or of course one can use inline assembly, but it would be better if that was not required. This is in fact what crossbeam now does, via [atomic-maybe-uninit](https://github.com/taiki-e/atomic-maybe-uninit).)
 * crossbeam's deque uses [volatile accesses that really should be atomic instead](https://github.com/crossbeam-rs/crossbeam/blob/5a154def002304814d50f3c7658bd30eb46b2fad/crossbeam-deque/src/deque.rs#L70-L88).
   They cannot use atomic accesses as those are not possible for arbitrary `T`.
   This would be resolved by bytewise atomic memcpy.
