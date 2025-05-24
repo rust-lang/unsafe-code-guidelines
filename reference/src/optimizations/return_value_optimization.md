@@ -1,20 +1,5 @@
-We should turn
+**This page has been archived**
 
-```rust,ignore
-// y unused
-let mut x = f();
-g(&mut x);
-y = x;
-// x unused
-```
+It did not actually reflect current language guarantees and caused frequent confusion.
 
-into
-
-```rust,ignore
-y = f();
-g(&mut y);
-```
-
-to avoid a copy.
-
-The potential issue here is `g` storing the pointer it got as an argument elsewhere.
+The old content can be accessed [on GitHub](https://github.com/rust-lang/unsafe-code-guidelines/blob/c138499c1de03b908dfe719a41193c84f8146883/reference/src/optimizations/return_value_optimization.md).
