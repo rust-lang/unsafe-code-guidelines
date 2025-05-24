@@ -6,8 +6,7 @@ The purpose of this repository is to collect and discuss all sorts of questions 
 It is primarily used by the [opsem team](https://github.com/rust-lang/opsem-team/) to track open questions around the operational semantics, but we also track some "non-opsem" questions that fall into T-lang or T-type's purview, if they are highly relevant to unsafe code authors.
 
 The [Unsafe Code Guidelines Reference "book"][ucg_book] is a past effort to systematize a consensus on some of these questions.
-It is not actively maintained any more, but can still be a good source of information and references.
-Note however that unless stated otherwise, the information in the guide is mostly a "recommendation" and still subject to change.
+Most of it has been archived, but the [glossary](https://rust-lang.github.io/unsafe-code-guidelines/glossary.html) is still a useful resource.
 
 Current consensus is documented in [t-opsem FCPs](https://github.com/rust-lang/opsem-team/blob/main/fcps.md) and the [Rust Language Reference].
 
