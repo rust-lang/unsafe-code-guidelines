@@ -8,6 +8,7 @@ Let's collect a list of those cases here.
   Alive says that this yields poison.
 - To implement the desired semantics for `MaybeUninit<$int>` we need a type of arbitrary size that can hold arbitrary data -- including provenance.
   LLVM currently has no such type, the only type that is fully guaranteed to support provenance is `ptr` and that has a fixed size.
+  [LLVM issue](https://github.com/llvm/llvm-project/issues/142141)
 - This one is not about current Rust but about possible future extensions:
   when LLVM returns `poison` for some operation, we can *not* say that this corresponds to `uninit` in Rust. We *must* declare this immediate UB.
   The reason for this is that LLVM does not really support `poison` being stored in memory; Rust's `uninit` can therefore only correspond to LLVM's `undef`.
